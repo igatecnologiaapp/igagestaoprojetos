@@ -248,7 +248,8 @@ function AppointmentsPage() {
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           {appointments.map((a) => {
-            const parts = (a.appointment_participants as Array<{ user_id: string; profiles: { full_name: string } | null }> | null) ?? [];
+            const parts = (a.appointment_participants as Array<{ user_id: string }> | null) ?? [];
+            const partNames = parts.map((p) => users.find((u) => u.id === p.user_id)?.full_name ?? p.user_id.slice(0, 6));
             return (
               <Card key={a.id} className="p-5 group">
                 <div className="flex items-start justify-between gap-2">

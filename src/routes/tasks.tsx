@@ -87,9 +87,15 @@ function TasksPage() {
     },
   });
 
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [pendingLinks, setPendingLinks] = useState<{ name: string; url: string }[]>([]);
+  const [linkDraft, setLinkDraft] = useState({ name: "", url: "" });
+
   const createMut = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("tasks").insert({
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      const { data: task, error } = await supabase.from("tasks").insert({
         name: form.name,
         description: form.description || null,
         project_id: form.project_id,
@@ -97,14 +103,34 @@ function TasksPage() {
         due_date: form.due_date || null,
         priority: form.priority,
         status: form.status,
-      });
+      }).select("id").single();
       if (error) throw error;
+
+      // Upload files
+      const attachments: Array<{ task_id: string; type: "file" | "link"; name: string; url: string; storage_path: string | null; created_by: string | null }> = [];
+      for (const file of pendingFiles) {
+        const path = `${task.id}/${Date.now()}-${file.name}`;
+        const { error: upErr } = await supabase.storage.from("task-files").upload(path, file);
+        if (upErr) throw upErr;
+        const { data: pub } = supabase.storage.from("task-files").getPublicUrl(path);
+        attachments.push({ task_id: task.id, type: "file", name: file.name, url: pub.publicUrl, storage_path: path, created_by: userId ?? null });
+      }
+      for (const link of pendingLinks) {
+        attachments.push({ task_id: task.id, type: "link", name: link.name || link.url, url: link.url, storage_path: null, created_by: userId ?? null });
+      }
+      if (attachments.length > 0) {
+        const { error: attErr } = await supabase.from("task_attachments").insert(attachments);
+        if (attErr) throw attErr;
+      }
     },
     onSuccess: () => {
       toast.success("Tarefa criada");
       qc.invalidateQueries({ queryKey: ["tasks"] });
       setOpen(false);
       setForm({ ...form, name: "", description: "", company_id: "", project_id: "", start_date: "", due_date: "" });
+      setPendingFiles([]);
+      setPendingLinks([]);
+      setLinkDraft({ name: "", url: "" });
     },
     onError: (e: Error) => toast.error(e.message),
   });

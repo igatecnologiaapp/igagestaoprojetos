@@ -14,6 +14,125 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointment_participants: {
+        Row: {
+          appointment_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          appointment_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          appointment_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_participants_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointments: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_at: string | null
+          id: string
+          location: string | null
+          project_id: string | null
+          start_at: string
+          status: Database["public"]["Enums"]["appointment_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_at?: string | null
+          id?: string
+          location?: string | null
+          project_id?: string | null
+          start_at: string
+          status?: Database["public"]["Enums"]["appointment_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_at?: string | null
+          id?: string
+          location?: string | null
+          project_id?: string | null
+          start_at?: string
+          status?: Database["public"]["Enums"]["appointment_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audit_history: {
+        Row: {
+          action: string
+          changed_at: string
+          changed_by: string | null
+          changes: Json | null
+          entity_id: string
+          entity_type: string
+          id: string
+        }
+        Insert: {
+          action: string
+          changed_at?: string
+          changed_by?: string | null
+          changes?: Json | null
+          entity_id: string
+          entity_type: string
+          id?: string
+        }
+        Update: {
+          action?: string
+          changed_at?: string
+          changed_by?: string | null
+          changes?: Json | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
           address: string | null
@@ -181,6 +300,73 @@ export type Database = {
         }
         Relationships: []
       }
+      task_comments: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          task_id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          task_id: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          task_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_comments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_shares: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          permission: Database["public"]["Enums"]["task_permission"]
+          task_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          permission?: Database["public"]["Enums"]["task_permission"]
+          task_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          permission?: Database["public"]["Enums"]["task_permission"]
+          task_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_shares_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_status_history: {
         Row: {
           changed_at: string
@@ -306,9 +492,18 @@ export type Database = {
         }
         Returns: boolean
       }
+      task_has_permission: {
+        Args: {
+          _min_perm: Database["public"]["Enums"]["task_permission"]
+          _task_id: string
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "owner" | "collaborator" | "viewer"
+      appointment_status: "scheduled" | "in_progress" | "done" | "cancelled"
       attachment_type: "file" | "link"
       company_status: "active" | "inactive"
       project_status:
@@ -317,6 +512,7 @@ export type Database = {
         | "paused"
         | "completed"
         | "cancelled"
+      task_permission: "view" | "comment" | "edit"
       task_priority: "low" | "medium" | "high" | "urgent"
       task_status:
         | "pending"
@@ -452,6 +648,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["owner", "collaborator", "viewer"],
+      appointment_status: ["scheduled", "in_progress", "done", "cancelled"],
       attachment_type: ["file", "link"],
       company_status: ["active", "inactive"],
       project_status: [
@@ -461,6 +658,7 @@ export const Constants = {
         "completed",
         "cancelled",
       ],
+      task_permission: ["view", "comment", "edit"],
       task_priority: ["low", "medium", "high", "urgent"],
       task_status: ["pending", "started", "in_progress", "paused", "completed"],
     },

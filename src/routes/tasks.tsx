@@ -21,7 +21,7 @@ import { TaskShares, TaskComments } from "@/components/task-collaboration";
 const searchSchema = z.object({ project: z.string().optional(), task: z.string().optional() });
 
 export const Route = createFileRoute("/tasks")({
-  component: () => <RequireAuth><TasksPage /></RequireAuth>,
+  component: () => <RequireAuth module="tasks"><TasksPage /></RequireAuth>,
   validateSearch: searchSchema,
   head: () => ({ meta: [{ title: "Tarefas — FlowDesk" }] }),
 });

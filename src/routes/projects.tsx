@@ -18,7 +18,7 @@ import { useAuth } from "@/lib/auth-context";
 import { ProjectShares } from "@/components/task-collaboration";
 
 export const Route = createFileRoute("/projects")({
-  component: () => <RequireAuth><ProjectsPage /></RequireAuth>,
+  component: () => <RequireAuth module="projects"><ProjectsPage /></RequireAuth>,
   head: () => ({ meta: [{ title: "Projetos — FlowDesk" }] }),
 });
 

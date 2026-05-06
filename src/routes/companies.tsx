@@ -16,7 +16,7 @@ import { useAuth } from "@/lib/auth-context";
 import { AuditHistory } from "@/components/audit-history";
 
 export const Route = createFileRoute("/companies")({
-  component: () => <RequireAuth><CompaniesPage /></RequireAuth>,
+  component: () => <RequireAuth module="companies"><CompaniesPage /></RequireAuth>,
   head: () => ({ meta: [{ title: "Empresas — FlowDesk" }] }),
 });
 

@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Download, FileText } from "lucide-react";
 
 export const Route = createFileRoute("/reports")({
-  component: () => <RequireAuth><ReportsPage /></RequireAuth>,
+  component: () => <RequireAuth module="reports"><ReportsPage /></RequireAuth>,
   head: () => ({ meta: [{ title: "Relatórios — FlowDesk" }] }),
 });
 

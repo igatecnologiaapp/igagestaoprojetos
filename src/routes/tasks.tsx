@@ -15,6 +15,8 @@ import { Plus, ListChecks, AlertTriangle, GripVertical, Paperclip, Link2, X, Upl
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
+import { AuditHistory } from "@/components/audit-history";
+import { TaskShares, TaskComments } from "@/components/task-collaboration";
 
 const searchSchema = z.object({ project: z.string().optional() });
 

@@ -13,6 +13,7 @@ import { Plus, Search, Building2, Trash2, Eye, FolderKanban, ListChecks, Calenda
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
+import { AuditHistory } from "@/components/audit-history";
 
 export const Route = createFileRoute("/companies")({
   component: () => <RequireAuth><CompaniesPage /></RequireAuth>,

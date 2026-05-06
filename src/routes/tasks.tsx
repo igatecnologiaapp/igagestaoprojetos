@@ -453,31 +453,50 @@ function TaskDetailDialog({ taskId, onClose }: { taskId: string | null; onClose:
               {attachments.length === 0 ? (
                 <p className="text-xs text-muted-foreground">Nenhum anexo</p>
               ) : (
-                <ul className="space-y-1.5">
-                  {attachments.map((a) => (
-                    <li key={a.id} className="flex items-center justify-between gap-2 bg-muted rounded px-2 py-1.5">
-                      <span className="flex items-center gap-2 text-sm truncate min-w-0">
-                        {a.type === "file" ? <FileText className="h-4 w-4 shrink-0" /> : <Link2 className="h-4 w-4 shrink-0" />}
-                        <span className="truncate">{a.name}</span>
-                      </span>
-                      <div className="flex items-center gap-1 shrink-0">
-                        {a.type === "file" && a.storage_path ? (
-                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => downloadFile(a.storage_path!, a.name)} title="Baixar">
-                            <Download className="h-3.5 w-3.5" />
-                          </Button>
-                        ) : (
-                          <Button size="icon" variant="ghost" className="h-7 w-7" asChild title="Abrir link">
-                            <a href={a.url} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-3.5 w-3.5" /></a>
-                          </Button>
+                <ul className="space-y-2">
+                  {attachments.map((a) => {
+                    const ext = a.name.split(".").pop()?.toLowerCase() ?? "";
+                    const isImage = a.type === "file" && ["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp"].includes(ext);
+                    const isPdf = a.type === "file" && ext === "pdf";
+                    return (
+                      <li key={a.id} className="bg-muted rounded overflow-hidden">
+                        <div className="flex items-center justify-between gap-2 px-2 py-1.5">
+                          <span className="flex items-center gap-2 text-sm truncate min-w-0">
+                            {a.type === "file" ? <FileText className="h-4 w-4 shrink-0" /> : <Link2 className="h-4 w-4 shrink-0" />}
+                            <span className="truncate">{a.name}</span>
+                          </span>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {a.type === "file" && a.storage_path ? (
+                              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => downloadFile(a.storage_path!, a.name)} title="Baixar">
+                                <Download className="h-3.5 w-3.5" />
+                              </Button>
+                            ) : (
+                              <Button size="icon" variant="ghost" className="h-7 w-7" asChild title="Abrir link">
+                                <a href={a.url} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-3.5 w-3.5" /></a>
+                              </Button>
+                            )}
+                            {canEdit && (
+                              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => deleteAttMut.mutate({ id: a.id, storage_path: a.storage_path })} title="Remover">
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                        {isImage && (
+                          <a href={a.url} target="_blank" rel="noopener noreferrer" className="block bg-background border-t">
+                            <img src={a.url} alt={a.name} className="max-h-64 w-full object-contain" loading="lazy" />
+                          </a>
                         )}
-                        {canEdit && (
-                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => deleteAttMut.mutate({ id: a.id, storage_path: a.storage_path })} title="Remover">
-                            <X className="h-3.5 w-3.5" />
-                          </Button>
+                        {isPdf && (
+                          <object data={a.url} type="application/pdf" className="w-full h-64 border-t bg-background">
+                            <a href={a.url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline p-2 block">
+                              Abrir PDF
+                            </a>
+                          </object>
                         )}
-                      </div>
-                    </li>
-                  ))}
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>

@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Building2, FolderKanban, ListChecks, LogOut, Sparkles } from "lucide-react";
+import { LayoutDashboard, Building2, FolderKanban, ListChecks, LogOut, Sparkles, Calendar } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -9,6 +9,7 @@ const nav = [
   { to: "/companies", label: "Empresas", icon: Building2 },
   { to: "/projects", label: "Projetos", icon: FolderKanban },
   { to: "/tasks", label: "Tarefas", icon: ListChecks },
+  { to: "/appointments", label: "Agendamentos", icon: Calendar },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {

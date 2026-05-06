@@ -495,10 +495,25 @@ function TaskDetailDialog({ taskId, onClose }: { taskId: string | null; onClose:
         <DialogHeader>
           <div className="flex items-center justify-between gap-2 pr-6">
             <DialogTitle>{task?.name ?? "Tarefa"}</DialogTitle>
-            {canEdit && task && !editing && (
+            {task && (
               <div className="flex gap-1">
-                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={startEdit}><Pencil className="h-3.5 w-3.5" /></Button>
-                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { if (confirm("Excluir tarefa?")) deleteTask.mutate(); }}><Trash2 className="h-3.5 w-3.5" /></Button>
+                <Button
+                  size="icon" variant="ghost" className="h-7 w-7"
+                  title="Compartilhar no WhatsApp"
+                  onClick={() => {
+                    const url = `${window.location.origin}/tasks?task=${task.id}`;
+                    const text = `Tarefa: ${task.name}\nStatus: ${statusColumns.find((s) => s.key === task.status)?.label}\nPrioridade: ${priorityLabels[task.priority].label}${task.due_date ? `\nPrazo: ${new Date(task.due_date).toLocaleDateString("pt-BR")}` : ""}\n${url}`;
+                    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+                  }}
+                >
+                  <Share2 className="h-3.5 w-3.5" />
+                </Button>
+                {canEdit && !editing && (
+                  <>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={startEdit}><Pencil className="h-3.5 w-3.5" /></Button>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { if (confirm("Excluir tarefa?")) deleteTask.mutate(); }}><Trash2 className="h-3.5 w-3.5" /></Button>
+                  </>
+                )}
               </div>
             )}
           </div>

@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/appointments")({
-  component: () => <RequireAuth><AppointmentsPage /></RequireAuth>,
+  component: () => <RequireAuth module="appointments"><AppointmentsPage /></RequireAuth>,
   head: () => ({ meta: [{ title: "Agendamentos — FlowDesk" }] }),
 });
 

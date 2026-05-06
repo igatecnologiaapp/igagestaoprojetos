@@ -15,9 +15,10 @@ import { Plus, FolderKanban, AlertTriangle, Pencil, Trash2 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
+import { ProjectShares } from "@/components/task-collaboration";
 
 export const Route = createFileRoute("/projects")({
-  component: () => <RequireAuth><ProjectsPage /></RequireAuth>,
+  component: () => <RequireAuth module="projects"><ProjectsPage /></RequireAuth>,
   head: () => ({ meta: [{ title: "Projetos — FlowDesk" }] }),
 });
 
@@ -180,6 +181,11 @@ function ProjectsPage() {
                   <Button type="submit" disabled={!form.company_id || saveMut.isPending}>{editingId ? "Salvar alterações" : "Criar projeto"}</Button>
                 </DialogFooter>
               </form>
+              {editingId && (
+                <div className="border-t pt-4 mt-2">
+                  <ProjectShares projectId={editingId} />
+                </div>
+              )}
             </DialogContent>
           </Dialog>
         )}

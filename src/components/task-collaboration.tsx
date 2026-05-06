@@ -12,13 +12,13 @@ import { useAuth } from "@/lib/auth-context";
 type Permission = "view" | "comment" | "edit";
 
 const permLabels: Record<Permission, string> = {
-  view: "Visualizar", comment: "Comentar", edit: "Editar",
+  view: "Visualizador", comment: "Colaborador", edit: "Administrador",
 };
 
 export function TaskShares({ taskId }: { taskId: string }) {
   const qc = useQueryClient();
   const { canEdit } = useAuth();
-  const [userId, setUserId] = useState("");
+  const [target, setTarget] = useState(""); // "u:<id>" or "e:<id>"
   const [perm, setPerm] = useState<Permission>("view");
 
   const { data: shares = [] } = useQuery({
@@ -31,19 +31,28 @@ export function TaskShares({ taskId }: { taskId: string }) {
     queryFn: async () => (await supabase.from("profiles").select("id,full_name").order("full_name")).data ?? [],
   });
 
+  const { data: externals = [] } = useQuery({
+    queryKey: ["external-list"],
+    queryFn: async () => (await supabase.from("external_collaborators").select("id,name,email").order("name")).data ?? [],
+  });
+
   const addMut = useMutation({
     mutationFn: async () => {
-      if (!userId) return;
-      const { error } = await supabase.from("task_shares").upsert(
-        { task_id: taskId, user_id: userId, permission: perm },
-        { onConflict: "task_id,user_id" }
-      );
+      if (!target) return;
+      const [kind, id] = target.split(":");
+      const payload: { task_id: string; user_id: string | null; external_id: string | null; permission: Permission } = {
+        task_id: taskId,
+        user_id: kind === "u" ? id : null,
+        external_id: kind === "e" ? id : null,
+        permission: perm,
+      };
+      const { error } = await supabase.from("task_shares").insert(payload);
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Compartilhado");
       qc.invalidateQueries({ queryKey: ["task-shares", taskId] });
-      setUserId("");
+      setTarget("");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -56,8 +65,14 @@ export function TaskShares({ taskId }: { taskId: string }) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["task-shares", taskId] }),
   });
 
-  const nameOf = (uid: string) => users.find((u) => u.id === uid)?.full_name ?? uid.slice(0, 8);
-  const available = users.filter((u) => !shares.some((s) => s.user_id === u.id));
+  const nameOf = (s: { user_id: string | null; external_id: string | null }) => {
+    if (s.user_id) return users.find((u) => u.id === s.user_id)?.full_name ?? s.user_id.slice(0, 8);
+    if (s.external_id) {
+      const e = externals.find((x) => x.id === s.external_id);
+      return e ? `${e.name} (externo)` : "externo";
+    }
+    return "—";
+  };
 
   return (
     <div className="space-y-2">
@@ -67,19 +82,20 @@ export function TaskShares({ taskId }: { taskId: string }) {
       </h3>
       {canEdit && (
         <div className="flex gap-2">
-          <Select value={userId} onValueChange={setUserId}>
-            <SelectTrigger className="flex-1"><SelectValue placeholder="Usuário…" /></SelectTrigger>
+          <Select value={target} onValueChange={setTarget}>
+            <SelectTrigger className="flex-1"><SelectValue placeholder="Usuário ou externo…" /></SelectTrigger>
             <SelectContent>
-              {available.map((u) => <SelectItem key={u.id} value={u.id}>{u.full_name ?? u.id.slice(0, 8)}</SelectItem>)}
+              {users.map((u) => <SelectItem key={`u-${u.id}`} value={`u:${u.id}`}>{u.full_name ?? u.id.slice(0, 8)}</SelectItem>)}
+              {externals.map((e) => <SelectItem key={`e-${e.id}`} value={`e:${e.id}`}>{e.name} (externo)</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={perm} onValueChange={(v) => setPerm(v as Permission)}>
-            <SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               {Object.entries(permLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Button size="sm" onClick={() => addMut.mutate()} disabled={!userId}>Add</Button>
+          <Button size="sm" onClick={() => addMut.mutate()} disabled={!target}>Add</Button>
         </div>
       )}
       {shares.length === 0 ? (
@@ -88,7 +104,108 @@ export function TaskShares({ taskId }: { taskId: string }) {
         <ul className="space-y-1">
           {shares.map((s) => (
             <li key={s.id} className="flex items-center justify-between text-xs bg-muted rounded px-2 py-1.5">
-              <span className="truncate">{nameOf(s.user_id)}</span>
+              <span className="truncate">{nameOf(s)}</span>
+              <div className="flex items-center gap-1">
+                <Badge variant="outline" className="text-[10px]">{permLabels[s.permission as Permission]}</Badge>
+                {canEdit && (
+                  <button onClick={() => removeMut.mutate(s.id)}><X className="h-3 w-3" /></button>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+export function ProjectShares({ projectId }: { projectId: string }) {
+  const qc = useQueryClient();
+  const { canEdit } = useAuth();
+  const [target, setTarget] = useState("");
+  const [perm, setPerm] = useState<Permission>("view");
+
+  const { data: shares = [] } = useQuery({
+    queryKey: ["project-shares", projectId],
+    queryFn: async () => (await supabase.from("project_shares").select("*").eq("project_id", projectId)).data ?? [],
+  });
+  const { data: users = [] } = useQuery({
+    queryKey: ["users-list"],
+    queryFn: async () => (await supabase.from("profiles").select("id,full_name").order("full_name")).data ?? [],
+  });
+  const { data: externals = [] } = useQuery({
+    queryKey: ["external-list"],
+    queryFn: async () => (await supabase.from("external_collaborators").select("id,name,email").order("name")).data ?? [],
+  });
+
+  const addMut = useMutation({
+    mutationFn: async () => {
+      if (!target) return;
+      const [kind, id] = target.split(":");
+      const payload: { project_id: string; user_id: string | null; external_id: string | null; permission: Permission } = {
+        project_id: projectId,
+        user_id: kind === "u" ? id : null,
+        external_id: kind === "e" ? id : null,
+        permission: perm,
+      };
+      const { error } = await supabase.from("project_shares").insert(payload);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Compartilhado");
+      qc.invalidateQueries({ queryKey: ["project-shares", projectId] });
+      setTarget("");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const removeMut = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("project_shares").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["project-shares", projectId] }),
+  });
+
+  const nameOf = (s: { user_id: string | null; external_id: string | null }) => {
+    if (s.user_id) return users.find((u) => u.id === s.user_id)?.full_name ?? s.user_id.slice(0, 8);
+    if (s.external_id) {
+      const e = externals.find((x) => x.id === s.external_id);
+      return e ? `${e.name} (externo)` : "externo";
+    }
+    return "—";
+  };
+
+  return (
+    <div className="space-y-2">
+      <h3 className="text-sm font-medium flex items-center gap-1.5">
+        <Share2 className="h-4 w-4" />
+        Compartilhamento ({shares.length})
+      </h3>
+      {canEdit && (
+        <div className="flex gap-2">
+          <Select value={target} onValueChange={setTarget}>
+            <SelectTrigger className="flex-1"><SelectValue placeholder="Usuário ou externo…" /></SelectTrigger>
+            <SelectContent>
+              {users.map((u) => <SelectItem key={`u-${u.id}`} value={`u:${u.id}`}>{u.full_name ?? u.id.slice(0, 8)}</SelectItem>)}
+              {externals.map((e) => <SelectItem key={`e-${e.id}`} value={`e:${e.id}`}>{e.name} (externo)</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={perm} onValueChange={(v) => setPerm(v as Permission)}>
+            <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {Object.entries(permLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Button size="sm" onClick={() => addMut.mutate()} disabled={!target}>Add</Button>
+        </div>
+      )}
+      {shares.length === 0 ? (
+        <p className="text-xs text-muted-foreground">Não compartilhado</p>
+      ) : (
+        <ul className="space-y-1">
+          {shares.map((s) => (
+            <li key={s.id} className="flex items-center justify-between text-xs bg-muted rounded px-2 py-1.5">
+              <span className="truncate">{nameOf(s)}</span>
               <div className="flex items-center gap-1">
                 <Badge variant="outline" className="text-[10px]">{permLabels[s.permission as Permission]}</Badge>
                 {canEdit && (
@@ -113,7 +230,6 @@ export function TaskComments({ taskId }: { taskId: string }) {
     queryFn: async () => (await supabase.from("task_comments").select("*").eq("task_id", taskId).order("created_at", { ascending: true })).data ?? [],
   });
 
-  const userIds = Array.from(new Set(comments.map((c) => c.user_id)));
   const { data: profiles = [] } = useQuery({
     queryKey: ["users-list"],
     queryFn: async () => (await supabase.from("profiles").select("id,full_name")).data ?? [],
@@ -133,7 +249,6 @@ export function TaskComments({ taskId }: { taskId: string }) {
   });
 
   const nameOf = (uid: string) => profiles.find((p) => p.id === uid)?.full_name ?? uid.slice(0, 8);
-  void userIds;
 
   return (
     <div className="space-y-2">

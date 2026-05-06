@@ -232,6 +232,62 @@ function TasksPage() {
                       </Select>
                     </div>
                   </div>
+
+                  <div className="space-y-2 pt-2 border-t">
+                    <Label className="text-xs flex items-center gap-1.5"><Paperclip className="h-3.5 w-3.5" />Anexar arquivos</Label>
+                    <Input
+                      type="file"
+                      multiple
+                      onChange={(e) => setPendingFiles([...pendingFiles, ...Array.from(e.target.files ?? [])])}
+                    />
+                    {pendingFiles.length > 0 && (
+                      <ul className="space-y-1">
+                        {pendingFiles.map((f, i) => (
+                          <li key={i} className="flex items-center justify-between text-xs bg-muted rounded px-2 py-1">
+                            <span className="flex items-center gap-1.5 truncate"><Upload className="h-3 w-3" />{f.name}</span>
+                            <button type="button" onClick={() => setPendingFiles(pendingFiles.filter((_, j) => j !== i))}><X className="h-3 w-3" /></button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs flex items-center gap-1.5"><Link2 className="h-3.5 w-3.5" />Links externos</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Nome (opcional)"
+                        value={linkDraft.name}
+                        onChange={(e) => setLinkDraft({ ...linkDraft, name: e.target.value })}
+                      />
+                      <Input
+                        placeholder="https://..."
+                        value={linkDraft.url}
+                        onChange={(e) => setLinkDraft({ ...linkDraft, url: e.target.value })}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (!linkDraft.url) return;
+                          setPendingLinks([...pendingLinks, linkDraft]);
+                          setLinkDraft({ name: "", url: "" });
+                        }}
+                      >Add</Button>
+                    </div>
+                    {pendingLinks.length > 0 && (
+                      <ul className="space-y-1">
+                        {pendingLinks.map((l, i) => (
+                          <li key={i} className="flex items-center justify-between text-xs bg-muted rounded px-2 py-1">
+                            <span className="flex items-center gap-1.5 truncate"><Link2 className="h-3 w-3" />{l.name || l.url}</span>
+                            <button type="button" onClick={() => setPendingLinks(pendingLinks.filter((_, j) => j !== i))}><X className="h-3 w-3" /></button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
                   <DialogFooter>
                     <Button type="submit" disabled={!form.project_id || createMut.isPending}>Criar tarefa</Button>
                   </DialogFooter>

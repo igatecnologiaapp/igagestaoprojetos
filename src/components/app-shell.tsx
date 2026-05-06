@@ -18,7 +18,8 @@ const nav: NavItem[] = [
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { user, signOut } = useAuth();
+  const { user, signOut, canAccess, isOwner } = useAuth();
+  const visibleNav = nav.filter((i) => (i.ownerOnly ? isOwner : i.module ? canAccess(i.module) : true));
   const location = useLocation();
   const navigate = useNavigate();
 

@@ -155,11 +155,20 @@ function TasksPage() {
                     <Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs">Projeto *</Label>
-                    <Select value={form.project_id} onValueChange={(v) => setForm({ ...form, project_id: v })}>
-                      <SelectTrigger><SelectValue placeholder="Selecione um projeto" /></SelectTrigger>
+                    <Label className="text-xs">Empresa *</Label>
+                    <Select value={form.company_id} onValueChange={(v) => setForm({ ...form, company_id: v, project_id: "" })}>
+                      <SelectTrigger><SelectValue placeholder="Selecione uma empresa" /></SelectTrigger>
                       <SelectContent>
-                        {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                        {companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Projeto *</Label>
+                    <Select value={form.project_id} onValueChange={(v) => setForm({ ...form, project_id: v })} disabled={!form.company_id}>
+                      <SelectTrigger><SelectValue placeholder={form.company_id ? "Selecione um projeto" : "Selecione uma empresa primeiro"} /></SelectTrigger>
+                      <SelectContent>
+                        {filteredProjects.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>

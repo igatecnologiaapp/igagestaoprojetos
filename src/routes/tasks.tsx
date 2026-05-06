@@ -173,7 +173,7 @@ function TasksPage() {
           {canEdit && (
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" />Nova tarefa</Button></DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-h-[90vh] overflow-y-auto">
                 <DialogHeader><DialogTitle>Nova tarefa</DialogTitle></DialogHeader>
                 <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); createMut.mutate(); }}>
                   <div className="space-y-1.5">

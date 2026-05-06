@@ -363,6 +363,8 @@ function TasksPage() {
           })}
         </div>
       )}
+
+      <TaskDetailDialog taskId={selectedTaskId} onClose={() => setSelectedTaskId(null)} />
     </div>
   );
 }

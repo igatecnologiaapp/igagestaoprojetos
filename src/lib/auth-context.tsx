@@ -3,15 +3,18 @@ import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 type AppRole = "owner" | "collaborator" | "viewer";
+export type AppModule = "companies" | "projects" | "tasks" | "appointments" | "reports";
 
 interface AuthContextValue {
   user: User | null;
   session: Session | null;
   roles: AppRole[];
+  modules: AppModule[]; // empty = all allowed (legacy/default)
   loading: boolean;
   signOut: () => Promise<void>;
   canEdit: boolean;
   isOwner: boolean;
+  canAccess: (m: AppModule) => boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -20,51 +23,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
+  const [modules, setModules] = useState<AppModule[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const loadAccess = (uid: string) => {
+    supabase.from("user_roles").select("role").eq("user_id", uid)
+      .then(({ data }) => setRoles((data ?? []).map((r) => r.role as AppRole)));
+    supabase.from("user_module_access").select("module").eq("user_id", uid)
+      .then(({ data }) => setModules((data ?? []).map((r) => r.module as AppModule)));
+  };
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
-        setTimeout(() => {
-          supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", s.user.id)
-            .then(({ data }) => setRoles((data ?? []).map((r) => r.role as AppRole)));
-        }, 0);
+        setTimeout(() => loadAccess(s.user.id), 0);
       } else {
         setRoles([]);
+        setModules([]);
       }
     });
 
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s);
       setUser(s?.user ?? null);
-      if (s?.user) {
-        supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", s.user.id)
-          .then(({ data }) => setRoles((data ?? []).map((r) => r.role as AppRole)));
-      }
+      if (s?.user) loadAccess(s.user.id);
       setLoading(false);
     });
 
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  const isOwner = roles.includes("owner");
+
   const value: AuthContextValue = {
     user,
     session,
     roles,
+    modules,
     loading,
     signOut: async () => {
       await supabase.auth.signOut();
     },
-    canEdit: roles.includes("owner") || roles.includes("collaborator"),
-    isOwner: roles.includes("owner"),
+    canEdit: isOwner || roles.includes("collaborator"),
+    isOwner,
+    canAccess: (m) => isOwner || modules.length === 0 || modules.includes(m),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

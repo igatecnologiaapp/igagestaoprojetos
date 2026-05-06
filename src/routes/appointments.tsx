@@ -51,7 +51,7 @@ function AppointmentsPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("appointments")
-        .select("*, companies(name), projects(name), appointment_participants(user_id, profiles:user_id(full_name))")
+        .select("*, companies(name), projects(name), appointment_participants(user_id)")
         .order("start_at", { ascending: false });
       if (error) throw error;
       return data;

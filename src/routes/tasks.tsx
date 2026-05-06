@@ -328,7 +328,8 @@ function TasksPage() {
                         key={t.id}
                         draggable={canEdit}
                         onDragStart={(e) => e.dataTransfer.setData("text/plain", t.id)}
-                        className="group rounded-md border bg-background p-3 cursor-grab active:cursor-grabbing hover:shadow-sm transition-shadow"
+                        onClick={() => setSelectedTaskId(t.id)}
+                        className="group rounded-md border bg-background p-3 cursor-pointer hover:shadow-sm transition-shadow"
                       >
                         <div className="flex items-start gap-2">
                           <GripVertical className="h-4 w-4 text-muted-foreground mt-0.5 opacity-0 group-hover:opacity-100" />

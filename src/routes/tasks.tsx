@@ -18,7 +18,7 @@ import { useAuth } from "@/lib/auth-context";
 import { AuditHistory } from "@/components/audit-history";
 import { TaskShares, TaskComments } from "@/components/task-collaboration";
 
-const searchSchema = z.object({ project: z.string().optional() });
+const searchSchema = z.object({ project: z.string().optional(), task: z.string().optional() });
 
 export const Route = createFileRoute("/tasks")({
   component: () => <RequireAuth><TasksPage /></RequireAuth>,

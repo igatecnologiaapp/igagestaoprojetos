@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, ListChecks, AlertTriangle, GripVertical } from "lucide-react";
+import { Plus, ListChecks, AlertTriangle, GripVertical, Paperclip, Link2, X, Upload } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
@@ -87,9 +87,15 @@ function TasksPage() {
     },
   });
 
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [pendingLinks, setPendingLinks] = useState<{ name: string; url: string }[]>([]);
+  const [linkDraft, setLinkDraft] = useState({ name: "", url: "" });
+
   const createMut = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("tasks").insert({
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      const { data: task, error } = await supabase.from("tasks").insert({
         name: form.name,
         description: form.description || null,
         project_id: form.project_id,
@@ -97,14 +103,34 @@ function TasksPage() {
         due_date: form.due_date || null,
         priority: form.priority,
         status: form.status,
-      });
+      }).select("id").single();
       if (error) throw error;
+
+      // Upload files
+      const attachments: Array<{ task_id: string; type: "file" | "link"; name: string; url: string; storage_path: string | null; created_by: string | null }> = [];
+      for (const file of pendingFiles) {
+        const path = `${task.id}/${Date.now()}-${file.name}`;
+        const { error: upErr } = await supabase.storage.from("task-files").upload(path, file);
+        if (upErr) throw upErr;
+        const { data: pub } = supabase.storage.from("task-files").getPublicUrl(path);
+        attachments.push({ task_id: task.id, type: "file", name: file.name, url: pub.publicUrl, storage_path: path, created_by: userId ?? null });
+      }
+      for (const link of pendingLinks) {
+        attachments.push({ task_id: task.id, type: "link", name: link.name || link.url, url: link.url, storage_path: null, created_by: userId ?? null });
+      }
+      if (attachments.length > 0) {
+        const { error: attErr } = await supabase.from("task_attachments").insert(attachments);
+        if (attErr) throw attErr;
+      }
     },
     onSuccess: () => {
       toast.success("Tarefa criada");
       qc.invalidateQueries({ queryKey: ["tasks"] });
       setOpen(false);
       setForm({ ...form, name: "", description: "", company_id: "", project_id: "", start_date: "", due_date: "" });
+      setPendingFiles([]);
+      setPendingLinks([]);
+      setLinkDraft({ name: "", url: "" });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -147,7 +173,7 @@ function TasksPage() {
           {canEdit && (
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" />Nova tarefa</Button></DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-h-[90vh] overflow-y-auto">
                 <DialogHeader><DialogTitle>Nova tarefa</DialogTitle></DialogHeader>
                 <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); createMut.mutate(); }}>
                   <div className="space-y-1.5">
@@ -206,6 +232,62 @@ function TasksPage() {
                       </Select>
                     </div>
                   </div>
+
+                  <div className="space-y-2 pt-2 border-t">
+                    <Label className="text-xs flex items-center gap-1.5"><Paperclip className="h-3.5 w-3.5" />Anexar arquivos</Label>
+                    <Input
+                      type="file"
+                      multiple
+                      onChange={(e) => setPendingFiles([...pendingFiles, ...Array.from(e.target.files ?? [])])}
+                    />
+                    {pendingFiles.length > 0 && (
+                      <ul className="space-y-1">
+                        {pendingFiles.map((f, i) => (
+                          <li key={i} className="flex items-center justify-between text-xs bg-muted rounded px-2 py-1">
+                            <span className="flex items-center gap-1.5 truncate"><Upload className="h-3 w-3" />{f.name}</span>
+                            <button type="button" onClick={() => setPendingFiles(pendingFiles.filter((_, j) => j !== i))}><X className="h-3 w-3" /></button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs flex items-center gap-1.5"><Link2 className="h-3.5 w-3.5" />Links externos</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Nome (opcional)"
+                        value={linkDraft.name}
+                        onChange={(e) => setLinkDraft({ ...linkDraft, name: e.target.value })}
+                      />
+                      <Input
+                        placeholder="https://..."
+                        value={linkDraft.url}
+                        onChange={(e) => setLinkDraft({ ...linkDraft, url: e.target.value })}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (!linkDraft.url) return;
+                          setPendingLinks([...pendingLinks, linkDraft]);
+                          setLinkDraft({ name: "", url: "" });
+                        }}
+                      >Add</Button>
+                    </div>
+                    {pendingLinks.length > 0 && (
+                      <ul className="space-y-1">
+                        {pendingLinks.map((l, i) => (
+                          <li key={i} className="flex items-center justify-between text-xs bg-muted rounded px-2 py-1">
+                            <span className="flex items-center gap-1.5 truncate"><Link2 className="h-3 w-3" />{l.name || l.url}</span>
+                            <button type="button" onClick={() => setPendingLinks(pendingLinks.filter((_, j) => j !== i))}><X className="h-3 w-3" /></button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
                   <DialogFooter>
                     <Button type="submit" disabled={!form.project_id || createMut.isPending}>Criar tarefa</Button>
                   </DialogFooter>

@@ -148,6 +148,39 @@ export type Database = {
           },
         ]
       }
+      task_attachments: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          storage_path: string | null
+          task_id: string
+          type: Database["public"]["Enums"]["attachment_type"]
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          storage_path?: string | null
+          task_id: string
+          type: Database["public"]["Enums"]["attachment_type"]
+          url: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          storage_path?: string | null
+          task_id?: string
+          type?: Database["public"]["Enums"]["attachment_type"]
+          url?: string
+        }
+        Relationships: []
+      }
       task_status_history: {
         Row: {
           changed_at: string
@@ -276,6 +309,7 @@ export type Database = {
     }
     Enums: {
       app_role: "owner" | "collaborator" | "viewer"
+      attachment_type: "file" | "link"
       company_status: "active" | "inactive"
       project_status:
         | "planning"
@@ -418,6 +452,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["owner", "collaborator", "viewer"],
+      attachment_type: ["file", "link"],
       company_status: ["active", "inactive"],
       project_status: [
         "planning",

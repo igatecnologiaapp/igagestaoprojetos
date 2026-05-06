@@ -242,21 +242,6 @@ function CompanyDetailDialog({ companyId, onClose }: { companyId: string | null;
     },
   });
 
-  const _projects_placeholder = () => null;
-  void _projects_placeholder;
-
-    queryKey: ["company-projects", companyId],
-    enabled: !!companyId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("projects")
-        .select("id, name, status, start_date, end_date, tasks(id, name, status, due_date, priority)")
-        .eq("company_id", companyId!)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-  });
 
   return (
     <Dialog open={!!companyId} onOpenChange={(o) => !o && onClose()}>

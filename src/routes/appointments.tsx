@@ -274,7 +274,7 @@ function AppointmentsPage() {
                   {parts.length > 0 && (
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <Users className="h-3 w-3" />
-                      {parts.map((p) => p.profiles?.full_name ?? p.user_id.slice(0, 6)).join(", ")}
+                      {partNames.join(", ")}
                     </div>
                   )}
                 </div>

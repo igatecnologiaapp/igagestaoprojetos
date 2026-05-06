@@ -224,7 +224,7 @@ function ProjectsPage() {
                   </div>
                 </Link>
                 {canEdit && (
-                  <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-background/90 rounded-md">
+                  <div className="absolute bottom-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-background/90 rounded-md border shadow-sm">
                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={(e) => { e.preventDefault(); openEdit(p); }}>
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>

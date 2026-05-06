@@ -101,13 +101,13 @@ function CompaniesPage() {
           <p className="text-muted-foreground mt-1">Gerencie seus clientes</p>
         </div>
         {canEdit && (
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" />Nova empresa</Button></DialogTrigger>
+          <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setEditingId(null); setForm(empty); } }}>
+            <DialogTrigger asChild><Button onClick={() => { setEditingId(null); setForm(empty); }}><Plus className="h-4 w-4 mr-1" />Nova empresa</Button></DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader><DialogTitle>Nova empresa</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{editingId ? "Editar empresa" : "Nova empresa"}</DialogTitle></DialogHeader>
               <form
                 className="grid gap-4 sm:grid-cols-2"
-                onSubmit={(e) => { e.preventDefault(); createMut.mutate(form); }}
+                onSubmit={(e) => { e.preventDefault(); saveMut.mutate(form); }}
               >
                 <Field label="Nome *" className="sm:col-span-2"><Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
                 <Field label="CNPJ"><Input value={form.cnpj} onChange={(e) => setForm({ ...form, cnpj: e.target.value })} /></Field>
@@ -129,7 +129,7 @@ function CompaniesPage() {
                 <Field label="Cidade"><Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></Field>
                 <Field label="UF"><Input maxLength={2} value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value.toUpperCase() })} /></Field>
                 <DialogFooter className="sm:col-span-2">
-                  <Button type="submit" disabled={createMut.isPending}>Salvar</Button>
+                  <Button type="submit" disabled={saveMut.isPending}>{editingId ? "Salvar alterações" : "Salvar"}</Button>
                 </DialogFooter>
               </form>
             </DialogContent>

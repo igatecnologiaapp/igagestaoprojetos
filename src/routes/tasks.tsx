@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, ListChecks, AlertTriangle, GripVertical, Paperclip, Link2, X, Upload } from "lucide-react";
+import { Plus, ListChecks, AlertTriangle, GripVertical, Paperclip, Link2, X, Upload, Download, ExternalLink, FileText } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
@@ -49,6 +49,7 @@ function TasksPage() {
   const projectFilter = search.project ?? "all";
 
   const [open, setOpen] = useState(false);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: "", description: "", company_id: "", project_id: "",
     start_date: "", due_date: "",
@@ -328,7 +329,8 @@ function TasksPage() {
                         key={t.id}
                         draggable={canEdit}
                         onDragStart={(e) => e.dataTransfer.setData("text/plain", t.id)}
-                        className="group rounded-md border bg-background p-3 cursor-grab active:cursor-grabbing hover:shadow-sm transition-shadow"
+                        onClick={() => setSelectedTaskId(t.id)}
+                        className="group rounded-md border bg-background p-3 cursor-pointer hover:shadow-sm transition-shadow"
                       >
                         <div className="flex items-start gap-2">
                           <GripVertical className="h-4 w-4 text-muted-foreground mt-0.5 opacity-0 group-hover:opacity-100" />
@@ -361,6 +363,127 @@ function TasksPage() {
           })}
         </div>
       )}
+
+      <TaskDetailDialog taskId={selectedTaskId} onClose={() => setSelectedTaskId(null)} />
     </div>
+  );
+}
+
+function TaskDetailDialog({ taskId, onClose }: { taskId: string | null; onClose: () => void }) {
+  const { canEdit } = useAuth();
+  const qc = useQueryClient();
+
+  const { data: task } = useQuery({
+    queryKey: ["task-detail", taskId],
+    enabled: !!taskId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("*, projects(name, companies(name))")
+        .eq("id", taskId!)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: attachments = [] } = useQuery({
+    queryKey: ["task-attachments", taskId],
+    enabled: !!taskId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("task_attachments")
+        .select("*")
+        .eq("task_id", taskId!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const deleteAttMut = useMutation({
+    mutationFn: async (att: { id: string; storage_path: string | null }) => {
+      if (att.storage_path) {
+        await supabase.storage.from("task-files").remove([att.storage_path]);
+      }
+      const { error } = await supabase.from("task_attachments").delete().eq("id", att.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Anexo removido");
+      qc.invalidateQueries({ queryKey: ["task-attachments", taskId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const downloadFile = async (path: string, name: string) => {
+    const { data, error } = await supabase.storage.from("task-files").download(path);
+    if (error) { toast.error(error.message); return; }
+    const url = URL.createObjectURL(data);
+    const a = document.createElement("a");
+    a.href = url; a.download = name; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <Dialog open={!!taskId} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{task?.name ?? "Tarefa"}</DialogTitle>
+        </DialogHeader>
+        {task && (
+          <div className="space-y-4">
+            <div className="text-xs text-muted-foreground">
+              {(task.projects as { name: string; companies: { name: string } | null } | null)?.companies?.name}
+              {" · "}
+              {(task.projects as { name: string } | null)?.name}
+            </div>
+            {task.description && <p className="text-sm whitespace-pre-wrap">{task.description}</p>}
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge variant={priorityLabels[task.priority].variant}>{priorityLabels[task.priority].label}</Badge>
+              <Badge variant="outline">{statusColumns.find((s) => s.key === task.status)?.label}</Badge>
+              {task.due_date && <span className="text-xs text-muted-foreground">Prazo: {new Date(task.due_date).toLocaleDateString("pt-BR")}</span>}
+            </div>
+
+            <div className="border-t pt-4">
+              <h3 className="text-sm font-medium mb-2 flex items-center gap-1.5">
+                <Paperclip className="h-4 w-4" />
+                Anexos ({attachments.length})
+              </h3>
+              {attachments.length === 0 ? (
+                <p className="text-xs text-muted-foreground">Nenhum anexo</p>
+              ) : (
+                <ul className="space-y-1.5">
+                  {attachments.map((a) => (
+                    <li key={a.id} className="flex items-center justify-between gap-2 bg-muted rounded px-2 py-1.5">
+                      <span className="flex items-center gap-2 text-sm truncate min-w-0">
+                        {a.type === "file" ? <FileText className="h-4 w-4 shrink-0" /> : <Link2 className="h-4 w-4 shrink-0" />}
+                        <span className="truncate">{a.name}</span>
+                      </span>
+                      <div className="flex items-center gap-1 shrink-0">
+                        {a.type === "file" && a.storage_path ? (
+                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => downloadFile(a.storage_path!, a.name)} title="Baixar">
+                            <Download className="h-3.5 w-3.5" />
+                          </Button>
+                        ) : (
+                          <Button size="icon" variant="ghost" className="h-7 w-7" asChild title="Abrir link">
+                            <a href={a.url} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-3.5 w-3.5" /></a>
+                          </Button>
+                        )}
+                        {canEdit && (
+                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => deleteAttMut.mutate({ id: a.id, storage_path: a.storage_path })} title="Remover">
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }

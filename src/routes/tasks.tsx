@@ -50,19 +50,31 @@ function TasksPage() {
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
-    name: "", description: "", project_id: "",
+    name: "", description: "", company_id: "", project_id: "",
     start_date: "", due_date: "",
     priority: "medium" as "low" | "medium" | "high" | "urgent",
     status: "pending" as Status,
   });
 
-  const { data: projects = [] } = useQuery({
-    queryKey: ["projects-select"],
+  const { data: companies = [] } = useQuery({
+    queryKey: ["companies-select"],
     queryFn: async () => {
-      const { data } = await supabase.from("projects").select("id,name").order("name");
+      const { data } = await supabase.from("companies").select("id,name").order("name");
       return data ?? [];
     },
   });
+
+  const { data: projects = [] } = useQuery({
+    queryKey: ["projects-select"],
+    queryFn: async () => {
+      const { data } = await supabase.from("projects").select("id,name,company_id").order("name");
+      return data ?? [];
+    },
+  });
+
+  const filteredProjects = form.company_id
+    ? projects.filter((p) => (p as { company_id: string }).company_id === form.company_id)
+    : projects;
 
   const { data: tasks = [], isLoading } = useQuery({
     queryKey: ["tasks", projectFilter],

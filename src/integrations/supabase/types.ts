@@ -187,6 +187,39 @@ export type Database = {
         }
         Relationships: []
       }
+      external_collaborators: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          email: string
+          id: string
+          name: string
+          phone: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          email: string
+          id?: string
+          name: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -216,6 +249,44 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      project_shares: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          external_id: string | null
+          id: string
+          permission: Database["public"]["Enums"]["task_permission"]
+          project_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          external_id?: string | null
+          id?: string
+          permission?: Database["public"]["Enums"]["task_permission"]
+          project_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          external_id?: string | null
+          id?: string
+          permission?: Database["public"]["Enums"]["task_permission"]
+          project_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_shares_external_id_fkey"
+            columns: ["external_id"]
+            isOneToOne: false
+            referencedRelation: "external_collaborators"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       projects: {
         Row: {
@@ -336,28 +407,38 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          external_id: string | null
           id: string
           permission: Database["public"]["Enums"]["task_permission"]
           task_id: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
           created_by?: string | null
+          external_id?: string | null
           id?: string
           permission?: Database["public"]["Enums"]["task_permission"]
           task_id: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
           created_by?: string | null
+          external_id?: string | null
           id?: string
           permission?: Database["public"]["Enums"]["task_permission"]
           task_id?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "task_shares_external_id_fkey"
+            columns: ["external_id"]
+            isOneToOne: false
+            referencedRelation: "external_collaborators"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "task_shares_task_id_fkey"
             columns: ["task_id"]
@@ -458,6 +539,27 @@ export type Database = {
           },
         ]
       }
+      user_module_access: {
+        Row: {
+          created_at: string
+          id: string
+          module: Database["public"]["Enums"]["app_module"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          module: Database["public"]["Enums"]["app_module"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          module?: Database["public"]["Enums"]["app_module"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -502,6 +604,12 @@ export type Database = {
       }
     }
     Enums: {
+      app_module:
+        | "companies"
+        | "projects"
+        | "tasks"
+        | "appointments"
+        | "reports"
       app_role: "owner" | "collaborator" | "viewer"
       appointment_status:
         | "scheduled"
@@ -652,6 +760,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_module: ["companies", "projects", "tasks", "appointments", "reports"],
       app_role: ["owner", "collaborator", "viewer"],
       appointment_status: [
         "scheduled",

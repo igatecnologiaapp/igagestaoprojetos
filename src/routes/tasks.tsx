@@ -590,6 +590,9 @@ function TaskDetailDialog({ taskId, onClose }: { taskId: string | null; onClose:
                 </ul>
               )}
             </div>
+            <div className="border-t pt-4"><TaskShares taskId={task.id} /></div>
+            <div className="border-t pt-4"><TaskComments taskId={task.id} /></div>
+            <div className="border-t pt-4"><AuditHistory entityType="task" entityId={task.id} /></div>
           </div>
         )}
       </DialogContent>

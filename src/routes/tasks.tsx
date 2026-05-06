@@ -49,6 +49,7 @@ function TasksPage() {
   const projectFilter = search.project ?? "all";
 
   const [open, setOpen] = useState(false);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: "", description: "", company_id: "", project_id: "",
     start_date: "", due_date: "",

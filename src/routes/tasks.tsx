@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, ListChecks, AlertTriangle, GripVertical, Paperclip, Link2, X, Upload, Download, ExternalLink, FileText } from "lucide-react";
+import { Plus, ListChecks, AlertTriangle, GripVertical, Paperclip, Link2, X, Upload, Download, ExternalLink, FileText, Pencil, Trash2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
@@ -425,13 +425,103 @@ function TaskDetailDialog({ taskId, onClose }: { taskId: string | null; onClose:
     URL.revokeObjectURL(url);
   };
 
+  const [editing, setEditing] = useState(false);
+  const [edit, setEdit] = useState({ name: "", description: "", status: "pending" as Status, priority: "medium" as "low" | "medium" | "high" | "urgent", start_date: "", due_date: "" });
+
+  const startEdit = () => {
+    if (!task) return;
+    setEdit({
+      name: task.name, description: task.description ?? "", status: task.status,
+      priority: task.priority, start_date: task.start_date ?? "", due_date: task.due_date ?? "",
+    });
+    setEditing(true);
+  };
+
+  const saveEdit = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("tasks").update({
+        name: edit.name, description: edit.description || null, status: edit.status,
+        priority: edit.priority, start_date: edit.start_date || null, due_date: edit.due_date || null,
+      }).eq("id", taskId!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Tarefa atualizada");
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["task-detail", taskId] });
+      setEditing(false);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteTask = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("tasks").delete().eq("id", taskId!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Tarefa removida");
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      onClose();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   return (
     <Dialog open={!!taskId} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{task?.name ?? "Tarefa"}</DialogTitle>
+          <div className="flex items-center justify-between gap-2 pr-6">
+            <DialogTitle>{task?.name ?? "Tarefa"}</DialogTitle>
+            {canEdit && task && !editing && (
+              <div className="flex gap-1">
+                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={startEdit}><Pencil className="h-3.5 w-3.5" /></Button>
+                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { if (confirm("Excluir tarefa?")) deleteTask.mutate(); }}><Trash2 className="h-3.5 w-3.5" /></Button>
+              </div>
+            )}
+          </div>
         </DialogHeader>
-        {task && (
+        {task && editing && (
+          <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); saveEdit.mutate(); }}>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Nome</Label>
+              <Input required value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Descrição</Label>
+              <Textarea rows={3} value={edit.description} onChange={(e) => setEdit({ ...edit, description: e.target.value })} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Status</Label>
+                <Select value={edit.status} onValueChange={(v) => setEdit({ ...edit, status: v as Status })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{statusColumns.map((s) => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Prioridade</Label>
+                <Select value={edit.priority} onValueChange={(v) => setEdit({ ...edit, priority: v as typeof edit.priority })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{Object.entries(priorityLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Início</Label>
+                <Input type="date" value={edit.start_date} onChange={(e) => setEdit({ ...edit, start_date: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Prazo</Label>
+                <Input type="date" value={edit.due_date} onChange={(e) => setEdit({ ...edit, due_date: e.target.value })} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditing(false)}>Cancelar</Button>
+              <Button type="submit" disabled={saveEdit.isPending}>Salvar</Button>
+            </DialogFooter>
+          </form>
+        )}
+        {task && !editing && (
           <div className="space-y-4">
             <div className="text-xs text-muted-foreground">
               {(task.projects as { name: string; companies: { name: string } | null } | null)?.companies?.name}

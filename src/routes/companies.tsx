@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Building2, Trash2, Eye, FolderKanban, ListChecks, Calendar, ExternalLink, ChevronRight } from "lucide-react";
+import { Plus, Search, Building2, Trash2, Eye, FolderKanban, ListChecks, Calendar, ExternalLink, ChevronRight, Pencil } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
@@ -35,6 +35,7 @@ function CompaniesPage() {
   const { canEdit, isOwner } = useAuth();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [viewId, setViewId] = useState<string | null>(null);
   const [form, setForm] = useState<CompanyForm>(empty);
 
@@ -47,21 +48,36 @@ function CompaniesPage() {
     },
   });
 
-  const createMut = useMutation({
+  const saveMut = useMutation({
     mutationFn: async (payload: CompanyForm) => {
-      const { error } = await supabase.from("companies").insert({
-        ...payload,
-        cnpj: payload.cnpj || null,
-      });
-      if (error) throw error;
+      const data = { ...payload, cnpj: payload.cnpj || null };
+      if (editingId) {
+        const { error } = await supabase.from("companies").update(data).eq("id", editingId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("companies").insert(data);
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
-      toast.success("Empresa cadastrada");
+      toast.success(editingId ? "Empresa atualizada" : "Empresa cadastrada");
       qc.invalidateQueries({ queryKey: ["companies"] });
-      setForm(empty); setOpen(false);
+      qc.invalidateQueries({ queryKey: ["company-detail"] });
+      setForm(empty); setOpen(false); setEditingId(null);
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const openEdit = (c: typeof companies[number]) => {
+    setEditingId(c.id);
+    setForm({
+      name: c.name, cnpj: c.cnpj ?? "", contact_name: c.contact_name ?? "",
+      contact_phone: c.contact_phone ?? "", contact_email: c.contact_email ?? "",
+      address: c.address ?? "", neighborhood: c.neighborhood ?? "", zip_code: c.zip_code ?? "",
+      city: c.city ?? "", state: c.state ?? "", status: c.status as "active" | "inactive",
+    });
+    setOpen(true);
+  };
 
   const deleteMut = useMutation({
     mutationFn: async (id: string) => {
@@ -85,13 +101,13 @@ function CompaniesPage() {
           <p className="text-muted-foreground mt-1">Gerencie seus clientes</p>
         </div>
         {canEdit && (
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" />Nova empresa</Button></DialogTrigger>
+          <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setEditingId(null); setForm(empty); } }}>
+            <DialogTrigger asChild><Button onClick={() => { setEditingId(null); setForm(empty); }}><Plus className="h-4 w-4 mr-1" />Nova empresa</Button></DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader><DialogTitle>Nova empresa</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{editingId ? "Editar empresa" : "Nova empresa"}</DialogTitle></DialogHeader>
               <form
                 className="grid gap-4 sm:grid-cols-2"
-                onSubmit={(e) => { e.preventDefault(); createMut.mutate(form); }}
+                onSubmit={(e) => { e.preventDefault(); saveMut.mutate(form); }}
               >
                 <Field label="Nome *" className="sm:col-span-2"><Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
                 <Field label="CNPJ"><Input value={form.cnpj} onChange={(e) => setForm({ ...form, cnpj: e.target.value })} /></Field>
@@ -113,7 +129,7 @@ function CompaniesPage() {
                 <Field label="Cidade"><Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></Field>
                 <Field label="UF"><Input maxLength={2} value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value.toUpperCase() })} /></Field>
                 <DialogFooter className="sm:col-span-2">
-                  <Button type="submit" disabled={createMut.isPending}>Salvar</Button>
+                  <Button type="submit" disabled={saveMut.isPending}>{editingId ? "Salvar alterações" : "Salvar"}</Button>
                 </DialogFooter>
               </form>
             </DialogContent>
@@ -155,6 +171,11 @@ function CompaniesPage() {
                 <Button size="sm" variant="ghost" onClick={() => setViewId(c.id)}>
                   <Eye className="h-4 w-4 mr-1" />Detalhes
                 </Button>
+                {canEdit && (
+                  <Button size="sm" variant="ghost" onClick={() => openEdit(c)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
                 {isOwner && (
                   <Button size="sm" variant="ghost" onClick={() => { if (confirm("Excluir empresa?")) deleteMut.mutate(c.id); }}>
                     <Trash2 className="h-4 w-4" />

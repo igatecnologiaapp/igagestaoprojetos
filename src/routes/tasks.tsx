@@ -104,7 +104,7 @@ function TasksPage() {
       toast.success("Tarefa criada");
       qc.invalidateQueries({ queryKey: ["tasks"] });
       setOpen(false);
-      setForm({ ...form, name: "", description: "", start_date: "", due_date: "" });
+      setForm({ ...form, name: "", description: "", company_id: "", project_id: "", start_date: "", due_date: "" });
     },
     onError: (e: Error) => toast.error(e.message),
   });

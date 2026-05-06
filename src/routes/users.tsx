@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Pencil, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
-import { adminCreateUser, adminUpdateUserAccess, adminDeleteUser } from "@/server/users.functions";
+import { adminCreateUser, adminUpdateUserAccess, adminDeleteUser } from "@/utils/users.functions";
 
 export const Route = createFileRoute("/users")({
   component: () => <RequireAuth><UsersPage /></RequireAuth>,

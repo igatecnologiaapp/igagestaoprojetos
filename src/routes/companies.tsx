@@ -303,11 +303,24 @@ function CompanyDetailDialog({ companyId, onClose }: { companyId: string | null;
             <section className="border-t pt-4">
               <h3 className="text-sm font-medium mb-2 flex items-center gap-1.5">
                 <Calendar className="h-4 w-4" />
-                Agendamentos
+                Agendamentos ({appointments.length})
               </h3>
-              <p className="text-xs text-muted-foreground">
-                Módulo de agendamentos ainda não disponível. Solicite a criação para habilitar esta seção.
-              </p>
+              {appointments.length === 0 ? (
+                <p className="text-xs text-muted-foreground">Nenhum agendamento</p>
+              ) : (
+                <ul className="space-y-1.5">
+                  {appointments.map((a) => (
+                    <li key={a.id} className="text-xs bg-muted/50 rounded px-2 py-1.5">
+                      <div className="font-medium">{a.title}</div>
+                      <div className="text-muted-foreground">{new Date(a.start_at).toLocaleString("pt-BR")}</div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            <section className="border-t pt-4">
+              <AuditHistory entityType="company" entityId={company.id} />
             </section>
 
             <DialogFooter>

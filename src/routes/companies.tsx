@@ -227,6 +227,37 @@ function CompanyDetailDialog({ companyId, onClose }: { companyId: string | null;
     },
   });
 
+  const { data: appointments = [] } = useQuery({
+    queryKey: ["company-appointments", companyId],
+    enabled: !!companyId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("appointments")
+        .select("id, title, start_at")
+        .eq("company_id", companyId!)
+        .order("start_at", { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const _projects_placeholder = () => null;
+  void _projects_placeholder;
+
+    queryKey: ["company-projects", companyId],
+    enabled: !!companyId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("projects")
+        .select("id, name, status, start_date, end_date, tasks(id, name, status, due_date, priority)")
+        .eq("company_id", companyId!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
   return (
     <Dialog open={!!companyId} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">

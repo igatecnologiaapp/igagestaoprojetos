@@ -35,6 +35,7 @@ function CompaniesPage() {
   const { canEdit, isOwner } = useAuth();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [viewId, setViewId] = useState<string | null>(null);
   const [form, setForm] = useState<CompanyForm>(empty);
 
@@ -47,21 +48,36 @@ function CompaniesPage() {
     },
   });
 
-  const createMut = useMutation({
+  const saveMut = useMutation({
     mutationFn: async (payload: CompanyForm) => {
-      const { error } = await supabase.from("companies").insert({
-        ...payload,
-        cnpj: payload.cnpj || null,
-      });
-      if (error) throw error;
+      const data = { ...payload, cnpj: payload.cnpj || null };
+      if (editingId) {
+        const { error } = await supabase.from("companies").update(data).eq("id", editingId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("companies").insert(data);
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
-      toast.success("Empresa cadastrada");
+      toast.success(editingId ? "Empresa atualizada" : "Empresa cadastrada");
       qc.invalidateQueries({ queryKey: ["companies"] });
-      setForm(empty); setOpen(false);
+      qc.invalidateQueries({ queryKey: ["company-detail"] });
+      setForm(empty); setOpen(false); setEditingId(null);
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const openEdit = (c: typeof companies[number]) => {
+    setEditingId(c.id);
+    setForm({
+      name: c.name, cnpj: c.cnpj ?? "", contact_name: c.contact_name ?? "",
+      contact_phone: c.contact_phone ?? "", contact_email: c.contact_email ?? "",
+      address: c.address ?? "", neighborhood: c.neighborhood ?? "", zip_code: c.zip_code ?? "",
+      city: c.city ?? "", state: c.state ?? "", status: c.status as "active" | "inactive",
+    });
+    setOpen(true);
+  };
 
   const deleteMut = useMutation({
     mutationFn: async (id: string) => {

@@ -1,16 +1,20 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Building2, FolderKanban, ListChecks, LogOut, Sparkles, Calendar, FileText } from "lucide-react";
-import { useAuth } from "@/lib/auth-context";
+import { LayoutDashboard, Building2, FolderKanban, ListChecks, LogOut, Sparkles, Calendar, FileText, Users, UserPlus } from "lucide-react";
+import { useAuth, type AppModule } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
-const nav = [
+type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; module?: AppModule; ownerOnly?: boolean };
+
+const nav: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/companies", label: "Empresas", icon: Building2 },
-  { to: "/projects", label: "Projetos", icon: FolderKanban },
-  { to: "/tasks", label: "Tarefas", icon: ListChecks },
-  { to: "/appointments", label: "Agendamentos", icon: Calendar },
-  { to: "/reports", label: "Relatórios", icon: FileText },
+  { to: "/companies", label: "Empresas", icon: Building2, module: "companies" },
+  { to: "/projects", label: "Projetos", icon: FolderKanban, module: "projects" },
+  { to: "/tasks", label: "Tarefas", icon: ListChecks, module: "tasks" },
+  { to: "/appointments", label: "Agendamentos", icon: Calendar, module: "appointments" },
+  { to: "/reports", label: "Relatórios", icon: FileText, module: "reports" },
+  { to: "/externals", label: "Externos", icon: UserPlus },
+  { to: "/users", label: "Usuários", icon: Users, ownerOnly: true },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {

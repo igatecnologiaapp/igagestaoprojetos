@@ -503,7 +503,12 @@ export type Database = {
     }
     Enums: {
       app_role: "owner" | "collaborator" | "viewer"
-      appointment_status: "scheduled" | "in_progress" | "done" | "cancelled"
+      appointment_status:
+        | "scheduled"
+        | "in_progress"
+        | "done"
+        | "cancelled"
+        | "to_schedule"
       attachment_type: "file" | "link"
       company_status: "active" | "inactive"
       project_status:
@@ -648,7 +653,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["owner", "collaborator", "viewer"],
-      appointment_status: ["scheduled", "in_progress", "done", "cancelled"],
+      appointment_status: [
+        "scheduled",
+        "in_progress",
+        "done",
+        "cancelled",
+        "to_schedule",
+      ],
       attachment_type: ["file", "link"],
       company_status: ["active", "inactive"],
       project_status: [

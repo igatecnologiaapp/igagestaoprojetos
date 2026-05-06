@@ -171,6 +171,11 @@ function CompaniesPage() {
                 <Button size="sm" variant="ghost" onClick={() => setViewId(c.id)}>
                   <Eye className="h-4 w-4 mr-1" />Detalhes
                 </Button>
+                {canEdit && (
+                  <Button size="sm" variant="ghost" onClick={() => openEdit(c)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
                 {isOwner && (
                   <Button size="sm" variant="ghost" onClick={() => { if (confirm("Excluir empresa?")) deleteMut.mutate(c.id); }}>
                     <Trash2 className="h-4 w-4" />

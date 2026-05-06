@@ -131,11 +131,11 @@ function ProjectsPage() {
           <p className="text-muted-foreground mt-1">Acompanhe o progresso dos seus projetos</p>
         </div>
         {canEdit && (
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" />Novo projeto</Button></DialogTrigger>
+          <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setEditingId(null); setForm(emptyProject); } }}>
+            <DialogTrigger asChild><Button onClick={() => { setEditingId(null); setForm(emptyProject); }}><Plus className="h-4 w-4 mr-1" />Novo projeto</Button></DialogTrigger>
             <DialogContent className="max-w-xl">
-              <DialogHeader><DialogTitle>Novo projeto</DialogTitle></DialogHeader>
-              <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); createMut.mutate(); }}>
+              <DialogHeader><DialogTitle>{editingId ? "Editar projeto" : "Novo projeto"}</DialogTitle></DialogHeader>
+              <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); saveMut.mutate(); }}>
                 <div className="space-y-1.5">
                   <Label className="text-xs">Nome *</Label>
                   <Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
@@ -177,7 +177,7 @@ function ProjectsPage() {
                   </Select>
                 </div>
                 <DialogFooter>
-                  <Button type="submit" disabled={!form.company_id || createMut.isPending}>Criar projeto</Button>
+                  <Button type="submit" disabled={!form.company_id || saveMut.isPending}>{editingId ? "Salvar alterações" : "Criar projeto"}</Button>
                 </DialogFooter>
               </form>
             </DialogContent>

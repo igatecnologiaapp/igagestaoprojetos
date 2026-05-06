@@ -10,6 +10,7 @@ const nav = [
   { to: "/projects", label: "Projetos", icon: FolderKanban },
   { to: "/tasks", label: "Tarefas", icon: ListChecks },
   { to: "/appointments", label: "Agendamentos", icon: Calendar },
+  { to: "/reports", label: "Relatórios", icon: FileText },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {

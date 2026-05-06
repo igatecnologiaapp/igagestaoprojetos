@@ -343,10 +343,21 @@ function TasksPage() {
                                 {(t.projects as { name: string }).name}
                               </div>
                             )}
-                            <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                              <Badge variant={priorityLabels[t.priority].variant} className="text-[10px] py-0 h-5">
-                                {priorityLabels[t.priority].label}
-                              </Badge>
+                            <div className="flex items-center gap-1.5 mt-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
+                              {canEdit ? (
+                                <Select value={t.priority} onValueChange={(v) => updatePriorityMut.mutate({ id: t.id, priority: v as "low" | "medium" | "high" | "urgent" })}>
+                                  <SelectTrigger className="h-5 px-1.5 text-[10px] w-auto gap-1 border-0 bg-transparent"><SelectValue /></SelectTrigger>
+                                  <SelectContent>{Object.entries(priorityLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}</SelectContent>
+                                </Select>
+                              ) : (
+                                <Badge variant={priorityLabels[t.priority].variant} className="text-[10px] py-0 h-5">{priorityLabels[t.priority].label}</Badge>
+                              )}
+                              {canEdit && (
+                                <Select value={t.status} onValueChange={(v) => updateStatusMut.mutate({ id: t.id, status: v as Status })}>
+                                  <SelectTrigger className="h-5 px-1.5 text-[10px] w-auto gap-1 border-0 bg-muted"><SelectValue /></SelectTrigger>
+                                  <SelectContent>{statusColumns.map((s) => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}</SelectContent>
+                                </Select>
+                              )}
                               {t.due_date && (
                                 <span className={`text-[10px] flex items-center gap-1 ${overdue ? "text-destructive" : "text-muted-foreground"}`}>
                                   {overdue && <AlertTriangle className="h-3 w-3" />}

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { RequireAuth } from "@/components/require-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,14 +11,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, ListChecks, AlertTriangle, GripVertical, Paperclip, Link2, X, Upload, Download, ExternalLink, FileText, Pencil, Trash2 } from "lucide-react";
+import { Plus, ListChecks, AlertTriangle, GripVertical, Paperclip, Link2, X, Upload, Download, ExternalLink, FileText, Pencil, Trash2, Share2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 import { AuditHistory } from "@/components/audit-history";
 import { TaskShares, TaskComments } from "@/components/task-collaboration";
 
-const searchSchema = z.object({ project: z.string().optional() });
+const searchSchema = z.object({ project: z.string().optional(), task: z.string().optional() });
 
 export const Route = createFileRoute("/tasks")({
   component: () => <RequireAuth><TasksPage /></RequireAuth>,
@@ -51,7 +51,8 @@ function TasksPage() {
   const projectFilter = search.project ?? "all";
 
   const [open, setOpen] = useState(false);
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(search.task ?? null);
+  useEffect(() => { if (search.task) setSelectedTaskId(search.task); }, [search.task]);
   const [form, setForm] = useState({
     name: "", description: "", company_id: "", project_id: "",
     start_date: "", due_date: "",
@@ -495,10 +496,25 @@ function TaskDetailDialog({ taskId, onClose }: { taskId: string | null; onClose:
         <DialogHeader>
           <div className="flex items-center justify-between gap-2 pr-6">
             <DialogTitle>{task?.name ?? "Tarefa"}</DialogTitle>
-            {canEdit && task && !editing && (
+            {task && (
               <div className="flex gap-1">
-                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={startEdit}><Pencil className="h-3.5 w-3.5" /></Button>
-                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { if (confirm("Excluir tarefa?")) deleteTask.mutate(); }}><Trash2 className="h-3.5 w-3.5" /></Button>
+                <Button
+                  size="icon" variant="ghost" className="h-7 w-7"
+                  title="Compartilhar no WhatsApp"
+                  onClick={() => {
+                    const url = `${window.location.origin}/tasks?task=${task.id}`;
+                    const text = `Tarefa: ${task.name}\nStatus: ${statusColumns.find((s) => s.key === task.status)?.label}\nPrioridade: ${priorityLabels[task.priority].label}${task.due_date ? `\nPrazo: ${new Date(task.due_date).toLocaleDateString("pt-BR")}` : ""}\n${url}`;
+                    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+                  }}
+                >
+                  <Share2 className="h-3.5 w-3.5" />
+                </Button>
+                {canEdit && !editing && (
+                  <>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={startEdit}><Pencil className="h-3.5 w-3.5" /></Button>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { if (confirm("Excluir tarefa?")) deleteTask.mutate(); }}><Trash2 className="h-3.5 w-3.5" /></Button>
+                  </>
+                )}
               </div>
             )}
           </div>

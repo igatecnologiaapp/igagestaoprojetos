@@ -40,7 +40,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Link>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
-          {nav.map((item) => {
+          {visibleNav.map((item) => {
             const Icon = item.icon;
             const active = location.pathname.startsWith(item.to);
             return (
@@ -80,7 +80,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="md:hidden flex items-center justify-between px-4 py-3 border-b bg-card">
           <Link to="/dashboard" className="font-display font-semibold">FlowDesk</Link>
           <nav className="flex gap-1">
-            {nav.map((item) => {
+            {visibleNav.map((item) => {
               const Icon = item.icon;
               return (
                 <Link key={item.to} to={item.to} className="p-2 rounded-md hover:bg-accent">

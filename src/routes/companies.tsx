@@ -35,6 +35,7 @@ function CompaniesPage() {
   const { canEdit, isOwner } = useAuth();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
+  const [viewId, setViewId] = useState<string | null>(null);
   const [form, setForm] = useState<CompanyForm>(empty);
 
   const { data: companies = [], isLoading } = useQuery({

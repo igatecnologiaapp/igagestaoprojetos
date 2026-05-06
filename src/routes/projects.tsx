@@ -197,8 +197,8 @@ function ProjectsPage() {
           {projects.map((p) => {
             const overdue = p.end_date && p.end_date < today && p.status !== "completed";
             return (
-              <Link key={p.id} to="/tasks" search={{ project: p.id }}>
-                <Card className="p-5 hover:shadow-md transition-shadow h-full">
+              <Card key={p.id} className="p-5 hover:shadow-md transition-shadow h-full group relative">
+                <Link to="/tasks" search={{ project: p.id }} className="block">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <h3 className="font-display font-semibold truncate">{p.name}</h3>
@@ -222,8 +222,20 @@ function ProjectsPage() {
                     <span>{p.end_date ? `Prazo: ${new Date(p.end_date).toLocaleDateString("pt-BR")}` : "Sem prazo"}</span>
                     {overdue && <span className="flex items-center gap-1 text-destructive"><AlertTriangle className="h-3 w-3" />Atrasado</span>}
                   </div>
-                </Card>
-              </Link>
+                </Link>
+                {canEdit && (
+                  <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-background/90 rounded-md">
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={(e) => { e.preventDefault(); openEdit(p); }}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    {isOwner && (
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={(e) => { e.preventDefault(); if (confirm("Excluir projeto?")) deleteMut.mutate(p.id); }}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </Card>
             );
           })}
         </div>

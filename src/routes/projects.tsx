@@ -37,14 +37,18 @@ const statusVariant: Record<string, "default" | "secondary" | "destructive" | "o
   cancelled: "destructive",
 };
 
+type ProjectForm = {
+  name: string; company_id: string; description: string; value: string; start_date: string; end_date: string;
+  status: "planning" | "in_progress" | "paused" | "completed" | "cancelled";
+};
+const emptyProject: ProjectForm = { name: "", company_id: "", description: "", value: "", start_date: "", end_date: "", status: "planning" };
+
 function ProjectsPage() {
   const qc = useQueryClient();
-  const { canEdit } = useAuth();
+  const { canEdit, isOwner } = useAuth();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({
-    name: "", company_id: "", description: "", value: "", start_date: "", end_date: "",
-    status: "planning" as "planning" | "in_progress" | "paused" | "completed" | "cancelled",
-  });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState<ProjectForm>(emptyProject);
 
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ["projects"],
@@ -70,9 +74,9 @@ function ProjectsPage() {
     },
   });
 
-  const createMut = useMutation({
+  const saveMut = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("projects").insert({
+      const payload = {
         name: form.name,
         company_id: form.company_id,
         description: form.description || null,
@@ -80,17 +84,42 @@ function ProjectsPage() {
         start_date: form.start_date || null,
         end_date: form.end_date || null,
         status: form.status,
-      });
-      if (error) throw error;
+      };
+      if (editingId) {
+        const { error } = await supabase.from("projects").update(payload).eq("id", editingId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("projects").insert(payload);
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
-      toast.success("Projeto criado");
+      toast.success(editingId ? "Projeto atualizado" : "Projeto criado");
       qc.invalidateQueries({ queryKey: ["projects"] });
-      setOpen(false);
-      setForm({ name: "", company_id: "", description: "", value: "", start_date: "", end_date: "", status: "planning" });
+      qc.invalidateQueries({ queryKey: ["company-projects"] });
+      setOpen(false); setEditingId(null); setForm(emptyProject);
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const deleteMut = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("projects").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Projeto removido"); qc.invalidateQueries({ queryKey: ["projects"] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const openEdit = (p: typeof projects[number]) => {
+    setEditingId(p.id);
+    setForm({
+      name: p.name, company_id: p.company_id, description: p.description ?? "",
+      value: p.value != null ? String(p.value) : "", start_date: p.start_date ?? "",
+      end_date: p.end_date ?? "", status: p.status,
+    });
+    setOpen(true);
+  };
 
   const today = new Date().toISOString().slice(0, 10);
 

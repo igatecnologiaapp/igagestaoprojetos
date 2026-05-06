@@ -151,17 +151,22 @@ function CompaniesPage() {
                 {c.contact_phone && <div>{c.contact_phone}</div>}
                 {(c.city || c.state) && <div>{[c.city, c.state].filter(Boolean).join(" / ")}</div>}
               </div>
-              {isOwner && (
-                <div className="mt-4 flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="mt-4 flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button size="sm" variant="ghost" onClick={() => setViewId(c.id)}>
+                  <Eye className="h-4 w-4 mr-1" />Detalhes
+                </Button>
+                {isOwner && (
                   <Button size="sm" variant="ghost" onClick={() => { if (confirm("Excluir empresa?")) deleteMut.mutate(c.id); }}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
-                </div>
-              )}
+                )}
+              </div>
             </Card>
           ))}
         </div>
       )}
+
+      <CompanyDetailDialog companyId={viewId} onClose={() => setViewId(null)} />
     </div>
   );
 }

@@ -40,9 +40,12 @@ export function TaskShares({ taskId }: { taskId: string }) {
     mutationFn: async () => {
       if (!target) return;
       const [kind, id] = target.split(":");
-      const payload = kind === "u"
-        ? { task_id: taskId, user_id: id, permission: perm }
-        : { task_id: taskId, external_id: id, permission: perm };
+      const payload: { task_id: string; user_id: string | null; external_id: string | null; permission: Permission } = {
+        task_id: taskId,
+        user_id: kind === "u" ? id : null,
+        external_id: kind === "e" ? id : null,
+        permission: perm,
+      };
       const { error } = await supabase.from("task_shares").insert(payload);
       if (error) throw error;
     },
@@ -139,9 +142,12 @@ export function ProjectShares({ projectId }: { projectId: string }) {
     mutationFn: async () => {
       if (!target) return;
       const [kind, id] = target.split(":");
-      const payload = kind === "u"
-        ? { project_id: projectId, user_id: id, permission: perm }
-        : { project_id: projectId, external_id: id, permission: perm };
+      const payload: { project_id: string; user_id: string | null; external_id: string | null; permission: Permission } = {
+        project_id: projectId,
+        user_id: kind === "u" ? id : null,
+        external_id: kind === "e" ? id : null,
+        permission: perm,
+      };
       const { error } = await supabase.from("project_shares").insert(payload);
       if (error) throw error;
     },

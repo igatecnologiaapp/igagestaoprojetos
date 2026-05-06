@@ -147,6 +147,15 @@ function TasksPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const updatePriorityMut = useMutation({
+    mutationFn: async ({ id, priority }: { id: string; priority: "low" | "medium" | "high" | "urgent" }) => {
+      const { error } = await supabase.from("tasks").update({ priority }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["tasks"] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const today = new Date().toISOString().slice(0, 10);
 
   const onDrop = (e: React.DragEvent, status: Status) => {

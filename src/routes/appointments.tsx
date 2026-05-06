@@ -21,6 +21,7 @@ export const Route = createFileRoute("/appointments")({
 });
 
 const statusLabels: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+  to_schedule: { label: "Agendar", variant: "secondary" },
   scheduled: { label: "Agendado", variant: "default" },
   in_progress: { label: "Em andamento", variant: "secondary" },
   done: { label: "Concluído", variant: "outline" },
@@ -30,7 +31,7 @@ const statusLabels: Record<string, { label: string; variant: "default" | "second
 type AppForm = {
   title: string; description: string; company_id: string; project_id: string;
   start_at: string; end_at: string; location: string;
-  status: "scheduled" | "in_progress" | "done" | "cancelled";
+  status: "to_schedule" | "scheduled" | "in_progress" | "done" | "cancelled";
   participants: string[];
 };
 

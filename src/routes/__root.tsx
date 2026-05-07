@@ -50,8 +50,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "FlowDesk — Gestão de Projetos & Tarefas" },
-      { name: "description", content: "Plataforma moderna para consultorias gerenciarem clientes, projetos e tarefas." },
+      { title: "Iga Consultoria" },
+      { name: "description", content: "Gestão de Projetos e Tarefas" },
+      { property: "og:title", content: "Iga Consultoria" },
+      { name: "twitter:title", content: "Iga Consultoria" },
+      { property: "og:description", content: "Gestão de Projetos e Tarefas" },
+      { name: "twitter:description", content: "Gestão de Projetos e Tarefas" },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/ZS7cne7QqacYMhU7zkBlkDuYRHj2/social-images/social-1778125536243-Logotipo_Iga.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/ZS7cne7QqacYMhU7zkBlkDuYRHj2/social-images/social-1778125536243-Logotipo_Iga.webp" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:type", content: "website" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

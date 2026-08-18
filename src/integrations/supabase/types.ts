@@ -250,6 +250,419 @@ export type Database = {
         }
         Relationships: []
       }
+      project_accounts: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          notes: string | null
+          platform: string
+          project_id: string
+          updated_at: string
+          url: string | null
+          username: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          notes?: string | null
+          platform: string
+          project_id: string
+          updated_at?: string
+          url?: string | null
+          username?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          notes?: string | null
+          platform?: string
+          project_id?: string
+          updated_at?: string
+          url?: string | null
+          username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_accounts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_credits: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          description: string | null
+          entry_date: string
+          id: string
+          notes: string | null
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          entry_date?: string
+          id?: string
+          notes?: string | null
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          entry_date?: string
+          id?: string
+          notes?: string | null
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_credits_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_custom_field_definitions: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          field_type: Database["public"]["Enums"]["custom_field_type"]
+          id: string
+          name: string
+          options: Json | null
+          position: number
+          required: boolean
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          field_type?: Database["public"]["Enums"]["custom_field_type"]
+          id?: string
+          name: string
+          options?: Json | null
+          position?: number
+          required?: boolean
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          field_type?: Database["public"]["Enums"]["custom_field_type"]
+          id?: string
+          name?: string
+          options?: Json | null
+          position?: number
+          required?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      project_custom_field_values: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          field_definition_id: string
+          id: string
+          project_id: string
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          field_definition_id: string
+          id?: string
+          project_id: string
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          field_definition_id?: string
+          id?: string
+          project_id?: string
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_custom_field_values_field_definition_id_fkey"
+            columns: ["field_definition_id"]
+            isOneToOne: false
+            referencedRelation: "project_custom_field_definitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_custom_field_values_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_emails: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          email: string
+          id: string
+          notes: string | null
+          project_id: string
+          provider: string | null
+          purpose: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          email: string
+          id?: string
+          notes?: string | null
+          project_id: string
+          provider?: string | null
+          purpose?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          id?: string
+          notes?: string | null
+          project_id?: string
+          provider?: string | null
+          purpose?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_emails_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_github_repos: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          default_branch: string | null
+          id: string
+          notes: string | null
+          owner: string | null
+          project_id: string
+          repo_name: string | null
+          status: string | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          default_branch?: string | null
+          id?: string
+          notes?: string | null
+          owner?: string | null
+          project_id: string
+          repo_name?: string | null
+          status?: string | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          default_branch?: string | null
+          id?: string
+          notes?: string | null
+          owner?: string | null
+          project_id?: string
+          repo_name?: string | null
+          status?: string | null
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_github_repos_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_links: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          project_id: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          project_id: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          project_id?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_links_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_lovable: {
+        Row: {
+          account_email: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          project_id: string
+          project_url: string | null
+          public_url: string | null
+          updated_at: string
+          workspace: string | null
+        }
+        Insert: {
+          account_email?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          project_id: string
+          project_url?: string | null
+          public_url?: string | null
+          updated_at?: string
+          workspace?: string | null
+        }
+        Update: {
+          account_email?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          project_id?: string
+          project_url?: string | null
+          public_url?: string | null
+          updated_at?: string
+          workspace?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_lovable_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_prompts: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          project_id: string
+          prompt_date: string
+          prompt_type: Database["public"]["Enums"]["prompt_type"]
+          purpose: string | null
+          sent_to_lovable_at: string | null
+          title: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          project_id: string
+          prompt_date?: string
+          prompt_type?: Database["public"]["Enums"]["prompt_type"]
+          purpose?: string | null
+          sent_to_lovable_at?: string | null
+          title: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          project_id?: string
+          prompt_date?: string
+          prompt_type?: Database["public"]["Enums"]["prompt_type"]
+          purpose?: string | null
+          sent_to_lovable_at?: string | null
+          title?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_prompts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_shares: {
         Row: {
           created_at: string
@@ -296,7 +709,11 @@ export type Database = {
           description: string | null
           end_date: string | null
           id: string
+          last_activity_at: string
           name: string
+          next_action: string | null
+          owner_id: string | null
+          phase: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["project_status"]
           updated_at: string
@@ -309,7 +726,11 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           id?: string
+          last_activity_at?: string
           name: string
+          next_action?: string | null
+          owner_id?: string | null
+          phase?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["project_status"]
           updated_at?: string
@@ -322,7 +743,11 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           id?: string
+          last_activity_at?: string
           name?: string
+          next_action?: string | null
+          owner_id?: string | null
+          phase?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["project_status"]
           updated_at?: string
@@ -619,12 +1044,37 @@ export type Database = {
         | "to_schedule"
       attachment_type: "file" | "link"
       company_status: "active" | "inactive"
+      custom_field_type:
+        | "text"
+        | "textarea"
+        | "number"
+        | "currency"
+        | "date"
+        | "datetime"
+        | "boolean"
+        | "select"
+        | "multiselect"
+        | "url"
+        | "email"
       project_status:
         | "planning"
         | "in_progress"
         | "paused"
         | "completed"
         | "cancelled"
+      prompt_type:
+        | "initial"
+        | "adjustment"
+        | "fix"
+        | "feature"
+        | "security"
+        | "database"
+        | "ux"
+        | "audit"
+        | "tests"
+        | "docs"
+        | "staging"
+        | "other"
       task_permission: "view" | "comment" | "edit"
       task_priority: "low" | "medium" | "high" | "urgent"
       task_status:
@@ -771,12 +1221,39 @@ export const Constants = {
       ],
       attachment_type: ["file", "link"],
       company_status: ["active", "inactive"],
+      custom_field_type: [
+        "text",
+        "textarea",
+        "number",
+        "currency",
+        "date",
+        "datetime",
+        "boolean",
+        "select",
+        "multiselect",
+        "url",
+        "email",
+      ],
       project_status: [
         "planning",
         "in_progress",
         "paused",
         "completed",
         "cancelled",
+      ],
+      prompt_type: [
+        "initial",
+        "adjustment",
+        "fix",
+        "feature",
+        "security",
+        "database",
+        "ux",
+        "audit",
+        "tests",
+        "docs",
+        "staging",
+        "other",
       ],
       task_permission: ["view", "comment", "edit"],
       task_priority: ["low", "medium", "high", "urgent"],

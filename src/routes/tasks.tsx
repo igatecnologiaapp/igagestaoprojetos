@@ -424,6 +424,22 @@ function TaskDetailDialog({ taskId, onClose }: { taskId: string | null; onClose:
     },
   });
 
+  // URLs temporárias (assinadas) para os arquivos privados do storage
+  const { data: signedUrls = {} } = useQuery({
+    queryKey: ["task-attachment-urls", taskId, attachments.map((a) => a.id).join(",")],
+    enabled: attachments.some((a) => a.type === "file" && a.storage_path),
+    queryFn: async () => {
+      const paths = attachments.filter((a) => a.type === "file" && a.storage_path).map((a) => a.storage_path!);
+      if (paths.length === 0) return {} as Record<string, string>;
+      const { data, error } = await supabase.storage.from("task-files").createSignedUrls(paths, 300);
+      if (error) throw error;
+      const map: Record<string, string> = {};
+      (data ?? []).forEach((d) => { if (d.path && d.signedUrl) map[d.path] = d.signedUrl; });
+      return map;
+    },
+    staleTime: 240_000,
+  });
+
   const deleteAttMut = useMutation({
     mutationFn: async (att: { id: string; storage_path: string | null }) => {
       if (att.storage_path) {

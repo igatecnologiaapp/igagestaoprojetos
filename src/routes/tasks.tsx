@@ -116,8 +116,8 @@ function TasksPage() {
         const path = `${task.id}/${Date.now()}-${file.name}`;
         const { error: upErr } = await supabase.storage.from("task-files").upload(path, file);
         if (upErr) throw upErr;
-        const { data: pub } = supabase.storage.from("task-files").getPublicUrl(path);
-        attachments.push({ task_id: task.id, type: "file", name: file.name, url: pub.publicUrl, storage_path: path, created_by: userId ?? null });
+        // Storage privado: guardamos apenas o caminho; o acesso usa URL temporária assinada.
+        attachments.push({ task_id: task.id, type: "file", name: file.name, url: path, storage_path: path, created_by: userId ?? null });
       }
       for (const link of pendingLinks) {
         attachments.push({ task_id: task.id, type: "link", name: link.name || link.url, url: link.url, storage_path: null, created_by: userId ?? null });

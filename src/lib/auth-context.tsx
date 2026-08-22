@@ -83,6 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     canEdit: isOwner || roles.includes("collaborator"),
     isOwner,
     canAccess: (m) => isOwner || modules.length === 0 || modules.includes(m),
+    hasPermission: (key) => isOwner || permissions.includes(key),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

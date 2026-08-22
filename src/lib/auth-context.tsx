@@ -26,11 +26,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [modules, setModules] = useState<AppModule[]>([]);
+  const [permissions, setPermissions] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadAccess = (uid: string) => {
     supabase.from("user_roles").select("role").eq("user_id", uid)
-      .then(({ data }) => setRoles((data ?? []).map((r) => r.role as AppRole)));
+      .then(({ data }) => {
+        const userRoles = (data ?? []).map((r) => r.role as AppRole);
+        setRoles(userRoles);
+        if (userRoles.length > 0) {
+          supabase.from("role_permissions").select("permission_key").in("role", userRoles)
+            .then(({ data: rp }) => setPermissions((rp ?? []).map((r) => r.permission_key)));
+        } else {
+          setPermissions([]);
+        }
+      });
     supabase.from("user_module_access").select("module").eq("user_id", uid)
       .then(({ data }) => setModules((data ?? []).map((r) => r.module as AppModule)));
   };

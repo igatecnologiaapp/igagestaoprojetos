@@ -54,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setRoles([]);
         setModules([]);
+        setPermissions([]);
       }
     });
 

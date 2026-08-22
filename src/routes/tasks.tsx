@@ -627,14 +627,14 @@ function TaskDetailDialog({ taskId, onClose }: { taskId: string | null; onClose:
                             )}
                           </div>
                         </div>
-                        {isImage && (
-                          <a href={a.url} target="_blank" rel="noopener noreferrer" className="block bg-background border-t">
-                            <img src={a.url} alt={a.name} className="max-h-64 w-full object-contain" loading="lazy" />
+                        {isImage && viewUrl && (
+                          <a href={viewUrl} target="_blank" rel="noopener noreferrer" className="block bg-background border-t">
+                            <img src={viewUrl} alt={a.name} className="max-h-64 w-full object-contain" loading="lazy" />
                           </a>
                         )}
-                        {isPdf && (
-                          <object data={a.url} type="application/pdf" className="w-full h-64 border-t bg-background">
-                            <a href={a.url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline p-2 block">
+                        {isPdf && viewUrl && (
+                          <object data={viewUrl} type="application/pdf" className="w-full h-64 border-t bg-background">
+                            <a href={viewUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline p-2 block">
                               Abrir PDF
                             </a>
                           </object>

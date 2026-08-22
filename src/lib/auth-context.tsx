@@ -10,11 +10,13 @@ interface AuthContextValue {
   session: Session | null;
   roles: AppRole[];
   modules: AppModule[]; // empty = all allowed (legacy/default)
+  permissions: string[];
   loading: boolean;
   signOut: () => Promise<void>;
   canEdit: boolean;
   isOwner: boolean;
   canAccess: (m: AppModule) => boolean;
+  hasPermission: (key: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);

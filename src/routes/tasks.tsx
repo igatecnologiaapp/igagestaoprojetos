@@ -602,6 +602,7 @@ function TaskDetailDialog({ taskId, onClose }: { taskId: string | null; onClose:
                     const ext = a.name.split(".").pop()?.toLowerCase() ?? "";
                     const isImage = a.type === "file" && ["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp"].includes(ext);
                     const isPdf = a.type === "file" && ext === "pdf";
+                    const viewUrl = a.type === "file" && a.storage_path ? signedUrls[a.storage_path] : a.url;
                     return (
                       <li key={a.id} className="bg-muted rounded overflow-hidden">
                         <div className="flex items-center justify-between gap-2 px-2 py-1.5">

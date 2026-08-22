@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_permissions: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          key: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          key: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          key?: string
+        }
+        Relationships: []
+      }
       appointment_participants: {
         Row: {
           appointment_id: string
@@ -763,6 +784,71 @@ export type Database = {
           },
         ]
       }
+      role_permissions: {
+        Row: {
+          created_at: string
+          id: string
+          permission_key: string
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          permission_key: string
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          permission_key?: string
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_permission_key_fkey"
+            columns: ["permission_key"]
+            isOneToOne: false
+            referencedRelation: "app_permissions"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
+      security_access_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          metadata: Json | null
+          occurred_at: string
+          origin: string | null
+          project_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          metadata?: Json | null
+          occurred_at?: string
+          origin?: string | null
+          project_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json | null
+          occurred_at?: string
+          origin?: string | null
+          project_id?: string | null
+        }
+        Relationships: []
+      }
       task_attachments: {
         Row: {
           created_at: string
@@ -985,6 +1071,41 @@ export type Database = {
         }
         Relationships: []
       }
+      user_permission_overrides: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          granted: boolean
+          id: string
+          permission_key: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          granted?: boolean
+          id?: string
+          permission_key: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          granted?: boolean
+          id?: string
+          permission_key?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_permission_overrides_permission_key_fkey"
+            columns: ["permission_key"]
+            isOneToOne: false
+            referencedRelation: "app_permissions"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1012,6 +1133,10 @@ export type Database = {
     }
     Functions: {
       can_edit: { Args: { _user_id: string }; Returns: boolean }
+      has_permission: {
+        Args: { _permission: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -10,11 +10,13 @@ interface AuthContextValue {
   session: Session | null;
   roles: AppRole[];
   modules: AppModule[]; // empty = all allowed (legacy/default)
+  permissions: string[];
   loading: boolean;
   signOut: () => Promise<void>;
   canEdit: boolean;
   isOwner: boolean;
   canAccess: (m: AppModule) => boolean;
+  hasPermission: (key: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -24,11 +26,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [modules, setModules] = useState<AppModule[]>([]);
+  const [permissions, setPermissions] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadAccess = (uid: string) => {
     supabase.from("user_roles").select("role").eq("user_id", uid)
-      .then(({ data }) => setRoles((data ?? []).map((r) => r.role as AppRole)));
+      .then(({ data }) => {
+        const userRoles = (data ?? []).map((r) => r.role as AppRole);
+        setRoles(userRoles);
+        if (userRoles.length > 0) {
+          supabase.from("role_permissions").select("permission_key").in("role", userRoles)
+            .then(({ data: rp }) => setPermissions((rp ?? []).map((r) => r.permission_key)));
+        } else {
+          setPermissions([]);
+        }
+      });
     supabase.from("user_module_access").select("module").eq("user_id", uid)
       .then(({ data }) => setModules((data ?? []).map((r) => r.module as AppModule)));
   };
@@ -42,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setRoles([]);
         setModules([]);
+        setPermissions([]);
       }
     });
 
@@ -62,6 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     session,
     roles,
     modules,
+    permissions,
     loading,
     signOut: async () => {
       await supabase.auth.signOut();
@@ -69,6 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     canEdit: isOwner || roles.includes("collaborator"),
     isOwner,
     canAccess: (m) => isOwner || modules.length === 0 || modules.includes(m),
+    hasPermission: (key) => isOwner || permissions.includes(key),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

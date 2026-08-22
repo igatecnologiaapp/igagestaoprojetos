@@ -116,8 +116,8 @@ function TasksPage() {
         const path = `${task.id}/${Date.now()}-${file.name}`;
         const { error: upErr } = await supabase.storage.from("task-files").upload(path, file);
         if (upErr) throw upErr;
-        const { data: pub } = supabase.storage.from("task-files").getPublicUrl(path);
-        attachments.push({ task_id: task.id, type: "file", name: file.name, url: pub.publicUrl, storage_path: path, created_by: userId ?? null });
+        // Storage privado: guardamos apenas o caminho; o acesso usa URL temporária assinada.
+        attachments.push({ task_id: task.id, type: "file", name: file.name, url: path, storage_path: path, created_by: userId ?? null });
       }
       for (const link of pendingLinks) {
         attachments.push({ task_id: task.id, type: "link", name: link.name || link.url, url: link.url, storage_path: null, created_by: userId ?? null });
@@ -424,6 +424,22 @@ function TaskDetailDialog({ taskId, onClose }: { taskId: string | null; onClose:
     },
   });
 
+  // URLs temporárias (assinadas) para os arquivos privados do storage
+  const { data: signedUrls = {} } = useQuery({
+    queryKey: ["task-attachment-urls", taskId, attachments.map((a) => a.id).join(",")],
+    enabled: attachments.some((a) => a.type === "file" && a.storage_path),
+    queryFn: async () => {
+      const paths = attachments.filter((a) => a.type === "file" && a.storage_path).map((a) => a.storage_path!);
+      if (paths.length === 0) return {} as Record<string, string>;
+      const { data, error } = await supabase.storage.from("task-files").createSignedUrls(paths, 300);
+      if (error) throw error;
+      const map: Record<string, string> = {};
+      (data ?? []).forEach((d) => { if (d.path && d.signedUrl) map[d.path] = d.signedUrl; });
+      return map;
+    },
+    staleTime: 240_000,
+  });
+
   const deleteAttMut = useMutation({
     mutationFn: async (att: { id: string; storage_path: string | null }) => {
       if (att.storage_path) {
@@ -586,6 +602,7 @@ function TaskDetailDialog({ taskId, onClose }: { taskId: string | null; onClose:
                     const ext = a.name.split(".").pop()?.toLowerCase() ?? "";
                     const isImage = a.type === "file" && ["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp"].includes(ext);
                     const isPdf = a.type === "file" && ext === "pdf";
+                    const viewUrl = a.type === "file" && a.storage_path ? signedUrls[a.storage_path] : a.url;
                     return (
                       <li key={a.id} className="bg-muted rounded overflow-hidden">
                         <div className="flex items-center justify-between gap-2 px-2 py-1.5">
@@ -610,14 +627,14 @@ function TaskDetailDialog({ taskId, onClose }: { taskId: string | null; onClose:
                             )}
                           </div>
                         </div>
-                        {isImage && (
-                          <a href={a.url} target="_blank" rel="noopener noreferrer" className="block bg-background border-t">
-                            <img src={a.url} alt={a.name} className="max-h-64 w-full object-contain" loading="lazy" />
+                        {isImage && viewUrl && (
+                          <a href={viewUrl} target="_blank" rel="noopener noreferrer" className="block bg-background border-t">
+                            <img src={viewUrl} alt={a.name} className="max-h-64 w-full object-contain" loading="lazy" />
                           </a>
                         )}
-                        {isPdf && (
-                          <object data={a.url} type="application/pdf" className="w-full h-64 border-t bg-background">
-                            <a href={a.url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline p-2 block">
+                        {isPdf && viewUrl && (
+                          <object data={viewUrl} type="application/pdf" className="w-full h-64 border-t bg-background">
+                            <a href={viewUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline p-2 block">
                               Abrir PDF
                             </a>
                           </object>

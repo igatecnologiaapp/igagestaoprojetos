@@ -15,6 +15,7 @@ const nav: NavItem[] = [
   { to: "/reports", label: "Relatórios", icon: FileText, module: "reports" },
   { to: "/externals", label: "Externos", icon: UserPlus },
   { to: "/users", label: "Usuários", icon: Users, ownerOnly: true },
+  { to: "/permissions", label: "Permissões", icon: ShieldCheck, ownerOnly: true },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {

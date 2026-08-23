@@ -1133,6 +1133,14 @@ export type Database = {
     }
     Functions: {
       can_edit: { Args: { _user_id: string }; Returns: boolean }
+      can_modify_task_files: {
+        Args: { _task_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_view_task: {
+        Args: { _task_id: string; _user_id: string }
+        Returns: boolean
+      }
       has_permission: {
         Args: { _permission: string; _user_id: string }
         Returns: boolean
@@ -1144,6 +1152,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      task_file_task_id: { Args: { _object_name: string }; Returns: string }
       task_has_permission: {
         Args: {
           _min_perm: Database["public"]["Enums"]["task_permission"]

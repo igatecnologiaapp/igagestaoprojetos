@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Building2, FolderKanban, ListChecks, LogOut, Sparkles, Calendar, FileText, Users, UserPlus } from "lucide-react";
+import { LayoutDashboard, Building2, FolderKanban, ListChecks, LogOut, Sparkles, Calendar, FileText, Users, UserPlus, ShieldCheck } from "lucide-react";
 import { useAuth, type AppModule } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";

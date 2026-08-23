@@ -13,6 +13,7 @@ import { Route as UsersRouteImport } from './routes/users'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as ProjectsRouteImport } from './routes/projects'
+import { Route as PermissionsRouteImport } from './routes/permissions'
 import { Route as ExternalsRouteImport } from './routes/externals'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CompaniesRouteImport } from './routes/companies'
@@ -38,6 +39,11 @@ const ReportsRoute = ReportsRouteImport.update({
 const ProjectsRoute = ProjectsRouteImport.update({
   id: '/projects',
   path: '/projects',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PermissionsRoute = PermissionsRouteImport.update({
+  id: '/permissions',
+  path: '/permissions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExternalsRoute = ExternalsRouteImport.update({
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/companies': typeof CompaniesRoute
   '/dashboard': typeof DashboardRoute
   '/externals': typeof ExternalsRoute
+  '/permissions': typeof PermissionsRoute
   '/projects': typeof ProjectsRoute
   '/reports': typeof ReportsRoute
   '/tasks': typeof TasksRoute
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/companies': typeof CompaniesRoute
   '/dashboard': typeof DashboardRoute
   '/externals': typeof ExternalsRoute
+  '/permissions': typeof PermissionsRoute
   '/projects': typeof ProjectsRoute
   '/reports': typeof ReportsRoute
   '/tasks': typeof TasksRoute
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/companies': typeof CompaniesRoute
   '/dashboard': typeof DashboardRoute
   '/externals': typeof ExternalsRoute
+  '/permissions': typeof PermissionsRoute
   '/projects': typeof ProjectsRoute
   '/reports': typeof ReportsRoute
   '/tasks': typeof TasksRoute
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/companies'
     | '/dashboard'
     | '/externals'
+    | '/permissions'
     | '/projects'
     | '/reports'
     | '/tasks'
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
     | '/companies'
     | '/dashboard'
     | '/externals'
+    | '/permissions'
     | '/projects'
     | '/reports'
     | '/tasks'
@@ -141,6 +152,7 @@ export interface FileRouteTypes {
     | '/companies'
     | '/dashboard'
     | '/externals'
+    | '/permissions'
     | '/projects'
     | '/reports'
     | '/tasks'
@@ -154,6 +166,7 @@ export interface RootRouteChildren {
   CompaniesRoute: typeof CompaniesRoute
   DashboardRoute: typeof DashboardRoute
   ExternalsRoute: typeof ExternalsRoute
+  PermissionsRoute: typeof PermissionsRoute
   ProjectsRoute: typeof ProjectsRoute
   ReportsRoute: typeof ReportsRoute
   TasksRoute: typeof TasksRoute
@@ -188,6 +201,13 @@ declare module '@tanstack/react-router' {
       path: '/projects'
       fullPath: '/projects'
       preLoaderRoute: typeof ProjectsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/permissions': {
+      id: '/permissions'
+      path: '/permissions'
+      fullPath: '/permissions'
+      preLoaderRoute: typeof PermissionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/externals': {
@@ -242,6 +262,7 @@ const rootRouteChildren: RootRouteChildren = {
   CompaniesRoute: CompaniesRoute,
   DashboardRoute: DashboardRoute,
   ExternalsRoute: ExternalsRoute,
+  PermissionsRoute: PermissionsRoute,
   ProjectsRoute: ProjectsRoute,
   ReportsRoute: ReportsRoute,
   TasksRoute: TasksRoute,

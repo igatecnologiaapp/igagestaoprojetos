@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.task_file_task_id(text) TO authenticated, service_role;

@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Building2, FolderKanban, ListChecks, LogOut, Sparkles, Calendar, FileText, Users, UserPlus } from "lucide-react";
+import { LayoutDashboard, Building2, FolderKanban, ListChecks, LogOut, Sparkles, Calendar, FileText, Users, UserPlus, ShieldCheck } from "lucide-react";
 import { useAuth, type AppModule } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -15,6 +15,7 @@ const nav: NavItem[] = [
   { to: "/reports", label: "Relatórios", icon: FileText, module: "reports" },
   { to: "/externals", label: "Externos", icon: UserPlus },
   { to: "/users", label: "Usuários", icon: Users, ownerOnly: true },
+  { to: "/permissions", label: "Permissões", icon: ShieldCheck, ownerOnly: true },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {

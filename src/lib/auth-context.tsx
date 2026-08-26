@@ -66,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRoles([]);
         setModules([]);
         setPermissions([]);
+        setDenied([]);
       }
     });
 
@@ -94,7 +95,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     canEdit: isOwner || roles.includes("collaborator"),
     isOwner,
     canAccess: (m) => isOwner || modules.length === 0 || modules.includes(m),
-    hasPermission: (key) => isOwner || permissions.includes(key),
+    // deny individual sempre prevalece, inclusive sobre owner (igual ao banco)
+    hasPermission: (key) => !denied.includes(key) && (isOwner || permissions.includes(key)),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

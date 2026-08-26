@@ -27,23 +27,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [modules, setModules] = useState<AppModule[]>([]);
   const [permissions, setPermissions] = useState<string[]>([]);
+  const [denied, setDenied] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Precedência idêntica à função has_permission() do banco:
+  // 1) deny individual  2) owner  3) grant individual  4) herança do papel
   const loadAccess = (uid: string) => {
-    supabase.from("user_roles").select("role").eq("user_id", uid)
-      .then(({ data }) => {
-        const userRoles = (data ?? []).map((r) => r.role as AppRole);
-        setRoles(userRoles);
-        if (userRoles.length > 0) {
-          supabase.from("role_permissions").select("permission_key").in("role", userRoles)
-            .then(({ data: rp }) => setPermissions((rp ?? []).map((r) => r.permission_key)));
-        } else {
-          setPermissions([]);
-        }
-      });
+    Promise.all([
+      supabase.from("user_roles").select("role").eq("user_id", uid),
+      supabase.from("user_permission_overrides").select("permission_key,granted").eq("user_id", uid),
+    ]).then(async ([{ data: ur }, { data: ov }]) => {
+      const userRoles = (ur ?? []).map((r) => r.role as AppRole);
+      setRoles(userRoles);
+      setDenied((ov ?? []).filter((o) => o.granted === false).map((o) => o.permission_key));
+      const granted = (ov ?? []).filter((o) => o.granted === true).map((o) => o.permission_key);
+      let inherited: string[] = [];
+      if (userRoles.length > 0) {
+        const { data: rp } = await supabase
+          .from("role_permissions")
+          .select("permission_key")
+          .in("role", userRoles);
+        inherited = (rp ?? []).map((r) => r.permission_key);
+      }
+      setPermissions([...new Set([...inherited, ...granted])]);
+    });
     supabase.from("user_module_access").select("module").eq("user_id", uid)
       .then(({ data }) => setModules((data ?? []).map((r) => r.module as AppModule)));
   };
+
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {

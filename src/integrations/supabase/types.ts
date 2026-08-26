@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -1133,8 +1133,24 @@ export type Database = {
     }
     Functions: {
       can_edit: { Args: { _user_id: string }; Returns: boolean }
+      can_edit_project: {
+        Args: { _project_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_edit_task: {
+        Args: { _task_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_modify_task_files: {
         Args: { _task_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_view_company: {
+        Args: { _company_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_view_project: {
+        Args: { _project_id: string; _user_id: string }
         Returns: boolean
       }
       can_view_task: {
@@ -1150,6 +1166,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      shares_workspace_with: {
+        Args: { _target: string; _viewer: string }
         Returns: boolean
       }
       task_file_task_id: { Args: { _object_name: string }; Returns: string }

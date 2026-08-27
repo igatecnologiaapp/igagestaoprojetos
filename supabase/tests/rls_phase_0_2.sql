@@ -9,6 +9,7 @@ BEGIN;
 CREATE TEMP TABLE _res(
   perfil text, recurso text, operacao text, deve_permitir text, esperado int, obtido int, ok boolean
 ) ON COMMIT DROP;
+GRANT ALL ON _res TO authenticated;
 
 DO $$
 DECLARE
@@ -20,7 +21,6 @@ DECLARE
   c_id uuid; p_id uuid; t_id uuid;
   n int;
 
-  PROCEDURE_placeholder int;
 BEGIN
   -- ---------- usuários de teste ----------
   INSERT INTO auth.users (id, instance_id, aud, role, email, encrypted_password,

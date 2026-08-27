@@ -9,6 +9,7 @@ BEGIN;
 CREATE TEMP TABLE _res(
   perfil text, recurso text, operacao text, deve_permitir text, esperado int, obtido int, ok boolean
 ) ON COMMIT DROP;
+GRANT ALL ON _res TO authenticated;
 
 DO $$
 DECLARE

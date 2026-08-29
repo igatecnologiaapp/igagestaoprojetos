@@ -32,27 +32,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Precedência idêntica à função has_permission() do banco:
   // 1) deny individual  2) owner  3) grant individual  4) herança do papel
-  const loadAccess = (uid: string) => {
-    Promise.all([
+  const loadAccess = async (uid: string) => {
+    const [{ data: ur, error: rolesError }, { data: ov, error: overridesError }, { data: moduleRows, error: modulesError }] = await Promise.all([
       supabase.from("user_roles").select("role").eq("user_id", uid),
       supabase.from("user_permission_overrides").select("permission_key,granted").eq("user_id", uid),
-    ]).then(async ([{ data: ur }, { data: ov }]) => {
-      const userRoles = (ur ?? []).map((r) => r.role as AppRole);
-      setRoles(userRoles);
-      setDenied((ov ?? []).filter((o) => o.granted === false).map((o) => o.permission_key));
-      const granted = (ov ?? []).filter((o) => o.granted === true).map((o) => o.permission_key);
-      let inherited: string[] = [];
-      if (userRoles.length > 0) {
-        const { data: rp } = await supabase
-          .from("role_permissions")
-          .select("permission_key")
-          .in("role", userRoles);
+      supabase.from("user_module_access").select("module").eq("user_id", uid),
+    ]);
+
+    if (rolesError || overridesError || modulesError) {
+      console.error("[auth] Não foi possível carregar os acessos do usuário.");
+      setRoles([]);
+      setModules([]);
+      setPermissions([]);
+      setDenied([]);
+      return;
+    }
+
+    const userRoles = (ur ?? []).map((r) => r.role as AppRole);
+    const granted = (ov ?? []).filter((o) => o.granted === true).map((o) => o.permission_key);
+    const deniedKeys = (ov ?? []).filter((o) => o.granted === false).map((o) => o.permission_key);
+    let inherited: string[] = [];
+
+    if (userRoles.length > 0) {
+      const { data: rp, error: permissionsError } = await supabase
+        .from("role_permissions")
+        .select("permission_key")
+        .in("role", userRoles);
+      if (permissionsError) {
+        console.error("[auth] Não foi possível carregar as permissões do usuário.");
+      } else {
         inherited = (rp ?? []).map((r) => r.permission_key);
       }
-      setPermissions([...new Set([...inherited, ...granted])]);
-    });
-    supabase.from("user_module_access").select("module").eq("user_id", uid)
-      .then(({ data }) => setModules((data ?? []).map((r) => r.module as AppModule)));
+    }
+
+    setRoles(userRoles);
+    setModules((moduleRows ?? []).map((r) => r.module as AppModule));
+    setDenied(deniedKeys);
+    setPermissions([...new Set([...inherited, ...granted])]);
   };
 
 
@@ -61,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
-        setTimeout(() => loadAccess(s.user.id), 0);
+        setTimeout(() => void loadAccess(s.user.id), 0);
       } else {
         setRoles([]);
         setModules([]);
@@ -73,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s);
       setUser(s?.user ?? null);
-      if (s?.user) loadAccess(s.user.id);
+      if (s?.user) void loadAccess(s.user.id);
       setLoading(false);
     });
 

@@ -1,9 +1,20 @@
 -- =====================================================================
 -- BLOCO 1 / FASE 0 — Suíte de menor privilégio (task_share x project_share)
 -- Reproduzível: roda dentro de transação e faz ROLLBACK ao final.
--- Exercita RLS de verdade: assume `role authenticated` + claims JWT (sub).
--- Uso: executar com privilégio de serviço (apenas para montar a massa).
+-- Exercita RLS de verdade: assume `role authenticated`/`anon` + claims JWT (sub),
+-- ou seja, as policies são avaliadas sob o papel esperado (não service_role).
+--
+-- PRÉ-REQUISITO DE EXECUÇÃO
+-- O canal SQL disponível não possui privilégio sobre o schema `auth`
+-- (erro: permission denied for schema auth). Nesse caso:
+--   1) criar 5 usuários de teste pela Auth Admin API (email_confirm=true);
+--   2) substituir os gen_random_uuid() abaixo pelos UUIDs reais retornados;
+--   3) remover o bloco INSERT INTO auth.users;
+--   4) executar este arquivo;
+--   5) excluir os usuários de teste pela Auth Admin API.
+-- Foi exatamente esse o procedimento usado na evidência do Bloco 1.
 -- =====================================================================
+
 BEGIN;
 
 CREATE TEMP TABLE _res(

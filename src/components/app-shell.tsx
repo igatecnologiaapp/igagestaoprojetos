@@ -78,9 +78,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
       <main className="flex-1 min-w-0">
-        <div className="md:hidden flex items-center justify-between px-4 py-3 border-b bg-card">
-          <Link to="/dashboard" className="font-display font-semibold">FlowDesk</Link>
-          <nav className="flex gap-1">
+        <div className="md:hidden flex items-center gap-2 px-4 py-3 border-b bg-card">
+          <Link to="/dashboard" className="font-display font-semibold shrink-0">FlowDesk</Link>
+          <nav className="flex gap-1 ml-auto min-w-0 overflow-x-auto">
             {visibleNav.map((item) => {
               const Icon = item.icon;
               return (

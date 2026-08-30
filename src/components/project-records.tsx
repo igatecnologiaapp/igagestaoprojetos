@@ -255,7 +255,7 @@ export function RecordSection({
       ) : (
         <ul className="space-y-2">
           {visibleRows.map((row) => (
-            <li key={row.id} className="rounded-md border p-3 flex items-start justify-between gap-3">
+            <li key={row.id} className="rounded-md border bg-card p-3 flex items-start justify-between gap-3 transition-colors hover:bg-muted/40">
               <div className="min-w-0 text-sm space-y-1">{render(row)}</div>
               {canManage && (
                 <div className="flex gap-1 shrink-0">

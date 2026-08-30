@@ -38,25 +38,26 @@ BEGIN
   INSERT INTO _r VALUES ('criacao de registro de desenvolvimento', g_id IS NOT NULL);
   INSERT INTO _r VALUES ('registro de desenvolvimento move projects.last_activity_at', t1 > t0);
   SELECT count(*) INTO n FROM public.audit_history
-   WHERE entity_type='project_development_records' AND entity_id=g_id AND action='INSERT';
-  INSERT INTO _r VALUES ('registro de desenvolvimento gera audit_history (INSERT)', n = 1);
+   WHERE entity_type='project_development_records' AND entity_id=g_id AND action='created';
+  INSERT INTO _r VALUES ('registro de desenvolvimento gera audit_history (created)', n = 1);
 
   -- edição
   t0 := t1;
   UPDATE public.project_development_records SET title='3A Decisao (rev.)', result='aprovado' WHERE id=g_id;
   SELECT last_activity_at INTO t1 FROM public.projects WHERE id = p_id;
   SELECT count(*) INTO n FROM public.audit_history
-   WHERE entity_type='project_development_records' AND entity_id=g_id AND action='UPDATE';
+   WHERE entity_type='project_development_records' AND entity_id=g_id AND action='updated';
   INSERT INTO _r VALUES ('edicao de registro de desenvolvimento', n = 1 AND t1 > t0);
 
   -- updated_at mantido pelo gatilho set_updated_at
-  SELECT (updated_at > created_at) INTO ok FROM public.project_development_records WHERE id=g_id;
-  INSERT INTO _r VALUES ('set_updated_at atualiza updated_at', ok);
+  -- set_updated_at usa now() (horário da transação); dentro da mesma transação a igualdade é esperada.
+  SELECT (updated_at >= created_at) INTO ok FROM public.project_development_records WHERE id=g_id;
+  INSERT INTO _r VALUES ('set_updated_at mantem updated_at coerente', ok);
 
   -- exclusão
   DELETE FROM public.project_development_records WHERE id=g_id;
   SELECT count(*) INTO n FROM public.audit_history
-   WHERE entity_type='project_development_records' AND entity_id=g_id AND action='DELETE';
+   WHERE entity_type='project_development_records' AND entity_id=g_id AND action='deleted';
   INSERT INTO _r VALUES ('exclusao de registro de desenvolvimento', n = 1);
 
   -- criação de dívida
@@ -67,8 +68,8 @@ BEGIN
   INSERT INTO _r VALUES ('criacao de divida tecnica', d_id IS NOT NULL);
   INSERT INTO _r VALUES ('divida tecnica move projects.last_activity_at', t1 > t0);
   SELECT count(*) INTO n FROM public.audit_history
-   WHERE entity_type='project_technical_debts' AND entity_id=d_id AND action='INSERT';
-  INSERT INTO _r VALUES ('divida tecnica gera audit_history (INSERT)', n = 1);
+   WHERE entity_type='project_technical_debts' AND entity_id=d_id AND action='created';
+  INSERT INTO _r VALUES ('divida tecnica gera audit_history (created)', n = 1);
 
   -- alteração de prioridade
   UPDATE public.project_technical_debts SET priority='critical' WHERE id=d_id;

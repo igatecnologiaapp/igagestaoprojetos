@@ -546,6 +546,8 @@ export function ProjectDetailDialog({
                     { key: "resolved_at", label: "Resolvida em", type: "date" },
                     { key: "origin", label: "Origem" },
                     { key: "impact", label: "Impacto" },
+                    { key: "responsible_user_id", label: "Responsável", type: "select", options: responsibleOptions },
+
                     { key: "description", label: "Descrição", type: "textarea" },
                     { key: "resolution", label: "Resolução", type: "textarea" },
                   ]}

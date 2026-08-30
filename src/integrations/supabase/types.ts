@@ -1275,6 +1275,10 @@ export type Database = {
         Args: { _task_id: string; _user_id: string }
         Returns: boolean
       }
+      can_view_appointment: {
+        Args: { _appointment_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_view_company: {
         Args: { _company_id: string; _user_id: string }
         Returns: boolean
@@ -1300,6 +1304,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_appointment_participant: {
+        Args: { _appointment_id: string; _user_id: string }
         Returns: boolean
       }
       shares_workspace_with: {

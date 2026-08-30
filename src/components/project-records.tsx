@@ -226,13 +226,35 @@ export function RecordSection({
         </Dialog>
       )}
 
+      {filterKey && filterValues.length > 1 && (
+        <Select value={filterValue} onValueChange={setFilterValue}>
+          <SelectTrigger className="h-9 w-[190px]">
+            <SelectValue placeholder={filterLabel} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__all">Todas as categorias</SelectItem>
+            {filterValues.map((v) => (
+              <SelectItem key={v} value={v}>{v}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+      {filterKey && rows.length > 0 && (
+        <span className="text-xs text-muted-foreground ml-auto">
+          {visibleRows.length} de {rows.length}
+        </span>
+      )}
+      </div>
+
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : rows.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{emptyLabel}</p>
+        <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">{emptyLabel}</div>
+      ) : visibleRows.length === 0 ? (
+        <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">Nenhum registro nesta categoria.</div>
       ) : (
         <ul className="space-y-2">
-          {rows.map((row) => (
+          {visibleRows.map((row) => (
             <li key={row.id} className="rounded-md border p-3 flex items-start justify-between gap-3">
               <div className="min-w-0 text-sm space-y-1">{render(row)}</div>
               {canManage && (

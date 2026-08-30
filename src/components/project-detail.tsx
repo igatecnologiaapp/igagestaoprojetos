@@ -346,6 +346,7 @@ export function ProjectDetailDialog({
                   { key: "url", label: "URL", type: "url", required: true, full: true },
                   { key: "description", label: "Descrição", type: "textarea" },
                 ]}
+                filterKey="category"
                 render={(r) => (
                   <>
                     <div className="flex items-center gap-2">

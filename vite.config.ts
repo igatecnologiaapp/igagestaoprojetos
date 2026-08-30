@@ -20,9 +20,10 @@ const publicEnvAliases: Record<string, string[]> = {
 const define: Record<string, string> = {};
 for (const [viteName, fallbacks] of Object.entries(publicEnvAliases)) {
   const value = [viteName, ...fallbacks].map((n) => process.env[n]).find(Boolean);
+  // esbuild exige literal ou "entity name": globalThis.<prop> é seguro (undefined quando ausente).
   define[`import.meta.env.${viteName}`] = value
     ? JSON.stringify(value)
-    : `(typeof globalThis!=="undefined"&&globalThis.__PUBLIC_ENV__?globalThis.__PUBLIC_ENV__.${viteName}:undefined)`;
+    : `globalThis.__PUBLIC_ENV_${viteName}__`;
 }
 
 // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).

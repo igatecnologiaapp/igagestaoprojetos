@@ -439,7 +439,7 @@ export function ProjectDetailDialog({
             </TabsContent>
 
             <TabsContent value="history" className="pt-4">
-              <AuditHistory entityType="project" entityId={projectId} />
+              <AuditHistory entityType="project" entityId={projectId} extraIds={[...taskIds, ...auditScope]} />
             </TabsContent>
           </Tabs>
         )}

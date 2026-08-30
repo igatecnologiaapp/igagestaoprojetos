@@ -31,7 +31,23 @@ export const promptTypes = [
   { value: "other", label: "Outro" },
 ];
 
-const linkCategories = ["Documentação", "Design", "Homologação", "Produção", "Planilha", "Outro"].map((c) => ({ value: c, label: c }));
+// Bloco 2B: categorias úteis para o campo `category` já existente em project_links.
+const linkCategories = [
+  "Produção",
+  "Homologação",
+  "Desenvolvimento",
+  "GitHub",
+  "Lovable",
+  "Banco de Dados",
+  "Documentação",
+  "Dashboard",
+  "API",
+  "Domínio",
+  "Infraestrutura",
+  "Design",
+  "Planilha",
+  "Outros",
+].map((c) => ({ value: c, label: c }));
 
 const fmtDate = (v: unknown) => (v ? new Date(String(v) + (String(v).length === 10 ? "T00:00:00" : "")).toLocaleDateString("pt-BR") : "—");
 const str = (v: unknown) => (v == null || v === "" ? null : String(v));

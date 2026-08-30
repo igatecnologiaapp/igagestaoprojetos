@@ -13,6 +13,7 @@ import { ProjectShares } from "@/components/task-collaboration";
 import { RecordSection, ExternalUrl } from "@/components/project-records";
 import { ProjectCustomFieldValues } from "@/components/project-custom-fields";
 import { ProjectPromptsTimeline } from "@/components/project-prompts-timeline";
+import { ProjectDevelopmentTimeline } from "@/components/project-development-timeline";
 import { useAuth } from "@/lib/auth-context";
 import { Coins, Github, Sparkles, ListChecks } from "lucide-react";
 
@@ -480,8 +481,19 @@ export function ProjectDetailDialog({
               <ProjectShares projectId={projectId} />
             </TabsContent>
 
-            {/* Bloco 3A — Governança do desenvolvimento */}
+            {/* Bloco 3A — Governança do desenvolvimento / Bloco 3B — Linha do tempo */}
             <TabsContent value="governance" className="space-y-6 pt-4">
+              <div>
+                <h4 className="text-sm font-semibold mb-2">Linha do tempo do desenvolvimento</h4>
+                <ProjectDevelopmentTimeline
+                  projectId={projectId}
+                  promptTypes={promptTypes}
+                  devRecordTypes={devRecordTypes}
+                  environments={environments}
+                  responsibleName={responsibleName}
+                />
+              </div>
+
               <div>
                 <h4 className="text-sm font-semibold mb-2">Registros de desenvolvimento</h4>
                 <RecordSection

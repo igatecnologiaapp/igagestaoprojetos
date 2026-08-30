@@ -33,6 +33,9 @@ const entityLabels: Record<string, { label: string; noun: string }> = {
   project_accounts: { label: "Acesso", noun: "um acesso" },
   project_custom_field_values: { label: "Campo personalizado", noun: "um campo personalizado" },
   project_custom_field_definitions: { label: "Definição de campo", noun: "uma definição de campo" },
+  // Bloco 3B — apenas rótulos de apresentação para as entidades de governança (Bloco 3A).
+  project_development_records: { label: "Registro de desenvolvimento", noun: "um registro de desenvolvimento" },
+  project_technical_debts: { label: "Dívida técnica", noun: "uma dívida técnica" },
 };
 
 const permissionLabels: Record<string, string> = {
@@ -59,6 +62,19 @@ const fieldLabels: Record<string, string> = {
   value: "valor",
   amount: "quantidade",
   notes: "observações",
+  // Bloco 3B — campos das entidades de governança
+  record_type: "tipo de registro",
+  commit_ref: "commit",
+  version_ref: "versão",
+  environment: "ambiente",
+  result: "resultado",
+  responsible_user_id: "responsável",
+  code: "código",
+  impact: "impacto",
+  origin: "origem",
+  resolution: "resolução",
+  resolved_at: "resolvida em",
+  identified_at: "identificada em",
 };
 
 const actionVerb: Record<string, string> = { created: "criou", updated: "alterou", deleted: "removeu" };

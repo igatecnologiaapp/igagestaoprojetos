@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/lib/auth-context";
+import { getPublicEnv, type PublicEnv } from "@/lib/public-env.functions";
 
 import appCss from "../styles.css?url";
 
@@ -46,6 +47,13 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  loader: async (): Promise<{ publicEnv: PublicEnv }> => {
+    if (typeof window !== "undefined") {
+      const cached = (window as unknown as { __PUBLIC_ENV__?: PublicEnv }).__PUBLIC_ENV__;
+      if (cached) return { publicEnv: cached };
+    }
+    return { publicEnv: await getPublicEnv() };
+  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -88,8 +96,15 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const { publicEnv } = Route.useLoaderData();
   return (
     <QueryClientProvider client={queryClient}>
+      {/* Configuração pública do backend injetada pelo servidor (apenas URL/chave anon/project id). */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `(function(e){window.__PUBLIC_ENV__=e;for(var k in e){if(e[k])window["__PUBLIC_ENV_"+k+"__"]=e[k];}})(${JSON.stringify(publicEnv).replace(/</g, "\\u003c")});`,
+        }}
+      />
       <AuthProvider>
         <Outlet />
         <Toaster richColors position="top-right" />

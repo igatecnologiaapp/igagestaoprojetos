@@ -7,10 +7,10 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 // Compatibilidade de ambiente (sem segredos no código):
-// o build oficial injeta apenas variáveis com prefixo VITE_ lidas de .env/process.env.
-// Em ambientes de publicação/CI onde apenas os nomes sem prefixo estão disponíveis
-// (SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY / SUPABASE_PROJECT_ID), replicamos os valores
-// para os nomes VITE_ correspondentes. Nenhum valor real é escrito aqui.
+// 1) build-time: se o ambiente de build expuser VITE_* / SUPABASE_* / PUBLIC_SUPABASE_*, o valor é embutido;
+// 2) runtime: caso contrário, o valor é lido de globalThis.__PUBLIC_ENV_<NOME>__, publicado pelo SSR (root route)
+//    a partir das variáveis de ambiente do servidor. Somente dados públicos (URL, chave anon, project id).
+// Nenhum valor real é escrito aqui.
 const publicEnvAliases: Record<string, string[]> = {
   VITE_SUPABASE_URL: ["SUPABASE_URL", "PUBLIC_SUPABASE_URL"],
   VITE_SUPABASE_PUBLISHABLE_KEY: ["SUPABASE_PUBLISHABLE_KEY", "PUBLIC_SUPABASE_PUBLISHABLE_KEY"],
@@ -20,7 +20,10 @@ const publicEnvAliases: Record<string, string[]> = {
 const define: Record<string, string> = {};
 for (const [viteName, fallbacks] of Object.entries(publicEnvAliases)) {
   const value = [viteName, ...fallbacks].map((n) => process.env[n]).find(Boolean);
-  if (value) define[`import.meta.env.${viteName}`] = JSON.stringify(value);
+  // esbuild exige literal ou "entity name": globalThis.<prop> é seguro (undefined quando ausente).
+  define[`import.meta.env.${viteName}`] = value
+    ? JSON.stringify(value)
+    : `globalThis.__PUBLIC_ENV_${viteName}__`;
 }
 
 // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).

@@ -150,6 +150,7 @@ export function ProjectDetailDialog({
               <TabsTrigger value="links">Links</TabsTrigger>
               {isOwner && <TabsTrigger value="accounts">Acessos</TabsTrigger>}
               <TabsTrigger value="shares">Compartilhamento</TabsTrigger>
+              <TabsTrigger value="governance">Governança</TabsTrigger>
               <TabsTrigger value="history">Histórico</TabsTrigger>
             </TabsList>
 

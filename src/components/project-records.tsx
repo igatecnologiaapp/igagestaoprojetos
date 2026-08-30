@@ -43,6 +43,11 @@ interface RecordSectionProps {
   orderBy?: { column: string; ascending?: boolean };
   render: (row: RecordRow) => React.ReactNode;
   canManage?: boolean;
+  /** Campo usado para filtrar/agrupar visualmente a lista (ex.: category). */
+  filterKey?: string;
+  filterLabel?: string;
+  /** Oculta a lista, mantendo apenas as ações (usado quando outra visualização a substitui). */
+  hideList?: boolean;
 }
 
 export function ExternalUrl({ url, label }: { url?: string | null; label?: string }) {
@@ -70,10 +75,14 @@ export function RecordSection({
   orderBy = { column: "created_at", ascending: false },
   render,
   canManage: canManageProp,
+  filterKey,
+  filterLabel = "Categoria",
+  hideList = false,
 }: RecordSectionProps) {
   const qc = useQueryClient();
   const { canEdit } = useAuth();
   const canManage = canManageProp ?? canEdit;
+  const [filterValue, setFilterValue] = useState("__all");
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const empty = Object.fromEntries(fields.map((f) => [f.key, ""])) as Record<string, string>;
@@ -149,8 +158,16 @@ export function RecordSection({
     setOpen(true);
   };
 
+  const filterValues = filterKey
+    ? Array.from(new Set(rows.map((r) => (r[filterKey] == null || r[filterKey] === "" ? "Outros" : String(r[filterKey]))))).sort((a, b) => a.localeCompare(b, "pt-BR"))
+    : [];
+  const visibleRows = filterKey && filterValue !== "__all"
+    ? rows.filter((r) => (r[filterKey] == null || r[filterKey] === "" ? "Outros" : String(r[filterKey])) === filterValue)
+    : rows;
+
   return (
     <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
       {canManage && (
         <Dialog
           open={open}
@@ -212,14 +229,36 @@ export function RecordSection({
         </Dialog>
       )}
 
-      {isLoading ? (
+      {filterKey && filterValues.length > 1 && (
+        <Select value={filterValue} onValueChange={setFilterValue}>
+          <SelectTrigger className="h-9 w-[190px]">
+            <SelectValue placeholder={filterLabel} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__all">Todas as categorias</SelectItem>
+            {filterValues.map((v) => (
+              <SelectItem key={v} value={v}>{v}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+      {filterKey && rows.length > 0 && (
+        <span className="text-xs text-muted-foreground ml-auto">
+          {visibleRows.length} de {rows.length}
+        </span>
+      )}
+      </div>
+
+      {hideList ? null : isLoading ? (
         <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : rows.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{emptyLabel}</p>
+        <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">{emptyLabel}</div>
+      ) : visibleRows.length === 0 ? (
+        <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">Nenhum registro nesta categoria.</div>
       ) : (
         <ul className="space-y-2">
-          {rows.map((row) => (
-            <li key={row.id} className="rounded-md border p-3 flex items-start justify-between gap-3">
+          {visibleRows.map((row) => (
+            <li key={row.id} className="rounded-md border bg-card p-3 flex items-start justify-between gap-3 transition-colors hover:bg-muted/40">
               <div className="min-w-0 text-sm space-y-1">{render(row)}</div>
               {canManage && (
                 <div className="flex gap-1 shrink-0">

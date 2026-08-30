@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +12,7 @@ import { AuditHistory } from "@/components/audit-history";
 import { ProjectShares } from "@/components/task-collaboration";
 import { RecordSection, ExternalUrl } from "@/components/project-records";
 import { ProjectCustomFieldValues } from "@/components/project-custom-fields";
+import { ProjectPromptsTimeline } from "@/components/project-prompts-timeline";
 import { useAuth } from "@/lib/auth-context";
 import { Coins, Github, Sparkles, ListChecks } from "lucide-react";
 
@@ -31,7 +33,23 @@ export const promptTypes = [
   { value: "other", label: "Outro" },
 ];
 
-const linkCategories = ["Documentação", "Design", "Homologação", "Produção", "Planilha", "Outro"].map((c) => ({ value: c, label: c }));
+// Bloco 2B: categorias úteis para o campo `category` já existente em project_links.
+const linkCategories = [
+  "Produção",
+  "Homologação",
+  "Desenvolvimento",
+  "GitHub",
+  "Lovable",
+  "Banco de Dados",
+  "Documentação",
+  "Dashboard",
+  "API",
+  "Domínio",
+  "Infraestrutura",
+  "Design",
+  "Planilha",
+  "Outros",
+].map((c) => ({ value: c, label: c }));
 
 const fmtDate = (v: unknown) => (v ? new Date(String(v) + (String(v).length === 10 ? "T00:00:00" : "")).toLocaleDateString("pt-BR") : "—");
 const str = (v: unknown) => (v == null || v === "" ? null : String(v));
@@ -56,6 +74,7 @@ export function ProjectDetailDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const { isOwner } = useAuth();
+  const [promptView, setPromptView] = useState("timeline");
 
   const { data: project } = useQuery({
     queryKey: ["project-detail", projectId],
@@ -77,6 +96,29 @@ export function ProjectDetailDialog({
     queryFn: async () => {
       const { data } = await supabase.from("tasks").select("id,name,status,priority,due_date").eq("project_id", projectId!).order("position");
       return data ?? [];
+    },
+  });
+
+  // Escopo do histórico visual: ids relacionados ao projeto cujos eventos já são auditados.
+  // A RLS de audit_history continua sendo a única fonte de autorização.
+  const taskIds = tasks.map((t) => t.id);
+  const { data: auditScope = [] } = useQuery({
+    queryKey: ["project-audit-scope", projectId, taskIds.join(",")],
+    enabled: !!projectId,
+    queryFn: async () => {
+      const childTables = [
+        "project_links", "project_prompts", "project_emails", "project_github_repos",
+        "project_lovable", "project_credits", "project_custom_field_values", "project_shares",
+      ];
+      const results = await Promise.all([
+        ...childTables.map((t) => sb.from(t).select("id").eq("project_id", projectId!)),
+        sb.from("appointments").select("id").eq("project_id", projectId!),
+        taskIds.length ? sb.from("task_comments").select("id").in("task_id", taskIds) : Promise.resolve({ data: [] }),
+        taskIds.length ? sb.from("task_attachments").select("id").in("task_id", taskIds) : Promise.resolve({ data: [] }),
+        taskIds.length ? sb.from("task_shares").select("id").in("task_id", taskIds) : Promise.resolve({ data: [] }),
+      ]);
+      const ids = results.flatMap((r: { data?: { id: string }[] | null }) => (r?.data ?? []).map((row) => row.id));
+      return ids as string[];
     },
   });
 
@@ -169,8 +211,15 @@ export function ProjectDetailDialog({
             </TabsContent>
 
             {/* Prompts */}
-            <TabsContent value="prompts" className="pt-4">
+            <TabsContent value="prompts" className="space-y-4 pt-4">
+              <Tabs value={promptView} onValueChange={setPromptView}>
+                <TabsList className="h-8">
+                  <TabsTrigger value="timeline" className="text-xs">Linha do tempo</TabsTrigger>
+                  <TabsTrigger value="list" className="text-xs">Lista</TabsTrigger>
+                </TabsList>
+              </Tabs>
               <RecordSection
+                hideList={promptView === "timeline"}
                 table="project_prompts"
                 projectId={projectId}
                 addLabel="Novo prompt"
@@ -183,6 +232,7 @@ export function ProjectDetailDialog({
                   { key: "prompt_date", label: "Data do prompt", type: "date" },
                   { key: "sent_to_lovable_at", label: "Enviado ao Lovable em", type: "date" },
                   { key: "purpose", label: "Finalidade" },
+                  { key: "commit_ref", label: "Referência de commit" },
                   { key: "notes", label: "Observações", type: "textarea" },
                 ]}
                 render={(r) => (
@@ -197,11 +247,18 @@ export function ProjectDetailDialog({
                     {str(r['sent_to_lovable_at']) && (
                       <p className="text-xs text-muted-foreground">Enviado ao Lovable em {fmtDate(r['sent_to_lovable_at'])}</p>
                     )}
+                    {str(r['commit_ref']) && (
+                      <p className="text-xs text-muted-foreground font-mono break-all">commit: {String(r['commit_ref'])}</p>
+                    )}
                     {str(r['notes']) && <p className="text-xs text-muted-foreground">{String(r['notes'])}</p>}
                   </>
                 )}
               />
+              {promptView === "timeline" && (
+                <ProjectPromptsTimeline projectId={projectId} typeLabels={promptTypes} />
+              )}
             </TabsContent>
+
 
             {/* GitHub */}
             <TabsContent value="github" className="pt-4">
@@ -330,6 +387,7 @@ export function ProjectDetailDialog({
                   { key: "url", label: "URL", type: "url", required: true, full: true },
                   { key: "description", label: "Descrição", type: "textarea" },
                 ]}
+                filterKey="category"
                 render={(r) => (
                   <>
                     <div className="flex items-center gap-2">
@@ -381,7 +439,7 @@ export function ProjectDetailDialog({
             </TabsContent>
 
             <TabsContent value="history" className="pt-4">
-              <AuditHistory entityType="project" entityId={projectId} />
+              <AuditHistory entityType="project" entityId={projectId} extraIds={[...taskIds, ...auditScope]} />
             </TabsContent>
           </Tabs>
         )}

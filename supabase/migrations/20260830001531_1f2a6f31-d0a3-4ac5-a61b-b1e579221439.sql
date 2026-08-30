@@ -1,0 +1,2 @@
+ALTER TABLE public.project_prompts ADD COLUMN IF NOT EXISTS commit_ref text;
+COMMENT ON COLUMN public.project_prompts.commit_ref IS 'Bloco 2B: referencia opcional de commit relacionada ao prompt (somente metadado, sem segredos).';

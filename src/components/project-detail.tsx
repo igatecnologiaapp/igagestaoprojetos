@@ -231,7 +231,11 @@ export function ProjectDetailDialog({
                   </>
                 )}
               />
+              {promptView === "timeline" && (
+                <ProjectPromptsTimeline projectId={projectId} typeLabels={promptTypes} />
+              )}
             </TabsContent>
+
 
             {/* GitHub */}
             <TabsContent value="github" className="pt-4">

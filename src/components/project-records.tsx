@@ -43,6 +43,9 @@ interface RecordSectionProps {
   orderBy?: { column: string; ascending?: boolean };
   render: (row: RecordRow) => React.ReactNode;
   canManage?: boolean;
+  /** Campo usado para filtrar/agrupar visualmente a lista (ex.: category). */
+  filterKey?: string;
+  filterLabel?: string;
 }
 
 export function ExternalUrl({ url, label }: { url?: string | null; label?: string }) {

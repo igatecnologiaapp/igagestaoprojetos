@@ -96,8 +96,15 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const { publicEnv } = Route.useLoaderData();
   return (
     <QueryClientProvider client={queryClient}>
+      {/* Configuração pública do backend injetada pelo servidor (apenas URL/chave anon/project id). */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `window.__PUBLIC_ENV__=Object.assign(window.__PUBLIC_ENV__||{},${JSON.stringify(publicEnv).replace(/</g, "\\u003c")});`,
+        }}
+      />
       <AuthProvider>
         <Outlet />
         <Toaster richColors position="top-right" />

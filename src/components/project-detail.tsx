@@ -54,6 +54,36 @@ const linkCategories = [
 const fmtDate = (v: unknown) => (v ? new Date(String(v) + (String(v).length === 10 ? "T00:00:00" : "")).toLocaleDateString("pt-BR") : "—");
 const str = (v: unknown) => (v == null || v === "" ? null : String(v));
 
+// Bloco 3A — Governança do desenvolvimento
+const devRecordTypes = [
+  { value: "decision", label: "Decisão" },
+  { value: "version", label: "Versão" },
+  { value: "test", label: "Teste" },
+  { value: "homologation", label: "Homologação" },
+  { value: "deployment", label: "Implantação" },
+];
+const environments = [
+  { value: "development", label: "Desenvolvimento" },
+  { value: "preview", label: "Preview" },
+  { value: "staging", label: "Homologação" },
+  { value: "production", label: "Produção" },
+];
+const debtStatuses = [
+  { value: "open", label: "Aberta" },
+  { value: "analysis", label: "Em análise" },
+  { value: "planned", label: "Planejada" },
+  { value: "resolved", label: "Resolvida" },
+  { value: "accepted", label: "Aceita" },
+];
+const debtPriorities = [
+  { value: "low", label: "Baixa" },
+  { value: "medium", label: "Média" },
+  { value: "high", label: "Alta" },
+  { value: "critical", label: "Crítica" },
+];
+const labelOf = (opts: { value: string; label: string }[], v: unknown) =>
+  opts.find((o) => o.value === String(v))?.label ?? (str(v) ?? "—");
+
 export function useProjectCredits(projectId: string | null) {
   return useQuery({
     queryKey: ["project-records", "project_credits", projectId],

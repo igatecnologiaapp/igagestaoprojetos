@@ -11,15 +11,15 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 // Em ambientes de publicação/CI onde apenas os nomes sem prefixo estão disponíveis
 // (SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY / SUPABASE_PROJECT_ID), replicamos os valores
 // para os nomes VITE_ correspondentes. Nenhum valor real é escrito aqui.
-const publicEnvAliases: Record<string, string> = {
-  VITE_SUPABASE_URL: "SUPABASE_URL",
-  VITE_SUPABASE_PUBLISHABLE_KEY: "SUPABASE_PUBLISHABLE_KEY",
-  VITE_SUPABASE_PROJECT_ID: "SUPABASE_PROJECT_ID",
+const publicEnvAliases: Record<string, string[]> = {
+  VITE_SUPABASE_URL: ["SUPABASE_URL", "PUBLIC_SUPABASE_URL"],
+  VITE_SUPABASE_PUBLISHABLE_KEY: ["SUPABASE_PUBLISHABLE_KEY", "PUBLIC_SUPABASE_PUBLISHABLE_KEY"],
+  VITE_SUPABASE_PROJECT_ID: ["SUPABASE_PROJECT_ID", "PUBLIC_SUPABASE_PROJECT_ID"],
 };
 
 const define: Record<string, string> = {};
-for (const [viteName, plainName] of Object.entries(publicEnvAliases)) {
-  const value = process.env[viteName] ?? process.env[plainName];
+for (const [viteName, fallbacks] of Object.entries(publicEnvAliases)) {
+  const value = [viteName, ...fallbacks].map((n) => process.env[n]).find(Boolean);
   if (value) define[`import.meta.env.${viteName}`] = JSON.stringify(value);
 }
 

@@ -224,6 +224,9 @@ export function ProjectDetailDialog({
                     {str(r['sent_to_lovable_at']) && (
                       <p className="text-xs text-muted-foreground">Enviado ao Lovable em {fmtDate(r['sent_to_lovable_at'])}</p>
                     )}
+                    {str(r['commit_ref']) && (
+                      <p className="text-xs text-muted-foreground font-mono break-all">commit: {String(r['commit_ref'])}</p>
+                    )}
                     {str(r['notes']) && <p className="text-xs text-muted-foreground">{String(r['notes'])}</p>}
                   </>
                 )}

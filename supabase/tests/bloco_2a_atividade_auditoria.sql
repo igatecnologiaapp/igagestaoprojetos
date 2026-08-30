@@ -2,6 +2,8 @@
 -- BLOCO 2A — Suíte de integridade histórica (last_activity_at + auditoria)
 -- Reproduzível: roda dentro de transação e faz ROLLBACK ao final.
 -- Não cria usuários de Auth: usa um usuário existente (owner) como autor.
+-- Nota: os gatilhos usam clock_timestamp(), logo os eventos são distinguíveis
+-- dentro da mesma transação de teste.
 -- Objetivo: comprovar que eventos autorizados movem projects.last_activity_at
 -- e que os eventos passam a produzir entrada em public.audit_history.
 -- =====================================================================
@@ -21,7 +23,6 @@ BEGIN
 
   -- criação de tarefa
   SELECT last_activity_at INTO t0 FROM public.projects WHERE id = p_id;
-  PERFORM pg_sleep(0.01);
   INSERT INTO public.tasks(project_id,name,created_by,priority,status,position)
     VALUES (p_id,'2A Tarefa',u,'medium','pending',0) RETURNING id INTO t_id;
   SELECT last_activity_at INTO t1 FROM public.projects WHERE id = p_id;
@@ -35,33 +36,36 @@ BEGIN
   INSERT INTO _r VALUES ('SELECT/leitura NAO move last_activity_at', t1 = t0);
 
   -- alteração de tarefa
-  PERFORM pg_sleep(0.01);
   UPDATE public.tasks SET status='in_progress' WHERE id = t_id;
   SELECT last_activity_at INTO t1 FROM public.projects WHERE id = p_id;
   INSERT INTO _r VALUES ('alteracao de tarefa move last_activity_at', t1 > t0);
 
   -- comentário
-  t0 := t1; PERFORM pg_sleep(0.01);
+  t0 := t1;
+  PERFORM pg_sleep(0.01);
   INSERT INTO public.task_comments(task_id,user_id,body) VALUES (t_id,u,'comentario 2A');
   SELECT last_activity_at INTO t1 FROM public.projects WHERE id = p_id;
   INSERT INTO _r VALUES ('comentario move last_activity_at', t1 > t0);
 
   -- anexo
-  t0 := t1; PERFORM pg_sleep(0.01);
+  t0 := t1;
+  PERFORM pg_sleep(0.01);
   INSERT INTO public.task_attachments(task_id,type,name,url,created_by)
     VALUES (t_id,'link','doc','https://exemplo.test/doc',u);
   SELECT last_activity_at INTO t1 FROM public.projects WHERE id = p_id;
   INSERT INTO _r VALUES ('anexo move last_activity_at', t1 > t0);
 
   -- agendamento vinculado ao projeto
-  t0 := t1; PERFORM pg_sleep(0.01);
+  t0 := t1;
+  PERFORM pg_sleep(0.01);
   INSERT INTO public.appointments(title, company_id, project_id, start_at, status, created_by)
     VALUES ('2A Agenda', c_id, p_id, now(), 'scheduled', u) RETURNING id INTO a_id;
   SELECT last_activity_at INTO t1 FROM public.projects WHERE id = p_id;
   INSERT INTO _r VALUES ('agendamento move last_activity_at', t1 > t0);
 
   -- registros do dossiê técnico
-  t0 := t1; PERFORM pg_sleep(0.01);
+  t0 := t1;
+  PERFORM pg_sleep(0.01);
   INSERT INTO public.project_prompts(project_id,title,prompt_type,prompt_date,created_by)
     VALUES (p_id,'2A Prompt','feature',current_date,u);
   INSERT INTO public.project_github_repos(project_id,url,created_by) VALUES (p_id,'https://github.com/x/y',u);
@@ -73,7 +77,8 @@ BEGIN
   INSERT INTO _r VALUES ('registros tecnicos movem last_activity_at', t1 > t0);
 
   -- alteração dos dados principais do projeto
-  t0 := t1; PERFORM pg_sleep(0.01);
+  t0 := t1;
+  PERFORM pg_sleep(0.01);
   UPDATE public.projects SET phase='execucao' WHERE id = p_id;
   SELECT last_activity_at INTO t1 FROM public.projects WHERE id = p_id;
   INSERT INTO _r VALUES ('alteracao do projeto move last_activity_at', t1 > t0);

@@ -13,6 +13,7 @@ import { ProjectShares } from "@/components/task-collaboration";
 import { RecordSection, ExternalUrl } from "@/components/project-records";
 import { ProjectCustomFieldValues } from "@/components/project-custom-fields";
 import { ProjectPromptsTimeline } from "@/components/project-prompts-timeline";
+import { ProjectDevelopmentTimeline } from "@/components/project-development-timeline";
 import { useAuth } from "@/lib/auth-context";
 import { Coins, Github, Sparkles, ListChecks } from "lucide-react";
 

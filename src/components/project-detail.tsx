@@ -195,9 +195,6 @@ export function ProjectDetailDialog({
                   <TabsTrigger value="list" className="text-xs">Lista</TabsTrigger>
                 </TabsList>
               </Tabs>
-              {promptView === "timeline" && (
-                <ProjectPromptsTimeline projectId={projectId} typeLabels={promptTypes} />
-              )}
               <RecordSection
                 hideList={promptView === "timeline"}
                 table="project_prompts"

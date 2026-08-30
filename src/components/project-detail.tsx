@@ -129,7 +129,7 @@ export function ProjectDetailDialog({
 
   return (
     <Dialog open={!!projectId} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] sm:max-w-4xl max-h-[90vh] overflow-y-auto overflow-x-hidden p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="font-display">{project?.name ?? "Projeto"}</DialogTitle>
           <p className="text-sm text-muted-foreground">

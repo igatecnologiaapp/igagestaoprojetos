@@ -185,19 +185,19 @@ export function RecordSection({
               {addLabel}
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] sm:max-w-lg max-h-[90vh] overflow-y-auto p-4 sm:p-6">
             <DialogHeader>
               <DialogTitle>{editingId ? "Editar registro" : addLabel}</DialogTitle>
             </DialogHeader>
             <form
-              className="grid grid-cols-2 gap-3"
+              className="grid grid-cols-1 sm:grid-cols-2 gap-3"
               onSubmit={(e) => {
                 e.preventDefault();
                 saveMut.mutate();
               }}
             >
               {fields.map((f) => (
-                <div key={f.key} className={`space-y-1.5 ${f.full || f.type === "textarea" ? "col-span-2" : ""}`}>
+                <div key={f.key} className={`space-y-1.5 ${f.full || f.type === "textarea" ? "sm:col-span-2" : ""}`}>
                   <Label className="text-xs">{f.label}{f.required ? " *" : ""}</Label>
                   {f.type === "textarea" ? (
                     <Textarea rows={3} required={f.required} value={form[f.key] ?? ""} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })} />
@@ -221,7 +221,7 @@ export function RecordSection({
                   )}
                 </div>
               ))}
-              <DialogFooter className="col-span-2">
+              <DialogFooter className="sm:col-span-2">
                 <Button type="submit" disabled={saveMut.isPending}>{editingId ? "Salvar" : "Adicionar"}</Button>
               </DialogFooter>
             </form>

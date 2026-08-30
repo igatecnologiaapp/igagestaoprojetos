@@ -274,7 +274,7 @@ function ProjectsPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative flex-1 min-w-56">
+        <div className="relative flex-1 min-w-0 sm:min-w-56">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input className="pl-8" placeholder="Buscar por projeto, empresa ou etapa…" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
@@ -355,7 +355,7 @@ function ProjectsPage() {
           {filtered.map((p) => {
             const overdue = p.end_date && p.end_date < today && p.status !== "completed";
             return (
-              <Card key={p.id} className="p-5 hover:shadow-md transition-shadow h-full group relative">
+              <Card key={p.id} className="p-5 hover:shadow-md transition-shadow h-full group relative min-w-0">
                 <button type="button" className="block w-full text-left" onClick={() => setDetailId(p.id)}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">

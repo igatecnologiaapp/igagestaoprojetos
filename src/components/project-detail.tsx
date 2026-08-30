@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +12,7 @@ import { AuditHistory } from "@/components/audit-history";
 import { ProjectShares } from "@/components/task-collaboration";
 import { RecordSection, ExternalUrl } from "@/components/project-records";
 import { ProjectCustomFieldValues } from "@/components/project-custom-fields";
+import { ProjectPromptsTimeline } from "@/components/project-prompts-timeline";
 import { useAuth } from "@/lib/auth-context";
 import { Coins, Github, Sparkles, ListChecks } from "lucide-react";
 
@@ -72,6 +74,7 @@ export function ProjectDetailDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const { isOwner } = useAuth();
+  const [promptView, setPromptView] = useState("timeline");
 
   const { data: project } = useQuery({
     queryKey: ["project-detail", projectId],

@@ -46,6 +46,8 @@ interface RecordSectionProps {
   /** Campo usado para filtrar/agrupar visualmente a lista (ex.: category). */
   filterKey?: string;
   filterLabel?: string;
+  /** Oculta a lista, mantendo apenas as ações (usado quando outra visualização a substitui). */
+  hideList?: boolean;
 }
 
 export function ExternalUrl({ url, label }: { url?: string | null; label?: string }) {
@@ -75,6 +77,7 @@ export function RecordSection({
   canManage: canManageProp,
   filterKey,
   filterLabel = "Categoria",
+  hideList = false,
 }: RecordSectionProps) {
   const qc = useQueryClient();
   const { canEdit } = useAuth();
@@ -246,7 +249,7 @@ export function RecordSection({
       )}
       </div>
 
-      {isLoading ? (
+      {hideList ? null : isLoading ? (
         <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : rows.length === 0 ? (
         <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">{emptyLabel}</div>

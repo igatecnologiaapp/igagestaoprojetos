@@ -498,8 +498,10 @@ export function ProjectDetailDialog({
                     { key: "version_ref", label: "Versão" },
                     { key: "environment", label: "Ambiente", type: "select", options: environments },
                     { key: "result", label: "Resultado / status" },
+                    { key: "responsible_user_id", label: "Responsável", type: "select", options: responsibleOptions },
                     { key: "description", label: "Descrição", type: "textarea" },
                     { key: "notes", label: "Observações (não inclua senhas ou tokens)", type: "textarea" },
+
                   ]}
                   filterKey="record_type"
                   filterLabel="Tipo"

@@ -46,6 +46,13 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  loader: async (): Promise<{ publicEnv: PublicEnv }> => {
+    if (typeof window !== "undefined") {
+      const cached = (window as unknown as { __PUBLIC_ENV__?: PublicEnv }).__PUBLIC_ENV__;
+      if (cached) return { publicEnv: cached };
+    }
+    return { publicEnv: await getPublicEnv() };
+  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },

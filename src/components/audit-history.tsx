@@ -62,6 +62,19 @@ const fieldLabels: Record<string, string> = {
   value: "valor",
   amount: "quantidade",
   notes: "observações",
+  // Bloco 3B — campos das entidades de governança
+  record_type: "tipo de registro",
+  commit_ref: "commit",
+  version_ref: "versão",
+  environment: "ambiente",
+  result: "resultado",
+  responsible_user_id: "responsável",
+  code: "código",
+  impact: "impacto",
+  origin: "origem",
+  resolution: "resolução",
+  resolved_at: "resolvida em",
+  identified_at: "identificada em",
 };
 
 const actionVerb: Record<string, string> = { created: "criou", updated: "alterou", deleted: "removeu" };

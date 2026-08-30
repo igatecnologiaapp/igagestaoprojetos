@@ -185,7 +185,17 @@ export function ProjectDetailDialog({
             </TabsContent>
 
             {/* Prompts */}
-            <TabsContent value="prompts" className="pt-4">
+            <TabsContent value="prompts" className="space-y-4 pt-4">
+              <Tabs value={promptView} onValueChange={setPromptView}>
+                <TabsList className="h-8">
+                  <TabsTrigger value="timeline" className="text-xs">Linha do tempo</TabsTrigger>
+                  <TabsTrigger value="list" className="text-xs">Lista</TabsTrigger>
+                </TabsList>
+              </Tabs>
+              {promptView === "timeline" && (
+                <ProjectPromptsTimeline projectId={projectId} typeLabels={promptTypes} />
+              )}
+              <div className={promptView === "timeline" ? "sr-only" : undefined}>
               <RecordSection
                 table="project_prompts"
                 projectId={projectId}

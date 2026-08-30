@@ -446,6 +446,68 @@ export type Database = {
           },
         ]
       }
+      project_development_records: {
+        Row: {
+          commit_ref: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          environment: string | null
+          event_date: string
+          id: string
+          notes: string | null
+          project_id: string
+          record_type: Database["public"]["Enums"]["dev_record_type"]
+          responsible_user_id: string | null
+          result: string | null
+          title: string
+          updated_at: string
+          version_ref: string | null
+        }
+        Insert: {
+          commit_ref?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          environment?: string | null
+          event_date?: string
+          id?: string
+          notes?: string | null
+          project_id: string
+          record_type: Database["public"]["Enums"]["dev_record_type"]
+          responsible_user_id?: string | null
+          result?: string | null
+          title: string
+          updated_at?: string
+          version_ref?: string | null
+        }
+        Update: {
+          commit_ref?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          environment?: string | null
+          event_date?: string
+          id?: string
+          notes?: string | null
+          project_id?: string
+          record_type?: Database["public"]["Enums"]["dev_record_type"]
+          responsible_user_id?: string | null
+          result?: string | null
+          title?: string
+          updated_at?: string
+          version_ref?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_development_records_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_emails: {
         Row: {
           created_at: string
@@ -721,6 +783,71 @@ export type Database = {
             columns: ["external_id"]
             isOneToOne: false
             referencedRelation: "external_collaborators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_technical_debts: {
+        Row: {
+          code: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          identified_at: string
+          impact: string | null
+          origin: string | null
+          priority: Database["public"]["Enums"]["tech_debt_priority"]
+          project_id: string
+          resolution: string | null
+          resolved_at: string | null
+          responsible_user_id: string | null
+          status: Database["public"]["Enums"]["tech_debt_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          code?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          identified_at?: string
+          impact?: string | null
+          origin?: string | null
+          priority?: Database["public"]["Enums"]["tech_debt_priority"]
+          project_id: string
+          resolution?: string | null
+          resolved_at?: string | null
+          responsible_user_id?: string | null
+          status?: Database["public"]["Enums"]["tech_debt_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          identified_at?: string
+          impact?: string | null
+          origin?: string | null
+          priority?: Database["public"]["Enums"]["tech_debt_priority"]
+          project_id?: string
+          resolution?: string | null
+          resolved_at?: string | null
+          responsible_user_id?: string | null
+          status?: Database["public"]["Enums"]["tech_debt_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_technical_debts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -1217,6 +1344,12 @@ export type Database = {
         | "multiselect"
         | "url"
         | "email"
+      dev_record_type:
+        | "decision"
+        | "version"
+        | "test"
+        | "homologation"
+        | "deployment"
       project_status:
         | "planning"
         | "in_progress"
@@ -1244,6 +1377,13 @@ export type Database = {
         | "in_progress"
         | "paused"
         | "completed"
+      tech_debt_priority: "low" | "medium" | "high" | "critical"
+      tech_debt_status:
+        | "open"
+        | "analysis"
+        | "planned"
+        | "resolved"
+        | "accepted"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1395,6 +1535,13 @@ export const Constants = {
         "url",
         "email",
       ],
+      dev_record_type: [
+        "decision",
+        "version",
+        "test",
+        "homologation",
+        "deployment",
+      ],
       project_status: [
         "planning",
         "in_progress",
@@ -1419,6 +1566,8 @@ export const Constants = {
       task_permission: ["view", "comment", "edit"],
       task_priority: ["low", "medium", "high", "urgent"],
       task_status: ["pending", "started", "in_progress", "paused", "completed"],
+      tech_debt_priority: ["low", "medium", "high", "critical"],
+      tech_debt_status: ["open", "analysis", "planned", "resolved", "accepted"],
     },
   },
 } as const

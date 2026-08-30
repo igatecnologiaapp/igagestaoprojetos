@@ -54,6 +54,36 @@ const linkCategories = [
 const fmtDate = (v: unknown) => (v ? new Date(String(v) + (String(v).length === 10 ? "T00:00:00" : "")).toLocaleDateString("pt-BR") : "—");
 const str = (v: unknown) => (v == null || v === "" ? null : String(v));
 
+// Bloco 3A — Governança do desenvolvimento
+const devRecordTypes = [
+  { value: "decision", label: "Decisão" },
+  { value: "version", label: "Versão" },
+  { value: "test", label: "Teste" },
+  { value: "homologation", label: "Homologação" },
+  { value: "deployment", label: "Implantação" },
+];
+const environments = [
+  { value: "development", label: "Desenvolvimento" },
+  { value: "preview", label: "Preview" },
+  { value: "staging", label: "Homologação" },
+  { value: "production", label: "Produção" },
+];
+const debtStatuses = [
+  { value: "open", label: "Aberta" },
+  { value: "analysis", label: "Em análise" },
+  { value: "planned", label: "Planejada" },
+  { value: "resolved", label: "Resolvida" },
+  { value: "accepted", label: "Aceita" },
+];
+const debtPriorities = [
+  { value: "low", label: "Baixa" },
+  { value: "medium", label: "Média" },
+  { value: "high", label: "Alta" },
+  { value: "critical", label: "Crítica" },
+];
+const labelOf = (opts: { value: string; label: string }[], v: unknown) =>
+  opts.find((o) => o.value === String(v))?.label ?? (str(v) ?? "—");
+
 export function useProjectCredits(projectId: string | null) {
   return useQuery({
     queryKey: ["project-records", "project_credits", projectId],
@@ -109,6 +139,7 @@ export function ProjectDetailDialog({
       const childTables = [
         "project_links", "project_prompts", "project_emails", "project_github_repos",
         "project_lovable", "project_credits", "project_custom_field_values", "project_shares",
+        "project_development_records", "project_technical_debts",
       ];
       const results = await Promise.all([
         ...childTables.map((t) => sb.from(t).select("id").eq("project_id", projectId!)),
@@ -149,6 +180,7 @@ export function ProjectDetailDialog({
               <TabsTrigger value="links">Links</TabsTrigger>
               {isOwner && <TabsTrigger value="accounts">Acessos</TabsTrigger>}
               <TabsTrigger value="shares">Compartilhamento</TabsTrigger>
+              <TabsTrigger value="governance">Governança</TabsTrigger>
               <TabsTrigger value="history">Histórico</TabsTrigger>
             </TabsList>
 
@@ -437,6 +469,98 @@ export function ProjectDetailDialog({
             <TabsContent value="shares" className="pt-4">
               <ProjectShares projectId={projectId} />
             </TabsContent>
+
+            {/* Bloco 3A — Governança do desenvolvimento */}
+            <TabsContent value="governance" className="space-y-6 pt-4">
+              <div>
+                <h4 className="text-sm font-semibold mb-2">Registros de desenvolvimento</h4>
+                <RecordSection
+                  table="project_development_records"
+                  projectId={projectId}
+                  addLabel="Novo registro"
+                  emptyLabel="Nenhum registro de desenvolvimento."
+                  orderBy={{ column: "event_date", ascending: false }}
+                  fields={[
+                    { key: "record_type", label: "Tipo", type: "select", options: devRecordTypes, required: true },
+                    { key: "event_date", label: "Data do evento", type: "date", required: true },
+                    { key: "title", label: "Título", required: true, full: true },
+                    { key: "commit_ref", label: "Commit (SHA)" },
+                    { key: "version_ref", label: "Versão" },
+                    { key: "environment", label: "Ambiente", type: "select", options: environments },
+                    { key: "result", label: "Resultado / status" },
+                    { key: "description", label: "Descrição", type: "textarea" },
+                    { key: "notes", label: "Observações (não inclua senhas ou tokens)", type: "textarea" },
+                  ]}
+                  filterKey="record_type"
+                  filterLabel="Tipo"
+                  render={(r) => (
+                    <>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="secondary">{labelOf(devRecordTypes, r['record_type'])}</Badge>
+                        <span className="font-medium">{String(r['title'])}</span>
+                        <span className="text-xs text-muted-foreground">{fmtDate(r['event_date'])}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {[
+                          str(r['version_ref']) && `Versão ${String(r['version_ref'])}`,
+                          str(r['commit_ref']) && `Commit ${String(r['commit_ref'])}`,
+                          str(r['environment']) && labelOf(environments, r['environment']),
+                          str(r['result']) && `Resultado: ${String(r['result'])}`,
+                        ].filter(Boolean).join(" · ") || "—"}
+                      </p>
+                      {str(r['description']) && <p className="text-xs text-muted-foreground">{String(r['description'])}</p>}
+                      {str(r['notes']) && <p className="text-xs text-muted-foreground">{String(r['notes'])}</p>}
+                    </>
+                  )}
+                />
+              </div>
+
+              <div>
+                <h4 className="text-sm font-semibold mb-2">Dívidas técnicas</h4>
+                <RecordSection
+                  table="project_technical_debts"
+                  projectId={projectId}
+                  addLabel="Nova dívida técnica"
+                  emptyLabel="Nenhuma dívida técnica registrada."
+                  orderBy={{ column: "identified_at", ascending: false }}
+                  fields={[
+                    { key: "code", label: "Código (ex.: DT-01)" },
+                    { key: "title", label: "Título", required: true },
+                    { key: "status", label: "Situação", type: "select", options: debtStatuses, required: true },
+                    { key: "priority", label: "Prioridade", type: "select", options: debtPriorities, required: true },
+                    { key: "identified_at", label: "Identificada em", type: "date" },
+                    { key: "resolved_at", label: "Resolvida em", type: "date" },
+                    { key: "origin", label: "Origem" },
+                    { key: "impact", label: "Impacto" },
+                    { key: "description", label: "Descrição", type: "textarea" },
+                    { key: "resolution", label: "Resolução", type: "textarea" },
+                  ]}
+                  filterKey="status"
+                  filterLabel="Situação"
+                  render={(r) => (
+                    <>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {str(r['code']) && <Badge variant="outline">{String(r['code'])}</Badge>}
+                        <span className="font-medium">{String(r['title'])}</span>
+                        <Badge variant="secondary">{labelOf(debtStatuses, r['status'])}</Badge>
+                        <Badge variant="outline">{labelOf(debtPriorities, r['priority'])}</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {[
+                          `Identificada em ${fmtDate(r['identified_at'])}`,
+                          str(r['resolved_at']) && `Resolvida em ${fmtDate(r['resolved_at'])}`,
+                          str(r['origin']) && `Origem: ${String(r['origin'])}`,
+                          str(r['impact']) && `Impacto: ${String(r['impact'])}`,
+                        ].filter(Boolean).join(" · ")}
+                      </p>
+                      {str(r['description']) && <p className="text-xs text-muted-foreground">{String(r['description'])}</p>}
+                      {str(r['resolution']) && <p className="text-xs text-muted-foreground">Resolução: {String(r['resolution'])}</p>}
+                    </>
+                  )}
+                />
+              </div>
+            </TabsContent>
+
 
             <TabsContent value="history" className="pt-4">
               <AuditHistory entityType="project" entityId={projectId} extraIds={[...taskIds, ...auditScope]} />

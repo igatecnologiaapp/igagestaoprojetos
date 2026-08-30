@@ -195,8 +195,8 @@ export function ProjectDetailDialog({
               {promptView === "timeline" && (
                 <ProjectPromptsTimeline projectId={projectId} typeLabels={promptTypes} />
               )}
-              <div className={promptView === "timeline" ? "sr-only" : undefined}>
               <RecordSection
+                hideList={promptView === "timeline"}
                 table="project_prompts"
                 projectId={projectId}
                 addLabel="Novo prompt"

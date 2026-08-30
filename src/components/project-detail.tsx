@@ -517,7 +517,9 @@ export function ProjectDetailDialog({
                           str(r['version_ref']) && `Versão ${String(r['version_ref'])}`,
                           str(r['commit_ref']) && `Commit ${String(r['commit_ref'])}`,
                           str(r['environment']) && labelOf(environments, r['environment']),
+                          responsibleName(r['responsible_user_id']) && `Responsável: ${responsibleName(r['responsible_user_id'])}`,
                           str(r['result']) && `Resultado: ${String(r['result'])}`,
+
                         ].filter(Boolean).join(" · ") || "—"}
                       </p>
                       {str(r['description']) && <p className="text-xs text-muted-foreground">{String(r['description'])}</p>}

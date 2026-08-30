@@ -567,6 +567,8 @@ export function ProjectDetailDialog({
                           str(r['resolved_at']) && `Resolvida em ${fmtDate(r['resolved_at'])}`,
                           str(r['origin']) && `Origem: ${String(r['origin'])}`,
                           str(r['impact']) && `Impacto: ${String(r['impact'])}`,
+                          responsibleName(r['responsible_user_id']) && `Responsável: ${responsibleName(r['responsible_user_id'])}`,
+
                         ].filter(Boolean).join(" · ")}
                       </p>
                       {str(r['description']) && <p className="text-xs text-muted-foreground">{String(r['description'])}</p>}

@@ -73,10 +73,13 @@ export function RecordSection({
   orderBy = { column: "created_at", ascending: false },
   render,
   canManage: canManageProp,
+  filterKey,
+  filterLabel = "Categoria",
 }: RecordSectionProps) {
   const qc = useQueryClient();
   const { canEdit } = useAuth();
   const canManage = canManageProp ?? canEdit;
+  const [filterValue, setFilterValue] = useState("__all");
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const empty = Object.fromEntries(fields.map((f) => [f.key, ""])) as Record<string, string>;

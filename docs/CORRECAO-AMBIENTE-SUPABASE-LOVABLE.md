@@ -67,3 +67,18 @@ O ambiente local/preview continuava funcionando porque o `.env` local (ignorado 
 ## 7. Encerramento
 
 Desenvolvimento interrompido. Fase 3 não iniciada. Aguardando homologação expressa.
+
+## Rodada de republicação — 30/08/2026 10:56 UTC
+
+- Nova publicação executada. `x-deployment-id` mudou de `2a5741e8…` para `0cea0784…`, comprovando novo deploy.
+- **O hash do bundle NÃO mudou**: continua `assets/index-0wrXZiUM.js`. Inspeção do artefato publicado: 0 ocorrências do identificador público do backend e 1 ocorrência da mensagem de erro de configuração.
+- Teste em navegador real (`/auth`, HTTP 200): a tela exibe "Missing Supabase environment variable(s): SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY". Login, Dashboard, Projetos, dossiê e agendamentos ficaram **bloqueados** e não puderam ser testados.
+- Causa raiz confirmada: o pipeline de build/publicação não recebe as variáveis públicas. O `.env` local existe e contém os valores corretos, porém está fora do Git (correto por política) e o build oficial parte da árvore versionada. Os nomes `PUBLIC_SUPABASE_*` cadastrados são **segredos de runtime**, indisponíveis durante o build, portanto o alias em `vite.config.ts` não encontra valor algum no momento da compilação.
+- Segurança reconfirmada: `.env` fora do Git, `.gitignore` protegendo `.env`/`.env.*` com exceção de `.env.example`, `.env.example` somente com placeholders, nenhum valor real em código, nenhuma service role no frontend.
+
+### Alternativas para autorização do responsável
+
+1. Reintroduzir o `.env` gerenciado pela plataforma na árvore versionada — contém exclusivamente URL, project ID e chave pública/anon (nenhum segredo). É o comportamento padrão do Lovable Cloud e restabelece o build imediatamente.
+2. Injeção em runtime: o servidor SSR (que possui `SUPABASE_URL`/`SUPABASE_PUBLISHABLE_KEY` como variáveis de runtime) publica a configuração pública para o cliente, mapeando `process.env.SUPABASE_*` no bundle para um objeto global preenchido em tempo de execução. Não grava valores no código e mantém portabilidade com Vite/GitHub/VPS, mas exige alteração de `vite.config.ts` e do root route.
+
+Nenhuma das duas foi executada nesta rodada por exigir decisão do responsável. Fase 3 não iniciada.

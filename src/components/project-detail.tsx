@@ -554,7 +554,7 @@ export function ProjectDetailDialog({
                     { key: "title", label: "Título", required: true },
                     { key: "status", label: "Situação", type: "select", options: debtStatuses, required: true },
                     { key: "priority", label: "Prioridade", type: "select", options: debtPriorities, required: true },
-                    { key: "identified_at", label: "Identificada em", type: "date" },
+                    { key: "identified_at", label: "Identificada em", type: "date", required: true },
                     { key: "resolved_at", label: "Resolvida em", type: "date" },
                     { key: "origin", label: "Origem" },
                     { key: "impact", label: "Impacto" },

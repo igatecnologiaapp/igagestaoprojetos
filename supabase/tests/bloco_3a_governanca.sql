@@ -10,6 +10,8 @@
 BEGIN;
 CREATE TEMP TABLE _r(cenario text, ok boolean) ON COMMIT DROP;
 CREATE TEMP TABLE _ctx(k text primary key, v uuid) ON COMMIT DROP;
+-- necessário porque parte da suíte executa sob os papéis authenticated/anon
+GRANT ALL ON _r, _ctx TO authenticated, anon;
 
 -- ---------------------------------------------------------------------
 -- Parte 1 — integridade (gatilhos, auditoria, unicidade, isolamento)

@@ -8,7 +8,7 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 // Compatibilidade de ambiente (sem segredos no código):
 // 1) build-time: se o ambiente de build expuser VITE_* / SUPABASE_* / PUBLIC_SUPABASE_*, o valor é embutido;
-// 2) runtime: caso contrário, o valor é lido de window.__PUBLIC_ENV__, publicado pelo SSR (root route)
+// 2) runtime: caso contrário, o valor é lido de globalThis.__PUBLIC_ENV_<NOME>__, publicado pelo SSR (root route)
 //    a partir das variáveis de ambiente do servidor. Somente dados públicos (URL, chave anon, project id).
 // Nenhum valor real é escrito aqui.
 const publicEnvAliases: Record<string, string[]> = {

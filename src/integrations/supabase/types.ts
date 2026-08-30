@@ -633,6 +633,7 @@ export type Database = {
       }
       project_prompts: {
         Row: {
+          commit_ref: string | null
           created_at: string
           created_by: string | null
           id: string
@@ -647,6 +648,7 @@ export type Database = {
           url: string | null
         }
         Insert: {
+          commit_ref?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -661,6 +663,7 @@ export type Database = {
           url?: string | null
         }
         Update: {
+          commit_ref?: string | null
           created_at?: string
           created_by?: string | null
           id?: string

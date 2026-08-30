@@ -102,7 +102,7 @@ function RootComponent() {
       {/* Configuração pública do backend injetada pelo servidor (apenas URL/chave anon/project id). */}
       <script
         dangerouslySetInnerHTML={{
-          __html: `window.__PUBLIC_ENV__=Object.assign(window.__PUBLIC_ENV__||{},${JSON.stringify(publicEnv).replace(/</g, "\\u003c")});`,
+          __html: `(function(e){window.__PUBLIC_ENV__=e;for(var k in e){if(e[k])window["__PUBLIC_ENV_"+k+"__"]=e[k];}})(${JSON.stringify(publicEnv).replace(/</g, "\\u003c")});`,
         }}
       />
       <AuthProvider>

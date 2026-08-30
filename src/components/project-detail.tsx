@@ -209,6 +209,7 @@ export function ProjectDetailDialog({
                   { key: "prompt_date", label: "Data do prompt", type: "date" },
                   { key: "sent_to_lovable_at", label: "Enviado ao Lovable em", type: "date" },
                   { key: "purpose", label: "Finalidade" },
+                  { key: "commit_ref", label: "Referência de commit" },
                   { key: "notes", label: "Observações", type: "textarea" },
                 ]}
                 render={(r) => (

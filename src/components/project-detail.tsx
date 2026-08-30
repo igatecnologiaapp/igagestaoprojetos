@@ -99,6 +99,29 @@ export function ProjectDetailDialog({
     },
   });
 
+  // Escopo do histórico visual: ids relacionados ao projeto cujos eventos já são auditados.
+  // A RLS de audit_history continua sendo a única fonte de autorização.
+  const taskIds = tasks.map((t) => t.id);
+  const { data: auditScope = [] } = useQuery({
+    queryKey: ["project-audit-scope", projectId, taskIds.join(",")],
+    enabled: !!projectId,
+    queryFn: async () => {
+      const childTables = [
+        "project_links", "project_prompts", "project_emails", "project_github_repos",
+        "project_lovable", "project_credits", "project_custom_field_values", "project_shares",
+      ];
+      const results = await Promise.all([
+        ...childTables.map((t) => sb.from(t).select("id").eq("project_id", projectId!)),
+        sb.from("appointments").select("id").eq("project_id", projectId!),
+        taskIds.length ? sb.from("task_comments").select("id").in("task_id", taskIds) : Promise.resolve({ data: [] }),
+        taskIds.length ? sb.from("task_attachments").select("id").in("task_id", taskIds) : Promise.resolve({ data: [] }),
+        taskIds.length ? sb.from("task_shares").select("id").in("task_id", taskIds) : Promise.resolve({ data: [] }),
+      ]);
+      const ids = results.flatMap((r: { data?: { id: string }[] | null }) => (r?.data ?? []).map((row) => row.id));
+      return ids as string[];
+    },
+  });
+
   const { data: credits = [] } = useProjectCredits(projectId);
   const totalCredits = credits.reduce((s, c) => s + Number(c.amount ?? 0), 0);
   const done = tasks.filter((t) => t.status === "completed").length;

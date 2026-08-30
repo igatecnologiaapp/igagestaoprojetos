@@ -109,6 +109,7 @@ export function ProjectDetailDialog({
       const childTables = [
         "project_links", "project_prompts", "project_emails", "project_github_repos",
         "project_lovable", "project_credits", "project_custom_field_values", "project_shares",
+        "project_development_records", "project_technical_debts",
       ];
       const results = await Promise.all([
         ...childTables.map((t) => sb.from(t).select("id").eq("project_id", projectId!)),

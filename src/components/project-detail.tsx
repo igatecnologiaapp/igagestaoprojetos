@@ -153,7 +153,17 @@ export function ProjectDetailDialog({
     },
   });
 
+  // Bloco 3A.1 — reutiliza a lista de perfis já existente no sistema para o campo Responsável.
+  const { data: profiles = [] } = useQuery({
+    queryKey: ["profiles-select"],
+    queryFn: async () => (await supabase.from("profiles").select("id,full_name").order("full_name")).data ?? [],
+  });
+  const responsibleOptions = profiles.map((p) => ({ value: p.id, label: p.full_name ?? p.id.slice(0, 8) }));
+  const responsibleName = (uid: unknown) =>
+    uid ? (profiles.find((p) => p.id === String(uid))?.full_name ?? String(uid).slice(0, 8)) : null;
+
   const { data: credits = [] } = useProjectCredits(projectId);
+
   const totalCredits = credits.reduce((s, c) => s + Number(c.amount ?? 0), 0);
   const done = tasks.filter((t) => t.status === "completed").length;
   const progress = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
@@ -488,8 +498,10 @@ export function ProjectDetailDialog({
                     { key: "version_ref", label: "Versão" },
                     { key: "environment", label: "Ambiente", type: "select", options: environments },
                     { key: "result", label: "Resultado / status" },
+                    { key: "responsible_user_id", label: "Responsável", type: "select", options: responsibleOptions },
                     { key: "description", label: "Descrição", type: "textarea" },
                     { key: "notes", label: "Observações (não inclua senhas ou tokens)", type: "textarea" },
+
                   ]}
                   filterKey="record_type"
                   filterLabel="Tipo"
@@ -505,7 +517,9 @@ export function ProjectDetailDialog({
                           str(r['version_ref']) && `Versão ${String(r['version_ref'])}`,
                           str(r['commit_ref']) && `Commit ${String(r['commit_ref'])}`,
                           str(r['environment']) && labelOf(environments, r['environment']),
+                          responsibleName(r['responsible_user_id']) && `Responsável: ${responsibleName(r['responsible_user_id'])}`,
                           str(r['result']) && `Resultado: ${String(r['result'])}`,
+
                         ].filter(Boolean).join(" · ") || "—"}
                       </p>
                       {str(r['description']) && <p className="text-xs text-muted-foreground">{String(r['description'])}</p>}
@@ -532,6 +546,8 @@ export function ProjectDetailDialog({
                     { key: "resolved_at", label: "Resolvida em", type: "date" },
                     { key: "origin", label: "Origem" },
                     { key: "impact", label: "Impacto" },
+                    { key: "responsible_user_id", label: "Responsável", type: "select", options: responsibleOptions },
+
                     { key: "description", label: "Descrição", type: "textarea" },
                     { key: "resolution", label: "Resolução", type: "textarea" },
                   ]}
@@ -551,6 +567,8 @@ export function ProjectDetailDialog({
                           str(r['resolved_at']) && `Resolvida em ${fmtDate(r['resolved_at'])}`,
                           str(r['origin']) && `Origem: ${String(r['origin'])}`,
                           str(r['impact']) && `Impacto: ${String(r['impact'])}`,
+                          responsibleName(r['responsible_user_id']) && `Responsável: ${responsibleName(r['responsible_user_id'])}`,
+
                         ].filter(Boolean).join(" · ")}
                       </p>
                       {str(r['description']) && <p className="text-xs text-muted-foreground">{String(r['description'])}</p>}

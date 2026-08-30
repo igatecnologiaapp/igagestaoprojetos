@@ -193,6 +193,11 @@ export function RecordSection({
               className="grid grid-cols-1 sm:grid-cols-2 gap-3"
               onSubmit={(e) => {
                 e.preventDefault();
+                const missing = fields.find((f) => f.required && !(form[f.key] ?? "").trim());
+                if (missing) {
+                  toast.error(`Preencha o campo obrigatório: ${missing.label}`);
+                  return;
+                }
                 saveMut.mutate();
               }}
             >
@@ -202,14 +207,19 @@ export function RecordSection({
                   {f.type === "textarea" ? (
                     <Textarea rows={3} required={f.required} value={form[f.key] ?? ""} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })} />
                   ) : f.type === "select" ? (
-                    <Select value={form[f.key] ?? ""} onValueChange={(v) => setForm({ ...form, [f.key]: v })}>
+                    <Select
+                      value={form[f.key] ? form[f.key] : "__none"}
+                      onValueChange={(v) => setForm({ ...form, [f.key]: v === "__none" ? "" : v })}
+                    >
                       <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="__none">{f.required ? "Selecione" : "— Não definido"}</SelectItem>
                         {(f.options ?? []).map((o) => (
                           <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
+
                   ) : (
                     <Input
                       type={f.type === "number" ? "number" : f.type === "date" ? "date" : f.type === "email" ? "email" : "text"}

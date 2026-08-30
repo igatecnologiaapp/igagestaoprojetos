@@ -155,8 +155,16 @@ export function RecordSection({
     setOpen(true);
   };
 
+  const filterValues = filterKey
+    ? Array.from(new Set(rows.map((r) => (r[filterKey] == null || r[filterKey] === "" ? "Outros" : String(r[filterKey]))))).sort((a, b) => a.localeCompare(b, "pt-BR"))
+    : [];
+  const visibleRows = filterKey && filterValue !== "__all"
+    ? rows.filter((r) => (r[filterKey] == null || r[filterKey] === "" ? "Outros" : String(r[filterKey])) === filterValue)
+    : rows;
+
   return (
     <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
       {canManage && (
         <Dialog
           open={open}

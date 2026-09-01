@@ -61,9 +61,9 @@ const groups: NavGroup[] = [
   },
 ];
 
-function Brand({ collapsed }: { collapsed?: boolean }) {
+function Brand({ collapsed, onNavigate }: { collapsed?: boolean; onNavigate?: () => void }) {
   return (
-    <Link to="/dashboard" className="flex items-center gap-3 min-w-0">
+    <Link to="/dashboard" onClick={onNavigate} className="flex items-center gap-3 min-w-0">
       <img
         src={igaLogo.url}
         alt="IGA Tecnologia"

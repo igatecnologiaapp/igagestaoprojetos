@@ -242,7 +242,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <SheetContent side="left" className="w-72 p-0 flex flex-col bg-sidebar text-sidebar-foreground">
               <SheetTitle className="sr-only">Menu de navegação</SheetTitle>
               <div className="px-5 py-5 border-b border-sidebar-border">
-                <Brand />
+                <Brand onNavigate={() => setMobileOpen(false)} />
               </div>
               <SidebarNav onNavigate={() => setMobileOpen(false)} />
               <UserFooter />

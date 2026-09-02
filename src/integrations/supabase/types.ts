@@ -241,6 +241,208 @@ export type Database = {
         }
         Relationships: []
       }
+      finance_categories: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          name: string
+          parent_id: string | null
+          position: number
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          name: string
+          parent_id?: string | null
+          position?: number
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          name?: string
+          parent_id?: string | null
+          position?: number
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "finance_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finance_services: {
+        Row: {
+          amount: number | null
+          auto_renew: boolean
+          billing_day: number | null
+          category_id: string | null
+          contracted_at: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          default_project_id: string | null
+          description: string | null
+          expires_at: string | null
+          id: string
+          is_shared: boolean
+          name: string
+          notes: string | null
+          plan: string | null
+          project_account_id: string | null
+          recurrence: Database["public"]["Enums"]["finance_recurrence"]
+          renews_at: string | null
+          status: Database["public"]["Enums"]["finance_service_status"]
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          amount?: number | null
+          auto_renew?: boolean
+          billing_day?: number | null
+          category_id?: string | null
+          contracted_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          default_project_id?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_shared?: boolean
+          name: string
+          notes?: string | null
+          plan?: string | null
+          project_account_id?: string | null
+          recurrence?: Database["public"]["Enums"]["finance_recurrence"]
+          renews_at?: string | null
+          status?: Database["public"]["Enums"]["finance_service_status"]
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          amount?: number | null
+          auto_renew?: boolean
+          billing_day?: number | null
+          category_id?: string | null
+          contracted_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          default_project_id?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_shared?: boolean
+          name?: string
+          notes?: string | null
+          plan?: string | null
+          project_account_id?: string | null
+          recurrence?: Database["public"]["Enums"]["finance_recurrence"]
+          renews_at?: string | null
+          status?: Database["public"]["Enums"]["finance_service_status"]
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_services_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "finance_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_services_default_project_id_fkey"
+            columns: ["default_project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_services_project_account_id_fkey"
+            columns: ["project_account_id"]
+            isOneToOne: false
+            referencedRelation: "project_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_services_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "finance_vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finance_vendors: {
+        Row: {
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          created_by: string | null
+          default_currency: string
+          document: string | null
+          id: string
+          legal_name: string | null
+          name: string
+          notes: string | null
+          status: Database["public"]["Enums"]["finance_entity_status"]
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          default_currency?: string
+          document?: string | null
+          id?: string
+          legal_name?: string | null
+          name: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["finance_entity_status"]
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          default_currency?: string
+          document?: string | null
+          id?: string
+          legal_name?: string | null
+          name?: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["finance_entity_status"]
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1358,6 +1560,14 @@ export type Database = {
         | "test"
         | "homologation"
         | "deployment"
+      finance_entity_status: "active" | "inactive"
+      finance_recurrence:
+        | "monthly"
+        | "quarterly"
+        | "semiannual"
+        | "annual"
+        | "one_off"
+      finance_service_status: "active" | "paused" | "cancelled" | "expired"
       project_status:
         | "planning"
         | "in_progress"
@@ -1550,6 +1760,15 @@ export const Constants = {
         "homologation",
         "deployment",
       ],
+      finance_entity_status: ["active", "inactive"],
+      finance_recurrence: [
+        "monthly",
+        "quarterly",
+        "semiannual",
+        "annual",
+        "one_off",
+      ],
+      finance_service_status: ["active", "paused", "cancelled", "expired"],
       project_status: [
         "planning",
         "in_progress",

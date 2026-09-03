@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.touch_project_activity_via_finance_service() FROM PUBLIC, anon, authenticated;

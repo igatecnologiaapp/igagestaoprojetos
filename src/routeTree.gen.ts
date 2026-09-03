@@ -20,6 +20,7 @@ import { Route as CompaniesRouteImport } from './routes/companies'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppointmentsRouteImport } from './routes/appointments'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as FinanceVendorsRouteImport } from './routes/finance/vendors'
 
 const UsersRoute = UsersRouteImport.update({
   id: '/users',
@@ -76,6 +77,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FinanceVendorsRoute = FinanceVendorsRouteImport.update({
+  id: '/finance/vendors',
+  path: '/finance/vendors',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -89,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof ReportsRoute
   '/tasks': typeof TasksRoute
   '/users': typeof UsersRoute
+  '/finance/vendors': typeof FinanceVendorsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -102,6 +109,7 @@ export interface FileRoutesByTo {
   '/reports': typeof ReportsRoute
   '/tasks': typeof TasksRoute
   '/users': typeof UsersRoute
+  '/finance/vendors': typeof FinanceVendorsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/reports': typeof ReportsRoute
   '/tasks': typeof TasksRoute
   '/users': typeof UsersRoute
+  '/finance/vendors': typeof FinanceVendorsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/tasks'
     | '/users'
+    | '/finance/vendors'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/tasks'
     | '/users'
+    | '/finance/vendors'
   id:
     | '__root__'
     | '/'
@@ -157,6 +168,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/tasks'
     | '/users'
+    | '/finance/vendors'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -171,6 +183,7 @@ export interface RootRouteChildren {
   ReportsRoute: typeof ReportsRoute
   TasksRoute: typeof TasksRoute
   UsersRoute: typeof UsersRoute
+  FinanceVendorsRoute: typeof FinanceVendorsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -252,6 +265,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/finance/vendors': {
+      id: '/finance/vendors'
+      path: '/finance/vendors'
+      fullPath: '/finance/vendors'
+      preLoaderRoute: typeof FinanceVendorsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -267,6 +287,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReportsRoute: ReportsRoute,
   TasksRoute: TasksRoute,
   UsersRoute: UsersRoute,
+  FinanceVendorsRoute: FinanceVendorsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

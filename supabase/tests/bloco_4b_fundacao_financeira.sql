@@ -171,10 +171,6 @@ BEGIN
     EXISTS (SELECT 1 FROM public.audit_history WHERE entity_type='finance_categories' AND entity_id=v_cat));
   PERFORM pg_temp.ck('2.24 auditoria de serviço (criação + status)',
     (SELECT count(*) FROM public.audit_history WHERE entity_type='finance_services' AND entity_id=v_svc) >= 2);
-  PERFORM pg_temp.ck('2.25 auditoria registra alteração de valor',
-    (UPDATE_VALOR_TEST(v_svc)));
-EXCEPTION WHEN undefined_function THEN
-  -- fallback: valida alteração de valor inline
   UPDATE public.finance_services SET amount = 250.00 WHERE id = v_svc;
   PERFORM pg_temp.ck('2.25 auditoria registra alteração de valor',
     EXISTS (SELECT 1 FROM public.audit_history

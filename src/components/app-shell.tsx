@@ -92,7 +92,15 @@ function SidebarNav({
   const visibleGroups = groups
     .map((g) => ({
       ...g,
-      items: g.items.filter((i) => (i.ownerOnly ? isOwner : i.module ? canAccess(i.module) : true)),
+      items: g.items.filter((i) =>
+        i.ownerOnly
+          ? isOwner
+          : i.permission
+            ? hasPermission(i.permission)
+            : i.module
+              ? canAccess(i.module)
+              : true,
+      ),
     }))
     .filter((g) => g.items.length > 0);
 

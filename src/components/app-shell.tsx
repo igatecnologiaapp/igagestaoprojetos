@@ -15,6 +15,9 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Menu,
+  Wallet,
+  Tags,
+  Server,
 } from "lucide-react";
 import { useAuth, type AppModule } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -22,7 +25,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import igaLogo from "@/assets/iga-logo.png.asset.json";
 
-type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; module?: AppModule; ownerOnly?: boolean };
+type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; module?: AppModule; ownerOnly?: boolean; permission?: string };
 type NavGroup = { id: string; label: string; items: NavItem[] };
 
 const groups: NavGroup[] = [
@@ -52,7 +55,12 @@ const groups: NavGroup[] = [
   {
     id: "governance",
     label: "Governança e controle",
-    items: [{ to: "/reports", label: "Relatórios", icon: FileText, module: "reports" }],
+    items: [
+      { to: "/reports", label: "Relatórios", icon: FileText, module: "reports" },
+      { to: "/finance/vendors", label: "Financeiro · Fornecedores", icon: Wallet, permission: "financial.view" },
+      { to: "/finance/categories", label: "Financeiro · Categorias", icon: Tags, permission: "financial.view" },
+      { to: "/finance/services", label: "Financeiro · Serviços", icon: Server, permission: "financial.view" },
+    ],
   },
   {
     id: "stakeholders",
@@ -86,13 +94,21 @@ function SidebarNav({
   collapsed?: boolean;
   onNavigate?: () => void;
 }) {
-  const { canAccess, isOwner } = useAuth();
+  const { canAccess, isOwner, hasPermission } = useAuth();
   const location = useLocation();
 
   const visibleGroups = groups
     .map((g) => ({
       ...g,
-      items: g.items.filter((i) => (i.ownerOnly ? isOwner : i.module ? canAccess(i.module) : true)),
+      items: g.items.filter((i) =>
+        i.ownerOnly
+          ? isOwner
+          : i.permission
+            ? hasPermission(i.permission)
+            : i.module
+              ? canAccess(i.module)
+              : true,
+      ),
     }))
     .filter((g) => g.items.length > 0);
 

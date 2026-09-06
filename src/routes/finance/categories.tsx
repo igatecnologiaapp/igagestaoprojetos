@@ -98,7 +98,12 @@ function CategoriesPage() {
       setOpen(false);
       reset();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) =>
+      toast.error(
+        e.message.includes("uq_finance_categories_slug")
+          ? "Já existe uma categoria com este identificador (slug)."
+          : e.message,
+      ),
   });
 
   const toggleMut = useMutation({

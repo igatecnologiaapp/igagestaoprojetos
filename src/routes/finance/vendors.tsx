@@ -105,7 +105,12 @@ function VendorsPage() {
       setOpen(false);
       reset();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) =>
+      toast.error(
+        e.message.includes("uq_finance_vendors_name")
+          ? "Já existe um fornecedor cadastrado com este nome."
+          : e.message,
+      ),
   });
 
   const toggleMut = useMutation({

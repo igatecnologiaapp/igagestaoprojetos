@@ -64,16 +64,41 @@ Campos: `id`, `vendor_id` (obrigatório, `ON DELETE RESTRICT`), `category_id`, `
 - Novas telas: `src/routes/finance/vendors.tsx`, `src/routes/finance/categories.tsx`, `src/routes/finance/services.tsx` — listar, buscar, criar, editar e ativar/desativar, sem exclusão física de registros referenciados.
 - `src/components/app-shell.tsx`: itens Fornecedores, Categorias e Serviços adicionados dentro do grupo já existente “Governança e Controle”, com exibição condicionada a `financial.view`. A organização do menu não foi reorganizada.
 
-## 7. Testes
+## 7. Testes executados (fechamento DT-05)
 
-- Suíte criada: `supabase/tests/bloco_4b_fundacao_financeira.sql` (transação com `ROLLBACK`), com 53 verificações: estrutura, enums, RLS, grants, índices, triggers, seeds, CRUD, constraints, auditoria, `last_activity_at`, acesso anônimo e negação por permissão.
-- Compilação da aplicação: **OK** (sem erros de build/tipos).
-- **Execução da suíte SQL e validação no navegador: PENDENTES.** O banco hospedado está pausado neste momento, o que impede conexão para executar os testes e realizar o login autenticado nas telas financeiras.
+Banco hospedado disponível. Resultados:
+
+### 7.1 Estrutura, RLS e políticas (consultas de catálogo)
+Aprovados: 1.1–1.9, 1.11–1.15 e 3.10–3.14.
+- As três tabelas existem; `finance_costs`, `finance_cost_allocations` e `finance_budgets` **não** existem (escopo respeitado).
+- Enums com 5/4/2 valores; RLS habilitada nas três tabelas; nenhuma policy com `USING (true)`.
+- Índices únicos, triggers de auditoria/atividade, 9 categorias seed e as permissões `financial.view`/`financial.edit` confirmados.
+- Leitura exige `financial.view`; serviços aceitam também `can_view_project_dossier`; escrita exige `financial.edit`; exclusão exige `owner`; nenhuma policy para `anon`.
+- **1.10 inconclusivo:** `information_schema.role_table_grants` não retorna linhas para o usuário de leitura. Verificação direta em `pg_class.relacl` mostra `authenticated` e `service_role` com privilégios — e também `anon`, herdado do padrão do projeto. Como não há policy para `anon`, a leitura anônima permanece bloqueada pela RLS. **Recomendação registrada como DT-06** (revogar o grant de tabela para `anon` nas três tabelas), sem execução por não estar autorizada neste bloco.
+
+### 7.2 CRUD, constraints, auditoria e última atividade
+Checks 2.1 a 2.26 aprovados: criação/edição de fornecedor, bloqueio de duplicidade por nome normalizado, nome em branco recusado, documento opcional, slug único, categoria pai, `kind` inválido recusado, desativação, criação de serviço com vínculos opcionais a projeto e conta, fornecedor obrigatório, valor negativo, dia de cobrança e datas incoerentes recusados, recorrência restrita ao enum, mudança de status, exclusão física de fornecedor referenciado bloqueada, auditoria de criação/alteração (inclusive de valor) e atualização de `projects.last_activity_at`.
+
+**Limitação metodológica:** a suíte `supabase/tests/bloco_4b_fundacao_financeira.sql` não pôde ser executada integralmente em transação com `ROLLBACK` pelo terminal: o usuário disponível (`sandbox_exec`) recebe `permission denied for schema auth` ao montar as fixtures e não pode `SET ROLE anon` nem executar `has_role`/`has_permission`. Os mesmos checks foram executados por outro caminho e os registros temporários foram removidos ao final (fornecedores, categoria, serviço e respectivas linhas de auditoria). Permanecem apenas as 9 categorias seed.
+
+### 7.3 Validação funcional autenticada (navegador)
+Sessão real de administrador, sem alterar RLS.
+- Desktop 1280: `/dashboard`, `/projects`, `/tasks`, `/appointments`, `/reports`, `/companies` e as três telas financeiras carregam sem erro de console e sem rolagem horizontal (regressão OK).
+- Fornecedores: criar, buscar, editar, desativar e reativar — todos aprovados; duplicidade por nome bloqueada com aviso.
+- Categorias: seeds listadas com categoria pai e slug; criar e editar aprovados.
+- Serviços: criação vinculada a fornecedor com valor e periodicidade aprovada; valor exibido formatado.
+- Mobile 390×844: as três telas sem estouro horizontal.
+- Todos os registros criados nos testes de tela foram removidos.
+
+### 7.4 Correção pontual aplicada
+Mensagens de erro de duplicidade em Fornecedores e Categorias passaram a exibir texto legível em vez do erro técnico do banco. Nenhuma regra de negócio, policy ou schema foi alterada.
 
 ## 8. Pendências / débitos técnicos
 
-- **DT-05:** executar `supabase/tests/bloco_4b_fundacao_financeira.sql` e a validação de interface (desktop 1280 e mobile 390×844) assim que o banco hospedado for retomado.
-- Avisos de linter remanescentes (14) referem-se a funções `SECURITY DEFINER` preexistentes ao Bloco 4B, já mapeadas em blocos anteriores.
+- **DT-05:** concluída no que é executável neste ambiente (estrutura, RLS, CRUD, constraints, auditoria, última atividade, telas desktop e mobile, regressões). Ressalva registrada: a suíte SQL oficial não roda ponta a ponta pelo usuário restrito do terminal.
+- **DT-06 (nova):** revogar `GRANT` de tabela para `anon` em `finance_vendors`, `finance_categories` e `finance_services`. Risco atual mitigado pela RLS (nenhuma policy para `anon`). Aguarda autorização.
+- **DT-07 (menor):** rótulos dos formulários financeiros não estão associados aos campos (`htmlFor`/`id`), o que reduz acessibilidade. Aguarda autorização.
+- Avisos de linter remanescentes (14) referem-se a funções `SECURITY DEFINER` preexistentes ao Bloco 4B.
 
 ## 9. Arquivos alterados
 
@@ -88,4 +113,4 @@ Campos: `id`, `vendor_id` (obrigatório, `ON DELETE RESTRICT`), `category_id`, `
 
 ## 10. Encerramento
 
-Desenvolvimento **parado**. Nenhuma estrutura de custos, rateios, orçamento ou dashboard foi iniciada. Bloco 4C não iniciado. Aguardando homologação expressa e a retomada do banco hospedado para concluir as validações pendentes.
+Desenvolvimento **parado**. Nenhuma estrutura de custos, rateios, orçamento, alertas ou dashboard foi iniciada. Bloco 4C não iniciado. Aguardando homologação expressa do fechamento do Bloco 4B / DT-05 e decisão sobre DT-06 e DT-07.

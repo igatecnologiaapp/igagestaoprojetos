@@ -37,6 +37,14 @@ export const Route = createFileRoute("/projects")({
 const statusLabels: Record<string, string> = {
   planning: "Planejamento",
   in_progress: "Em andamento",
+  in_development: "Em desenvolvimento",
+  testing: "Em testes",
+  validation: "Em validação",
+  homologation: "Em homologação",
+  deployment: "Em implantação",
+  awaiting_credits: "Aguardando créditos",
+  awaiting_client: "Aguardando cliente",
+  awaiting_info: "Aguardando informação",
   paused: "Pausado",
   completed: "Concluído",
   cancelled: "Cancelado",
@@ -45,6 +53,14 @@ const statusLabels: Record<string, string> = {
 const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   planning: "secondary",
   in_progress: "default",
+  in_development: "default",
+  testing: "secondary",
+  validation: "secondary",
+  homologation: "secondary",
+  deployment: "default",
+  awaiting_credits: "outline",
+  awaiting_client: "outline",
+  awaiting_info: "outline",
   paused: "outline",
   completed: "default",
   cancelled: "destructive",
@@ -52,7 +68,7 @@ const statusVariant: Record<string, "default" | "secondary" | "destructive" | "o
 
 type ProjectForm = {
   name: string; company_id: string; description: string; value: string; start_date: string; end_date: string;
-  status: "planning" | "in_progress" | "paused" | "completed" | "cancelled";
+  status: string;
   phase: string; next_action: string; owner_id: string;
 };
 const emptyProject: ProjectForm = {

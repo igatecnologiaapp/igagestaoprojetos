@@ -35,16 +35,15 @@ SELECT '1.6 RLS habilitada nas duas tabelas' AS check,
        bool_and(relrowsecurity) AS passed
   FROM pg_class WHERE relname IN ('finance_costs','finance_cost_allocations');
 
+-- Obs.: information_schema.role_table_grants é filtrado pelo papel conectado;
+-- usar pg_class.relacl garante leitura fiel dos privilégios.
 SELECT '1.7 anon sem privilégios' AS check,
-       NOT EXISTS (
-         SELECT 1 FROM information_schema.role_table_grants
-          WHERE table_schema='public' AND grantee='anon'
-            AND table_name IN ('finance_costs','finance_cost_allocations')) AS passed;
+       (SELECT bool_and(relacl::text NOT LIKE '%anon=%') FROM pg_class
+         WHERE relname IN ('finance_costs','finance_cost_allocations')) AS passed;
 
-SELECT '1.8 authenticated com CRUD' AS check,
-       (SELECT count(DISTINCT privilege_type) FROM information_schema.role_table_grants
-         WHERE table_schema='public' AND grantee='authenticated' AND table_name='finance_costs'
-           AND privilege_type IN ('SELECT','INSERT','UPDATE','DELETE')) = 4 AS passed;
+SELECT '1.8 authenticated com CRUD e service_role total' AS check,
+       (SELECT bool_and(relacl::text LIKE '%authenticated=arwd%' AND relacl::text LIKE '%service_role=arwd%')
+          FROM pg_class WHERE relname IN ('finance_costs','finance_cost_allocations')) AS passed;
 
 SELECT '1.9 unicidade custo+projeto' AS check,
        EXISTS (SELECT 1 FROM pg_constraint

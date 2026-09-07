@@ -60,6 +60,7 @@ const groups: NavGroup[] = [
       { to: "/finance/vendors", label: "Financeiro · Fornecedores", icon: Wallet, permission: "financial.view" },
       { to: "/finance/categories", label: "Financeiro · Categorias", icon: Tags, permission: "financial.view" },
       { to: "/finance/services", label: "Financeiro · Serviços", icon: Server, permission: "financial.view" },
+      { to: "/finance/costs", label: "Financeiro · Custos", icon: Wallet, permission: "financial.view" },
     ],
   },
   {

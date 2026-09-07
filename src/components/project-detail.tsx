@@ -14,6 +14,7 @@ import { RecordSection, ExternalUrl } from "@/components/project-records";
 import { ProjectCustomFieldValues } from "@/components/project-custom-fields";
 import { ProjectPromptsTimeline } from "@/components/project-prompts-timeline";
 import { ProjectDevelopmentTimeline } from "@/components/project-development-timeline";
+import { ProjectManagementSummary } from "@/components/project-management-summary";
 import { useAuth } from "@/lib/auth-context";
 import { Coins, Github, Sparkles, ListChecks } from "lucide-react";
 
@@ -180,8 +181,9 @@ export function ProjectDetailDialog({
         </DialogHeader>
 
         {projectId && (
-          <Tabs defaultValue="overview">
+          <Tabs defaultValue="management">
             <TabsList className="flex flex-wrap h-auto">
+              <TabsTrigger value="management">Gestão do Projeto</TabsTrigger>
               <TabsTrigger value="overview">Visão geral</TabsTrigger>
               <TabsTrigger value="tasks">Tarefas</TabsTrigger>
               <TabsTrigger value="prompts">ChatGPT / Prompts</TabsTrigger>
@@ -194,6 +196,11 @@ export function ProjectDetailDialog({
               <TabsTrigger value="governance">Governança</TabsTrigger>
               <TabsTrigger value="history">Histórico</TabsTrigger>
             </TabsList>
+
+            {/* Bloco 4B.1 — Resumo gerencial */}
+            <TabsContent value="management" className="pt-4">
+              <ProjectManagementSummary projectId={projectId} responsibleName={responsibleName} />
+            </TabsContent>
 
             {/* Visão geral */}
             <TabsContent value="overview" className="space-y-4 pt-4">

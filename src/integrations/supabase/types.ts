@@ -898,45 +898,57 @@ export type Database = {
       project_prompts: {
         Row: {
           commit_ref: string | null
+          content: string | null
           created_at: string
           created_by: string | null
           id: string
           notes: string | null
+          planned_send_date: string | null
+          platform: string | null
           project_id: string
           prompt_date: string
           prompt_type: Database["public"]["Enums"]["prompt_type"]
           purpose: string | null
           sent_to_lovable_at: string | null
+          status: Database["public"]["Enums"]["prompt_status"]
           title: string
           updated_at: string
           url: string | null
         }
         Insert: {
           commit_ref?: string | null
+          content?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
           notes?: string | null
+          planned_send_date?: string | null
+          platform?: string | null
           project_id: string
           prompt_date?: string
           prompt_type?: Database["public"]["Enums"]["prompt_type"]
           purpose?: string | null
           sent_to_lovable_at?: string | null
+          status?: Database["public"]["Enums"]["prompt_status"]
           title: string
           updated_at?: string
           url?: string | null
         }
         Update: {
           commit_ref?: string | null
+          content?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
           notes?: string | null
+          planned_send_date?: string | null
+          platform?: string | null
           project_id?: string
           prompt_date?: string
           prompt_type?: Database["public"]["Enums"]["prompt_type"]
           purpose?: string | null
           sent_to_lovable_at?: string | null
+          status?: Database["public"]["Enums"]["prompt_status"]
           title?: string
           updated_at?: string
           url?: string | null
@@ -1574,6 +1586,21 @@ export type Database = {
         | "paused"
         | "completed"
         | "cancelled"
+        | "awaiting_credits"
+        | "awaiting_client"
+        | "awaiting_info"
+        | "in_development"
+        | "testing"
+        | "validation"
+        | "homologation"
+        | "deployment"
+      prompt_status:
+        | "draft"
+        | "to_send"
+        | "sent"
+        | "awaiting_reply"
+        | "done"
+        | "cancelled"
       prompt_type:
         | "initial"
         | "adjustment"
@@ -1774,6 +1801,22 @@ export const Constants = {
         "in_progress",
         "paused",
         "completed",
+        "cancelled",
+        "awaiting_credits",
+        "awaiting_client",
+        "awaiting_info",
+        "in_development",
+        "testing",
+        "validation",
+        "homologation",
+        "deployment",
+      ],
+      prompt_status: [
+        "draft",
+        "to_send",
+        "sent",
+        "awaiting_reply",
+        "done",
         "cancelled",
       ],
       prompt_type: [

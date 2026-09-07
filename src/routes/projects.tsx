@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { RequireAuth } from "@/components/require-auth";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -68,7 +69,7 @@ const statusVariant: Record<string, "default" | "secondary" | "destructive" | "o
 
 type ProjectForm = {
   name: string; company_id: string; description: string; value: string; start_date: string; end_date: string;
-  status: string;
+  status: Database["public"]["Enums"]["project_status"];
   phase: string; next_action: string; owner_id: string;
 };
 const emptyProject: ProjectForm = {

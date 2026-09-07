@@ -114,3 +114,20 @@ Mensagens de erro de duplicidade em Fornecedores e Categorias passaram a exibir 
 ## 10. Encerramento
 
 Desenvolvimento **parado**. Nenhuma estrutura de custos, rateios, orçamento, alertas ou dashboard foi iniciada. Bloco 4C não iniciado. Aguardando homologação expressa do fechamento do Bloco 4B / DT-05 e decisão sobre DT-06 e DT-07.
+
+---
+
+## Atualização — fechamento de DT-06 e DT-07 (rodada 4B.1)
+
+- **DT-06 — RESOLVIDA.** Migration incremental revogou todos os privilégios de tabela
+  de `anon` em `finance_vendors`, `finance_categories` e `finance_services`,
+  preservando `authenticated`, `service_role`, policies, `financial.view`,
+  `financial.edit` e `can_view_project_dossier`. Verificado em `pg_class.relacl`:
+  `anon` não aparece mais em nenhuma das três tabelas. Auth e Storage não alterados.
+- **DT-07 — RESOLVIDA.** Todos os rótulos das telas Fornecedores, Categorias e
+  Serviços passaram a usar `htmlFor` com o `id` correspondente do campo
+  (`Input`, `Textarea`, `SelectTrigger`); filtros sem rótulo visível receberam
+  `aria-label`. Nenhuma tela foi redesenhada.
+
+Detalhamento completo, incluindo a entrega do Resumo Gerencial, em
+`docs/BLOCO-4B-1-RESUMO-GERENCIAL-PROJETO.md`.

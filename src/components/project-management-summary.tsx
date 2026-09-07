@@ -91,7 +91,7 @@ export function ProjectManagementSummary({
   projectId: string;
   responsibleName: (id: unknown) => string | null;
 }) {
-  const { hasPermission, isOwner } = useAuth();
+  const { hasPermission, isOwner, user } = useAuth();
   const canEditProject = isOwner || hasPermission("projects.edit");
   const canViewFinance = hasPermission("financial.view");
   const canEditFinance = hasPermission("financial.edit");

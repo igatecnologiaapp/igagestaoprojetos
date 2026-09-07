@@ -311,9 +311,9 @@ function ServicesPage() {
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label>Fornecedor *</Label>
+              <Label htmlFor="services-fornecedor">Fornecedor *</Label>
               <Select value={form.vendor_id} onValueChange={(v) => setForm({ ...form, vendor_id: v })}>
-                <SelectTrigger>
+                <SelectTrigger id="services-fornecedor">
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
@@ -326,14 +326,14 @@ function ServicesPage() {
               </Select>
             </div>
             <div>
-              <Label>Nome *</Label>
-              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <Label htmlFor="services-nome">Nome *</Label>
+              <Input id="services-nome" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Categoria</Label>
+                <Label htmlFor="services-categoria">Categoria</Label>
                 <Select value={form.category_id} onValueChange={(v) => setForm({ ...form, category_id: v })}>
-                  <SelectTrigger>
+                  <SelectTrigger id="services-categoria">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -347,15 +347,15 @@ function ServicesPage() {
                 </Select>
               </div>
               <div>
-                <Label>Plano</Label>
-                <Input value={form.plan} onChange={(e) => setForm({ ...form, plan: e.target.value })} />
+                <Label htmlFor="services-plano">Plano</Label>
+                <Input id="services-plano" value={form.plan} onChange={(e) => setForm({ ...form, plan: e.target.value })} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Periodicidade</Label>
+                <Label htmlFor="services-periodicidade">Periodicidade</Label>
                 <Select value={form.recurrence} onValueChange={(v) => setForm({ ...form, recurrence: v as Recurrence })}>
-                  <SelectTrigger>
+                  <SelectTrigger id="services-periodicidade">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -368,9 +368,9 @@ function ServicesPage() {
                 </Select>
               </div>
               <div>
-                <Label>Situação</Label>
+                <Label htmlFor="services-situacao">Situação</Label>
                 <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as ServiceStatus })}>
-                  <SelectTrigger>
+                  <SelectTrigger id="services-situacao">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -385,39 +385,39 @@ function ServicesPage() {
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <Label>Valor</Label>
-                <Input type="number" min="0" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
+                <Label htmlFor="services-valor">Valor</Label>
+                <Input id="services-valor" type="number" min="0" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
               </div>
               <div>
-                <Label>Moeda</Label>
-                <Input maxLength={3} value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} />
+                <Label htmlFor="services-moeda">Moeda</Label>
+                <Input id="services-moeda" maxLength={3} value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} />
               </div>
               <div>
-                <Label>Dia cobrança</Label>
-                <Input type="number" min="1" max="31" value={form.billing_day} onChange={(e) => setForm({ ...form, billing_day: e.target.value })} />
+                <Label htmlFor="services-dia-cobranca">Dia cobrança</Label>
+                <Input id="services-dia-cobranca" type="number" min="1" max="31" value={form.billing_day} onChange={(e) => setForm({ ...form, billing_day: e.target.value })} />
               </div>
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <Label>Contratação</Label>
-                <Input type="date" value={form.contracted_at} onChange={(e) => setForm({ ...form, contracted_at: e.target.value })} />
+                <Label htmlFor="services-contratacao">Contratação</Label>
+                <Input id="services-contratacao" type="date" value={form.contracted_at} onChange={(e) => setForm({ ...form, contracted_at: e.target.value })} />
               </div>
               <div>
-                <Label>Renovação</Label>
-                <Input type="date" value={form.renews_at} onChange={(e) => setForm({ ...form, renews_at: e.target.value })} />
+                <Label htmlFor="services-renovacao">Renovação</Label>
+                <Input id="services-renovacao" type="date" value={form.renews_at} onChange={(e) => setForm({ ...form, renews_at: e.target.value })} />
               </div>
               <div>
-                <Label>Expiração</Label>
-                <Input type="date" value={form.expires_at} onChange={(e) => setForm({ ...form, expires_at: e.target.value })} />
+                <Label htmlFor="services-expiracao">Expiração</Label>
+                <Input id="services-expiracao" type="date" value={form.expires_at} onChange={(e) => setForm({ ...form, expires_at: e.target.value })} />
               </div>
             </div>
             <div>
-              <Label>Projeto padrão</Label>
+              <Label htmlFor="services-projeto-padrao">Projeto padrão</Label>
               <Select
                 value={form.default_project_id}
                 onValueChange={(v) => setForm({ ...form, default_project_id: v, project_account_id: "none" })}
               >
-                <SelectTrigger>
+                <SelectTrigger id="services-projeto-padrao">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -432,9 +432,9 @@ function ServicesPage() {
             </div>
             {form.default_project_id !== "none" && (
               <div>
-                <Label>Conta/plataforma do projeto</Label>
+                <Label htmlFor="services-conta-plataforma-do-projeto">Conta/plataforma do projeto</Label>
                 <Select value={form.project_account_id} onValueChange={(v) => setForm({ ...form, project_account_id: v })}>
-                  <SelectTrigger>
+                  <SelectTrigger id="services-conta-plataforma-do-projeto">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -459,12 +459,12 @@ function ServicesPage() {
               </label>
             </div>
             <div>
-              <Label>Descrição</Label>
-              <Textarea rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+              <Label htmlFor="services-descricao">Descrição</Label>
+              <Textarea id="services-descricao" rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             </div>
             <div>
-              <Label>Observações</Label>
-              <Textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+              <Label htmlFor="services-observacoes">Observações</Label>
+              <Textarea id="services-observacoes" rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
               <p className="text-xs text-muted-foreground mt-1">Não registre senhas, tokens ou chaves de acesso.</p>
             </div>
           </div>

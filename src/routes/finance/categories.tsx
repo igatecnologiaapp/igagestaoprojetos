@@ -201,11 +201,11 @@ function CategoriesPage() {
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label>Nome *</Label>
-              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <Label htmlFor="categories-nome">Nome *</Label>
+              <Input id="categories-nome" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
             <div>
-              <Label>Slug</Label>
+              <Label htmlFor="categories-slug">Slug</Label>
               <Input
                 placeholder={slugify(form.name) || "identificador-unico"}
                 value={form.slug}
@@ -214,9 +214,9 @@ function CategoriesPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Tipo</Label>
+                <Label htmlFor="categories-tipo">Tipo</Label>
                 <Select value={form.kind} onValueChange={(v) => setForm({ ...form, kind: v })}>
-                  <SelectTrigger>
+                  <SelectTrigger id="categories-tipo">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -229,14 +229,14 @@ function CategoriesPage() {
                 </Select>
               </div>
               <div>
-                <Label>Posição</Label>
-                <Input type="number" value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} />
+                <Label htmlFor="categories-posicao">Posição</Label>
+                <Input id="categories-posicao" type="number" value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} />
               </div>
             </div>
             <div>
-              <Label>Categoria pai</Label>
+              <Label htmlFor="categories-categoria-pai">Categoria pai</Label>
               <Select value={form.parent_id} onValueChange={(v) => setForm({ ...form, parent_id: v })}>
-                <SelectTrigger>
+                <SelectTrigger id="categories-categoria-pai">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

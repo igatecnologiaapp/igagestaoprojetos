@@ -219,45 +219,45 @@ function VendorsPage() {
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label>Nome *</Label>
-              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <Label htmlFor="vendors-nome">Nome *</Label>
+              <Input id="vendors-nome" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
             <div>
-              <Label>Razão social</Label>
-              <Input value={form.legal_name} onChange={(e) => setForm({ ...form, legal_name: e.target.value })} />
+              <Label htmlFor="vendors-razao-social">Razão social</Label>
+              <Input id="vendors-razao-social" value={form.legal_name} onChange={(e) => setForm({ ...form, legal_name: e.target.value })} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Documento</Label>
-                <Input value={form.document} onChange={(e) => setForm({ ...form, document: e.target.value })} />
+                <Label htmlFor="vendors-documento">Documento</Label>
+                <Input id="vendors-documento" value={form.document} onChange={(e) => setForm({ ...form, document: e.target.value })} />
               </div>
               <div>
-                <Label>Moeda padrão</Label>
-                <Input maxLength={3} value={form.default_currency} onChange={(e) => setForm({ ...form, default_currency: e.target.value })} />
+                <Label htmlFor="vendors-moeda-padrao">Moeda padrão</Label>
+                <Input id="vendors-moeda-padrao" maxLength={3} value={form.default_currency} onChange={(e) => setForm({ ...form, default_currency: e.target.value })} />
               </div>
             </div>
             <div>
-              <Label>Site</Label>
-              <Input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} />
+              <Label htmlFor="vendors-site">Site</Label>
+              <Input id="vendors-site" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Contato</Label>
-                <Input value={form.contact_name} onChange={(e) => setForm({ ...form, contact_name: e.target.value })} />
+                <Label htmlFor="vendors-contato">Contato</Label>
+                <Input id="vendors-contato" value={form.contact_name} onChange={(e) => setForm({ ...form, contact_name: e.target.value })} />
               </div>
               <div>
-                <Label>Telefone</Label>
-                <Input value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })} />
+                <Label htmlFor="vendors-telefone">Telefone</Label>
+                <Input id="vendors-telefone" value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })} />
               </div>
             </div>
             <div>
-              <Label>E-mail</Label>
-              <Input type="email" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} />
+              <Label htmlFor="vendors-e-mail">E-mail</Label>
+              <Input id="vendors-e-mail" type="email" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} />
             </div>
             <div>
-              <Label>Situação</Label>
+              <Label htmlFor="vendors-situacao">Situação</Label>
               <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as Status })}>
-                <SelectTrigger>
+                <SelectTrigger id="vendors-situacao">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -267,8 +267,8 @@ function VendorsPage() {
               </Select>
             </div>
             <div>
-              <Label>Observações</Label>
-              <Textarea rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+              <Label htmlFor="vendors-observacoes">Observações</Label>
+              <Textarea id="vendors-observacoes" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
               <p className="text-xs text-muted-foreground mt-1">Não registre senhas, tokens ou chaves de acesso.</p>
             </div>
           </div>

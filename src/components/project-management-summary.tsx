@@ -39,6 +39,14 @@ export const promptStatusOptions = [
   { value: "cancelled", label: "Cancelado" },
 ];
 
+const debtStatusLabels = [
+  { value: "open", label: "Aberta" },
+  { value: "analysis", label: "Em análise" },
+  { value: "planned", label: "Planejada" },
+  { value: "resolved", label: "Resolvida" },
+  { value: "accepted", label: "Aceita" },
+];
+
 const platformSuggestions = ["Lovable", "Claude", "ChatGPT", "GitHub", "Supabase", "Gamma", "Base44", "VPS", "Docker", "Outra"];
 
 const money = (v: number | null | undefined, currency = "BRL") =>
@@ -703,7 +711,7 @@ export function ProjectManagementSummary({
               <li key={String(d['id'])} className="flex flex-wrap items-center gap-2">
                 {d['code'] ? <Badge variant="outline">{String(d['code'])}</Badge> : null}
                 <span className="break-words">{String(d['title'])}</span>
-                <Badge variant="secondary">{String(d['status'])}</Badge>
+                <Badge variant="secondary">{labelOf(debtStatusLabels, d['status'])}</Badge>
                 <span className="text-xs text-muted-foreground">{dd(d['identified_at'])}</span>
               </li>
             ))}

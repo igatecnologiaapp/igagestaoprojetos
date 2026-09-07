@@ -288,6 +288,136 @@ export type Database = {
           },
         ]
       }
+      finance_cost_allocations: {
+        Row: {
+          amount: number
+          cost_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          percentage: number
+          project_id: string
+        }
+        Insert: {
+          amount: number
+          cost_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          percentage: number
+          project_id: string
+        }
+        Update: {
+          amount?: number
+          cost_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          percentage?: number
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_cost_allocations_cost_id_fkey"
+            columns: ["cost_id"]
+            isOneToOne: false
+            referencedRelation: "finance_costs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_cost_allocations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finance_costs: {
+        Row: {
+          amount: number
+          amount_brl: number | null
+          category_id: string | null
+          competence: string
+          cost_type: Database["public"]["Enums"]["finance_cost_type"]
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string
+          due_date: string | null
+          id: string
+          is_shared: boolean
+          notes: string | null
+          paid_at: string | null
+          service_id: string | null
+          status: Database["public"]["Enums"]["finance_cost_status"]
+          updated_at: string
+          vendor_id: string | null
+        }
+        Insert: {
+          amount: number
+          amount_brl?: number | null
+          category_id?: string | null
+          competence: string
+          cost_type?: Database["public"]["Enums"]["finance_cost_type"]
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description: string
+          due_date?: string | null
+          id?: string
+          is_shared?: boolean
+          notes?: string | null
+          paid_at?: string | null
+          service_id?: string | null
+          status?: Database["public"]["Enums"]["finance_cost_status"]
+          updated_at?: string
+          vendor_id?: string | null
+        }
+        Update: {
+          amount?: number
+          amount_brl?: number | null
+          category_id?: string | null
+          competence?: string
+          cost_type?: Database["public"]["Enums"]["finance_cost_type"]
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string
+          due_date?: string | null
+          id?: string
+          is_shared?: boolean
+          notes?: string | null
+          paid_at?: string | null
+          service_id?: string | null
+          status?: Database["public"]["Enums"]["finance_cost_status"]
+          updated_at?: string
+          vendor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_costs_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "finance_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_costs_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "finance_services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_costs_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "finance_vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       finance_services: {
         Row: {
           amount: number | null
@@ -1497,6 +1627,10 @@ export type Database = {
         Args: { _company_id: string; _user_id: string }
         Returns: boolean
       }
+      can_view_cost: {
+        Args: { _cost_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_view_project: {
         Args: { _project_id: string; _user_id: string }
         Returns: boolean
@@ -1572,6 +1706,8 @@ export type Database = {
         | "test"
         | "homologation"
         | "deployment"
+      finance_cost_status: "forecast" | "open" | "paid" | "cancelled"
+      finance_cost_type: "recurring" | "one_off"
       finance_entity_status: "active" | "inactive"
       finance_recurrence:
         | "monthly"
@@ -1787,6 +1923,8 @@ export const Constants = {
         "homologation",
         "deployment",
       ],
+      finance_cost_status: ["forecast", "open", "paid", "cancelled"],
+      finance_cost_type: ["recurring", "one_off"],
       finance_entity_status: ["active", "inactive"],
       finance_recurrence: [
         "monthly",

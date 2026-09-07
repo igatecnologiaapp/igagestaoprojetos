@@ -398,6 +398,56 @@ export function ProjectManagementSummary({
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const createCost = useMutation({
+    mutationFn: async () => {
+      if (!costForm.description.trim()) throw new Error("Informe a descrição do custo.");
+      const amount = Number(costForm.amount);
+      if (!(amount >= 0) || costForm.amount === "") throw new Error("Informe um valor válido.");
+      const pct = Number(costForm.percentage);
+      if (!(pct > 0 && pct <= 100)) throw new Error("O percentual deve estar entre 0 e 100.");
+      const { data, error } = await sb
+        .from("finance_costs")
+        .insert({
+          description: costForm.description.trim(),
+          amount,
+          currency: "BRL",
+          competence: costForm.competence,
+          cost_type: costForm.cost_type,
+          status: costForm.status,
+          is_shared: pct < 100,
+          paid_at: costForm.status === "paid" ? new Date().toISOString().slice(0, 10) : null,
+          created_by: user?.id ?? null,
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
+      const { error: allocError } = await sb.from("finance_cost_allocations").insert({
+        cost_id: data.id,
+        project_id: projectId,
+        percentage: pct,
+        amount: Number(((amount * pct) / 100).toFixed(2)),
+        created_by: user?.id ?? null,
+      });
+      if (allocError) throw allocError;
+    },
+    onSuccess: () => {
+      toast.success("Custo registrado");
+      setNewCostOpen(false);
+      setCostForm({
+        description: "",
+        amount: "",
+        competence: new Date().toISOString().slice(0, 8) + "01",
+        cost_type: "one_off",
+        status: "open",
+        percentage: "100",
+      });
+      qc.invalidateQueries({ queryKey: ["project-cost-allocations", projectId] });
+      qc.invalidateQueries({ queryKey: ["project-detail", projectId] });
+      qc.invalidateQueries({ queryKey: ["finance_costs"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const changePromptStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const { error } = await sb.from("project_prompts").update({ status }).eq("id", id);

@@ -103,6 +103,15 @@ export function ProjectManagementSummary({
   const [promptFilterStatus, setPromptFilterStatus] = useState("all");
   const [promptFilterPlatform, setPromptFilterPlatform] = useState("all");
   const [newPromptOpen, setNewPromptOpen] = useState(false);
+  const [newCostOpen, setNewCostOpen] = useState(false);
+  const [costForm, setCostForm] = useState({
+    description: "",
+    amount: "",
+    competence: new Date().toISOString().slice(0, 8) + "01",
+    cost_type: "one_off",
+    status: "open",
+    percentage: "100",
+  });
   const [promptForm, setPromptForm] = useState({
     title: "",
     platform: "Lovable",

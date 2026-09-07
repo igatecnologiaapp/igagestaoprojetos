@@ -206,7 +206,7 @@ function CategoriesPage() {
             </div>
             <div>
               <Label htmlFor="categories-slug">Slug</Label>
-              <Input
+              <Input id="categories-slug"
                 placeholder={slugify(form.name) || "identificador-unico"}
                 value={form.slug}
                 onChange={(e) => setForm({ ...form, slug: e.target.value })}

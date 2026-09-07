@@ -262,6 +262,51 @@ export function ProjectManagementSummary({
     },
   });
 
+  // Custos reais alocados a este projeto (Bloco 4C)
+  const { data: allocations = [] } = useQuery({
+    queryKey: ["project-cost-allocations", projectId],
+    enabled: canViewFinance,
+    queryFn: async () => {
+      const { data, error } = await sb
+        .from("finance_cost_allocations")
+        .select("id,percentage,amount,finance_costs(id,description,competence,status,cost_type,currency,amount,amount_brl,paid_at)")
+        .eq("project_id", projectId);
+      if (error) throw error;
+      return (data ?? []) as {
+        id: string;
+        percentage: number;
+        amount: number;
+        finance_costs?: {
+          id: string;
+          description: string;
+          competence: string;
+          status: string;
+          cost_type: string;
+          currency: string;
+          amount: number;
+          amount_brl: number | null;
+          paid_at: string | null;
+        } | null;
+      }[];
+    },
+  });
+
+  const realized = useMemo(() => {
+    let paid = 0;
+    let openTotal = 0;
+    let total = 0;
+    for (const a of allocations) {
+      const c = a.finance_costs;
+      if (!c || c.status === "cancelled") continue;
+      const v = Number(a.amount);
+      total += v;
+      if (c.status === "paid") paid += v;
+      else openTotal += v;
+    }
+    return { paid, open: openTotal, total, count: allocations.length };
+  }, [allocations]);
+
+
   const finance = useMemo(() => {
     const active = services.filter((s) => s.status === "active");
     let monthly = 0;

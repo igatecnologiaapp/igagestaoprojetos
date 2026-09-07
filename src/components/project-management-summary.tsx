@@ -597,6 +597,117 @@ export function ProjectManagementSummary({
         )}
       </div>
 
+      {/* Custos reais (realizado) */}
+      {canViewFinance && (
+        <div className="space-y-3 border-t pt-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <SectionTitle>Custos realizados</SectionTitle>
+            {canEditFinance && (
+              <Button size="sm" variant="outline" onClick={() => setNewCostOpen((v) => !v)}>
+                <Plus className="h-4 w-4" /> Adicionar custo
+              </Button>
+            )}
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-3 text-sm">
+            <Card className="p-3">
+              <div className="text-xs text-muted-foreground">Custos alocados ao projeto</div>
+              <p className="font-semibold mt-1">{money(realized.total)}</p>
+            </Card>
+            <Card className="p-3">
+              <div className="text-xs text-muted-foreground">Custos pagos</div>
+              <p className="font-semibold mt-1">{money(realized.paid)}</p>
+            </Card>
+            <Card className="p-3">
+              <div className="text-xs text-muted-foreground">Custos em aberto</div>
+              <p className="font-semibold mt-1">{money(realized.open)}</p>
+            </Card>
+          </div>
+
+          {newCostOpen && canEditFinance && (
+            <Card className="p-3 space-y-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <Label htmlFor="pc-desc">Descrição *</Label>
+                  <Input id="pc-desc" value={costForm.description} onChange={(e) => setCostForm({ ...costForm, description: e.target.value })} />
+                </div>
+                <div>
+                  <Label htmlFor="pc-valor">Valor total (R$) *</Label>
+                  <Input id="pc-valor" type="number" step="0.01" min="0" value={costForm.amount} onChange={(e) => setCostForm({ ...costForm, amount: e.target.value })} />
+                </div>
+                <div>
+                  <Label htmlFor="pc-competencia">Competência *</Label>
+                  <Input id="pc-competencia" type="date" value={costForm.competence} onChange={(e) => setCostForm({ ...costForm, competence: e.target.value })} />
+                </div>
+                <div>
+                  <Label htmlFor="pc-tipo">Tipo</Label>
+                  <Select value={costForm.cost_type} onValueChange={(v) => setCostForm({ ...costForm, cost_type: v })}>
+                    <SelectTrigger id="pc-tipo"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="one_off">Eventual</SelectItem>
+                      <SelectItem value="recurring">Recorrente</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="pc-situacao">Situação</Label>
+                  <Select value={costForm.status} onValueChange={(v) => setCostForm({ ...costForm, status: v })}>
+                    <SelectTrigger id="pc-situacao"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="forecast">Previsto</SelectItem>
+                      <SelectItem value="open">Em aberto</SelectItem>
+                      <SelectItem value="paid">Pago</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="pc-percentual">Parcela deste projeto (%)</Label>
+                  <Input id="pc-percentual" type="number" min="0.01" max="100" step="0.01" value={costForm.percentage} onChange={(e) => setCostForm({ ...costForm, percentage: e.target.value })} />
+                </div>
+                <div className="flex items-end">
+                  <p className="text-xs text-muted-foreground">
+                    Use 100% para custo exclusivo. Para dividir com outros projetos, informe a parcela e conclua o rateio em Financeiro · Custos.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={() => createCost.mutate()} disabled={createCost.isPending}>
+                  <Save className="h-4 w-4" /> Salvar custo
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setNewCostOpen(false)}>
+                  <X className="h-4 w-4" /> Cancelar
+                </Button>
+              </div>
+            </Card>
+          )}
+
+          {allocations.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum custo real alocado a este projeto.</p>
+          ) : (
+            <ul className="space-y-1 text-xs text-muted-foreground">
+              {allocations.map((a) => (
+                <li key={a.id} className="break-words">
+                  {a.finance_costs?.description ?? "Custo"} — parcela {Number(a.percentage)}% · {money(Number(a.amount))} ·{" "}
+                  {a.finance_costs?.status === "paid"
+                    ? "pago"
+                    : a.finance_costs?.status === "cancelled"
+                      ? "cancelado"
+                      : a.finance_costs?.status === "forecast"
+                        ? "previsto"
+                        : "em aberto"}
+                  {a.finance_costs?.competence
+                    ? ` · competência ${new Date(a.finance_costs.competence + "T00:00:00").toLocaleDateString("pt-BR", { month: "2-digit", year: "numeric" })}`
+                    : ""}
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="text-xs text-muted-foreground">
+            Valores estimados vêm dos serviços contratados; valores realizados vêm dos custos efetivamente registrados. Estimado não significa pago.
+          </p>
+        </div>
+      )}
+
       {/* Prompts pendentes */}
       <div className="space-y-3 border-t pt-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">

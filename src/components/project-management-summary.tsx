@@ -91,9 +91,10 @@ export function ProjectManagementSummary({
   projectId: string;
   responsibleName: (id: unknown) => string | null;
 }) {
-  const { hasPermission, isOwner } = useAuth();
+  const { hasPermission, isOwner, user } = useAuth();
   const canEditProject = isOwner || hasPermission("projects.edit");
   const canViewFinance = hasPermission("financial.view");
+  const canEditFinance = hasPermission("financial.edit");
   const canViewCredentials = isOwner || hasPermission("credentials.metadata.view");
   const canEditPrompts = isOwner || hasPermission("prompts.edit") || canEditProject;
   const qc = useQueryClient();
@@ -103,6 +104,15 @@ export function ProjectManagementSummary({
   const [promptFilterStatus, setPromptFilterStatus] = useState("all");
   const [promptFilterPlatform, setPromptFilterPlatform] = useState("all");
   const [newPromptOpen, setNewPromptOpen] = useState(false);
+  const [newCostOpen, setNewCostOpen] = useState(false);
+  const [costForm, setCostForm] = useState({
+    description: "",
+    amount: "",
+    competence: new Date().toISOString().slice(0, 8) + "01",
+    cost_type: "one_off",
+    status: "open",
+    percentage: "100",
+  });
   const [promptForm, setPromptForm] = useState({
     title: "",
     platform: "Lovable",
@@ -262,6 +272,51 @@ export function ProjectManagementSummary({
     },
   });
 
+  // Custos reais alocados a este projeto (Bloco 4C)
+  const { data: allocations = [] } = useQuery({
+    queryKey: ["project-cost-allocations", projectId],
+    enabled: canViewFinance,
+    queryFn: async () => {
+      const { data, error } = await sb
+        .from("finance_cost_allocations")
+        .select("id,percentage,amount,finance_costs(id,description,competence,status,cost_type,currency,amount,amount_brl,paid_at)")
+        .eq("project_id", projectId);
+      if (error) throw error;
+      return (data ?? []) as {
+        id: string;
+        percentage: number;
+        amount: number;
+        finance_costs?: {
+          id: string;
+          description: string;
+          competence: string;
+          status: string;
+          cost_type: string;
+          currency: string;
+          amount: number;
+          amount_brl: number | null;
+          paid_at: string | null;
+        } | null;
+      }[];
+    },
+  });
+
+  const realized = useMemo(() => {
+    let paid = 0;
+    let openTotal = 0;
+    let total = 0;
+    for (const a of allocations) {
+      const c = a.finance_costs;
+      if (!c || c.status === "cancelled") continue;
+      const v = Number(a.amount);
+      total += v;
+      if (c.status === "paid") paid += v;
+      else openTotal += v;
+    }
+    return { paid, open: openTotal, total, count: allocations.length };
+  }, [allocations]);
+
+
   const finance = useMemo(() => {
     const active = services.filter((s) => s.status === "active");
     let monthly = 0;
@@ -343,6 +398,56 @@ export function ProjectManagementSummary({
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const createCost = useMutation({
+    mutationFn: async () => {
+      if (!costForm.description.trim()) throw new Error("Informe a descrição do custo.");
+      const amount = Number(costForm.amount);
+      if (!(amount >= 0) || costForm.amount === "") throw new Error("Informe um valor válido.");
+      const pct = Number(costForm.percentage);
+      if (!(pct > 0 && pct <= 100)) throw new Error("O percentual deve estar entre 0 e 100.");
+      const { data, error } = await sb
+        .from("finance_costs")
+        .insert({
+          description: costForm.description.trim(),
+          amount,
+          currency: "BRL",
+          competence: costForm.competence,
+          cost_type: costForm.cost_type,
+          status: costForm.status,
+          is_shared: pct < 100,
+          paid_at: costForm.status === "paid" ? new Date().toISOString().slice(0, 10) : null,
+          created_by: user?.id ?? null,
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
+      const { error: allocError } = await sb.from("finance_cost_allocations").insert({
+        cost_id: data.id,
+        project_id: projectId,
+        percentage: pct,
+        amount: Number(((amount * pct) / 100).toFixed(2)),
+        created_by: user?.id ?? null,
+      });
+      if (allocError) throw allocError;
+    },
+    onSuccess: () => {
+      toast.success("Custo registrado");
+      setNewCostOpen(false);
+      setCostForm({
+        description: "",
+        amount: "",
+        competence: new Date().toISOString().slice(0, 8) + "01",
+        cost_type: "one_off",
+        status: "open",
+        percentage: "100",
+      });
+      qc.invalidateQueries({ queryKey: ["project-cost-allocations", projectId] });
+      qc.invalidateQueries({ queryKey: ["project-detail", projectId] });
+      qc.invalidateQueries({ queryKey: ["finance_costs"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const changePromptStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const { error } = await sb.from("project_prompts").update({ status }).eq("id", id);
@@ -397,6 +502,22 @@ export function ProjectManagementSummary({
           <div className="text-xs text-muted-foreground">Resultado bruto estimado</div>
           <p className="text-lg font-semibold mt-1">{canViewFinance && grossResult != null ? money(grossResult) : "—"}</p>
           <p className="text-xs text-muted-foreground">Estimativa (receita − custo mensal conhecido)</p>
+        </Card>
+        <Card className="p-3">
+          <div className="text-xs text-muted-foreground">Custos realizados no período</div>
+          <p className="text-lg font-semibold mt-1">{canViewFinance ? money(realized.total) : "Sem permissão"}</p>
+          {canViewFinance && (
+            <p className="text-xs text-muted-foreground">
+              Pagos {money(realized.paid)} · em aberto {money(realized.open)}
+            </p>
+          )}
+        </Card>
+        <Card className="p-3">
+          <div className="text-xs text-muted-foreground">Resultado bruto gerencial</div>
+          <p className="text-lg font-semibold mt-1">
+            {canViewFinance && revenue != null ? money(revenue - realized.total) : "—"}
+          </p>
+          <p className="text-xs text-muted-foreground">Receita contratada − custos reais conhecidos</p>
         </Card>
         <Card className="p-3">
           <div className="text-xs text-muted-foreground">Próxima ação</div>
@@ -551,6 +672,117 @@ export function ProjectManagementSummary({
           </>
         )}
       </div>
+
+      {/* Custos reais (realizado) */}
+      {canViewFinance && (
+        <div className="space-y-3 border-t pt-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <SectionTitle>Custos realizados</SectionTitle>
+            {canEditFinance && (
+              <Button size="sm" variant="outline" onClick={() => setNewCostOpen((v) => !v)}>
+                <Plus className="h-4 w-4" /> Adicionar custo
+              </Button>
+            )}
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-3 text-sm">
+            <Card className="p-3">
+              <div className="text-xs text-muted-foreground">Custos alocados ao projeto</div>
+              <p className="font-semibold mt-1">{money(realized.total)}</p>
+            </Card>
+            <Card className="p-3">
+              <div className="text-xs text-muted-foreground">Custos pagos</div>
+              <p className="font-semibold mt-1">{money(realized.paid)}</p>
+            </Card>
+            <Card className="p-3">
+              <div className="text-xs text-muted-foreground">Custos em aberto</div>
+              <p className="font-semibold mt-1">{money(realized.open)}</p>
+            </Card>
+          </div>
+
+          {newCostOpen && canEditFinance && (
+            <Card className="p-3 space-y-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <Label htmlFor="pc-desc">Descrição *</Label>
+                  <Input id="pc-desc" value={costForm.description} onChange={(e) => setCostForm({ ...costForm, description: e.target.value })} />
+                </div>
+                <div>
+                  <Label htmlFor="pc-valor">Valor total (R$) *</Label>
+                  <Input id="pc-valor" type="number" step="0.01" min="0" value={costForm.amount} onChange={(e) => setCostForm({ ...costForm, amount: e.target.value })} />
+                </div>
+                <div>
+                  <Label htmlFor="pc-competencia">Competência *</Label>
+                  <Input id="pc-competencia" type="date" value={costForm.competence} onChange={(e) => setCostForm({ ...costForm, competence: e.target.value })} />
+                </div>
+                <div>
+                  <Label htmlFor="pc-tipo">Tipo</Label>
+                  <Select value={costForm.cost_type} onValueChange={(v) => setCostForm({ ...costForm, cost_type: v })}>
+                    <SelectTrigger id="pc-tipo"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="one_off">Eventual</SelectItem>
+                      <SelectItem value="recurring">Recorrente</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="pc-situacao">Situação</Label>
+                  <Select value={costForm.status} onValueChange={(v) => setCostForm({ ...costForm, status: v })}>
+                    <SelectTrigger id="pc-situacao"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="forecast">Previsto</SelectItem>
+                      <SelectItem value="open">Em aberto</SelectItem>
+                      <SelectItem value="paid">Pago</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="pc-percentual">Parcela deste projeto (%)</Label>
+                  <Input id="pc-percentual" type="number" min="0.01" max="100" step="0.01" value={costForm.percentage} onChange={(e) => setCostForm({ ...costForm, percentage: e.target.value })} />
+                </div>
+                <div className="flex items-end">
+                  <p className="text-xs text-muted-foreground">
+                    Use 100% para custo exclusivo. Para dividir com outros projetos, informe a parcela e conclua o rateio em Financeiro · Custos.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={() => createCost.mutate()} disabled={createCost.isPending}>
+                  <Save className="h-4 w-4" /> Salvar custo
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setNewCostOpen(false)}>
+                  <X className="h-4 w-4" /> Cancelar
+                </Button>
+              </div>
+            </Card>
+          )}
+
+          {allocations.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum custo real alocado a este projeto.</p>
+          ) : (
+            <ul className="space-y-1 text-xs text-muted-foreground">
+              {allocations.map((a) => (
+                <li key={a.id} className="break-words">
+                  {a.finance_costs?.description ?? "Custo"} — parcela {Number(a.percentage)}% · {money(Number(a.amount))} ·{" "}
+                  {a.finance_costs?.status === "paid"
+                    ? "pago"
+                    : a.finance_costs?.status === "cancelled"
+                      ? "cancelado"
+                      : a.finance_costs?.status === "forecast"
+                        ? "previsto"
+                        : "em aberto"}
+                  {a.finance_costs?.competence
+                    ? ` · competência ${new Date(a.finance_costs.competence + "T00:00:00").toLocaleDateString("pt-BR", { month: "2-digit", year: "numeric" })}`
+                    : ""}
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="text-xs text-muted-foreground">
+            Valores estimados vêm dos serviços contratados; valores realizados vêm dos custos efetivamente registrados. Estimado não significa pago.
+          </p>
+        </div>
+      )}
 
       {/* Prompts pendentes */}
       <div className="space-y-3 border-t pt-4">

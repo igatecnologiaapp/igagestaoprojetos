@@ -444,6 +444,22 @@ export function ProjectManagementSummary({
           <p className="text-xs text-muted-foreground">Estimativa (receita − custo mensal conhecido)</p>
         </Card>
         <Card className="p-3">
+          <div className="text-xs text-muted-foreground">Custos realizados no período</div>
+          <p className="text-lg font-semibold mt-1">{canViewFinance ? money(realized.total) : "Sem permissão"}</p>
+          {canViewFinance && (
+            <p className="text-xs text-muted-foreground">
+              Pagos {money(realized.paid)} · em aberto {money(realized.open)}
+            </p>
+          )}
+        </Card>
+        <Card className="p-3">
+          <div className="text-xs text-muted-foreground">Resultado bruto gerencial</div>
+          <p className="text-lg font-semibold mt-1">
+            {canViewFinance && revenue != null ? money(revenue - realized.total) : "—"}
+          </p>
+          <p className="text-xs text-muted-foreground">Receita contratada − custos reais conhecidos</p>
+        </Card>
+        <Card className="p-3">
           <div className="text-xs text-muted-foreground">Próxima ação</div>
           <p className="text-sm font-medium mt-1 break-words">{project.next_action || "—"}</p>
         </Card>

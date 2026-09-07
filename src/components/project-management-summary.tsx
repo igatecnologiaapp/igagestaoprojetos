@@ -94,6 +94,7 @@ export function ProjectManagementSummary({
   const { hasPermission, isOwner } = useAuth();
   const canEditProject = isOwner || hasPermission("projects.edit");
   const canViewFinance = hasPermission("financial.view");
+  const canEditFinance = hasPermission("financial.edit");
   const canViewCredentials = isOwner || hasPermission("credentials.metadata.view");
   const canEditPrompts = isOwner || hasPermission("prompts.edit") || canEditProject;
   const qc = useQueryClient();

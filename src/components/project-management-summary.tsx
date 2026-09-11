@@ -890,6 +890,117 @@ export function ProjectManagementSummary({
         </div>
       )}
 
+      {/* Orçamento previsto × realizado */}
+      {canViewFinance && (
+        <div className="space-y-3 border-t pt-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <SectionTitle>Orçamento — previsto × realizado</SectionTitle>
+            {canEditFinance && (
+              <Button size="sm" variant="outline" onClick={() => setNewBudgetOpen((v) => !v)}>
+                <Plus className="h-4 w-4" /> Adicionar orçamento
+              </Button>
+            )}
+          </div>
+
+          {newBudgetOpen && canEditFinance && (
+            <Card className="p-3 space-y-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <Label htmlFor="pb-valor">Valor previsto (R$) *</Label>
+                  <Input id="pb-valor" type="number" min="0" step="0.01" value={budgetForm.amount} onChange={(e) => setBudgetForm({ ...budgetForm, amount: e.target.value })} />
+                </div>
+                <div>
+                  <Label htmlFor="pb-cat">Categoria</Label>
+                  <Select value={budgetForm.category_id} onValueChange={(v) => setBudgetForm({ ...budgetForm, category_id: v })}>
+                    <SelectTrigger id="pb-cat"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Orçamento do projeto (sem categoria)</SelectItem>
+                      {financeCategories.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="pb-ini">Início do período *</Label>
+                  <Input id="pb-ini" type="date" value={budgetForm.period_start} onChange={(e) => setBudgetForm({ ...budgetForm, period_start: e.target.value })} />
+                </div>
+                <div>
+                  <Label htmlFor="pb-fim">Fim do período *</Label>
+                  <Input id="pb-fim" type="date" value={budgetForm.period_end} onChange={(e) => setBudgetForm({ ...budgetForm, period_end: e.target.value })} />
+                </div>
+                <div className="sm:col-span-2">
+                  <Label htmlFor="pb-notas">Observações</Label>
+                  <Textarea id="pb-notas" rows={2} value={budgetForm.notes} onChange={(e) => setBudgetForm({ ...budgetForm, notes: e.target.value })} />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={() => createBudget.mutate()} disabled={createBudget.isPending}>
+                  <Save className="h-4 w-4" /> Salvar orçamento
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setNewBudgetOpen(false)}>
+                  <X className="h-4 w-4" /> Cancelar
+                </Button>
+              </div>
+            </Card>
+          )}
+
+          {budgets.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Nenhum orçamento previsto para este projeto. Cadastre aqui ou em Financeiro · Orçamentos.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {budgets.map((b) => {
+                const r = realizedFor(
+                  allocations.map((a) => ({
+                    amount: Number(a.amount),
+                    project_id: projectId,
+                    finance_costs: a.finance_costs
+                      ? {
+                          status: a.finance_costs.status,
+                          competence: a.finance_costs.competence,
+                          category_id: (a.finance_costs as unknown as { category_id: string | null }).category_id ?? null,
+                        }
+                      : null,
+                  })),
+                  {
+                    projectId,
+                    categoryId: b.category_id ?? undefined,
+                    periodStart: b.period_start,
+                    periodEnd: b.period_end,
+                  },
+                );
+                const c = consumption(Number(b.amount ?? 0), r.total);
+                return (
+                  <Card key={b.id} className="p-3 text-sm space-y-1">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="font-medium break-words">
+                        {b.finance_categories?.name ?? "Projeto (sem categoria)"}
+                      </span>
+                      <Badge variant={levelVariant[c.level]}>{levelLabels[c.level]}</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Período {dd(b.period_start)} a {dd(b.period_end)}
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <div><span className="text-xs text-muted-foreground block">Previsto</span>{money(Number(b.amount ?? 0))}</div>
+                      <div><span className="text-xs text-muted-foreground block">Realizado</span>{money(r.total)}</div>
+                      <div><span className="text-xs text-muted-foreground block">Diferença</span>{money(Number(b.amount ?? 0) - r.total)}</div>
+                      <div><span className="text-xs text-muted-foreground block">Consumo</span>{c.pct == null ? "—" : `${c.pct.toFixed(1)}%`}</div>
+                    </div>
+                    {b.notes && <p className="text-xs text-muted-foreground break-words">{b.notes}</p>}
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+          <p className="text-xs text-muted-foreground">
+            Orçamento não é custo; custo em aberto não é custo pago; resultado bruto gerencial não é lucro líquido contábil.
+          </p>
+        </div>
+      )}
+
       {/* Prompts pendentes */}
       <div className="space-y-3 border-t pt-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">

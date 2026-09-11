@@ -24,6 +24,7 @@ import { Route as FinanceVendorsRouteImport } from './routes/finance/vendors'
 import { Route as FinanceServicesRouteImport } from './routes/finance/services'
 import { Route as FinanceCostsRouteImport } from './routes/finance/costs'
 import { Route as FinanceCategoriesRouteImport } from './routes/finance/categories'
+import { Route as FinanceBudgetsRouteImport } from './routes/finance/budgets'
 
 const UsersRoute = UsersRouteImport.update({
   id: '/users',
@@ -100,6 +101,11 @@ const FinanceCategoriesRoute = FinanceCategoriesRouteImport.update({
   path: '/finance/categories',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FinanceBudgetsRoute = FinanceBudgetsRouteImport.update({
+  id: '/finance/budgets',
+  path: '/finance/budgets',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -113,6 +119,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof ReportsRoute
   '/tasks': typeof TasksRoute
   '/users': typeof UsersRoute
+  '/finance/budgets': typeof FinanceBudgetsRoute
   '/finance/categories': typeof FinanceCategoriesRoute
   '/finance/costs': typeof FinanceCostsRoute
   '/finance/services': typeof FinanceServicesRoute
@@ -130,6 +137,7 @@ export interface FileRoutesByTo {
   '/reports': typeof ReportsRoute
   '/tasks': typeof TasksRoute
   '/users': typeof UsersRoute
+  '/finance/budgets': typeof FinanceBudgetsRoute
   '/finance/categories': typeof FinanceCategoriesRoute
   '/finance/costs': typeof FinanceCostsRoute
   '/finance/services': typeof FinanceServicesRoute
@@ -148,6 +156,7 @@ export interface FileRoutesById {
   '/reports': typeof ReportsRoute
   '/tasks': typeof TasksRoute
   '/users': typeof UsersRoute
+  '/finance/budgets': typeof FinanceBudgetsRoute
   '/finance/categories': typeof FinanceCategoriesRoute
   '/finance/costs': typeof FinanceCostsRoute
   '/finance/services': typeof FinanceServicesRoute
@@ -167,6 +176,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/tasks'
     | '/users'
+    | '/finance/budgets'
     | '/finance/categories'
     | '/finance/costs'
     | '/finance/services'
@@ -184,6 +194,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/tasks'
     | '/users'
+    | '/finance/budgets'
     | '/finance/categories'
     | '/finance/costs'
     | '/finance/services'
@@ -201,6 +212,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/tasks'
     | '/users'
+    | '/finance/budgets'
     | '/finance/categories'
     | '/finance/costs'
     | '/finance/services'
@@ -219,6 +231,7 @@ export interface RootRouteChildren {
   ReportsRoute: typeof ReportsRoute
   TasksRoute: typeof TasksRoute
   UsersRoute: typeof UsersRoute
+  FinanceBudgetsRoute: typeof FinanceBudgetsRoute
   FinanceCategoriesRoute: typeof FinanceCategoriesRoute
   FinanceCostsRoute: typeof FinanceCostsRoute
   FinanceServicesRoute: typeof FinanceServicesRoute
@@ -332,6 +345,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FinanceCategoriesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/finance/budgets': {
+      id: '/finance/budgets'
+      path: '/finance/budgets'
+      fullPath: '/finance/budgets'
+      preLoaderRoute: typeof FinanceBudgetsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -347,6 +367,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReportsRoute: ReportsRoute,
   TasksRoute: TasksRoute,
   UsersRoute: UsersRoute,
+  FinanceBudgetsRoute: FinanceBudgetsRoute,
   FinanceCategoriesRoute: FinanceCategoriesRoute,
   FinanceCostsRoute: FinanceCostsRoute,
   FinanceServicesRoute: FinanceServicesRoute,

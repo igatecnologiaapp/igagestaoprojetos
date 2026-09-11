@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Pencil, Plus, Save, X } from "lucide-react";
+import { consumption, currentMonthRange, levelLabels, levelVariant, realizedFor } from "@/lib/finance-budgets";
 
 const sb = supabase as unknown as { from: (t: string) => any };
 
@@ -112,6 +113,14 @@ export function ProjectManagementSummary({
     cost_type: "one_off",
     status: "open",
     percentage: "100",
+  });
+  const [newBudgetOpen, setNewBudgetOpen] = useState(false);
+  const [budgetForm, setBudgetForm] = useState({
+    amount: "",
+    category_id: "none",
+    period_start: currentMonthRange().start,
+    period_end: currentMonthRange().end,
+    notes: "",
   });
   const [promptForm, setPromptForm] = useState({
     title: "",
@@ -279,7 +288,7 @@ export function ProjectManagementSummary({
     queryFn: async () => {
       const { data, error } = await sb
         .from("finance_cost_allocations")
-        .select("id,percentage,amount,finance_costs(id,description,competence,status,cost_type,currency,amount,amount_brl,paid_at)")
+        .select("id,percentage,amount,finance_costs(id,description,competence,status,cost_type,currency,amount,amount_brl,paid_at,category_id)")
         .eq("project_id", projectId);
       if (error) throw error;
       return (data ?? []) as {
@@ -301,6 +310,38 @@ export function ProjectManagementSummary({
     },
   });
 
+  // Orçamentos do projeto (Bloco 4D)
+  const { data: budgets = [] } = useQuery({
+    queryKey: ["project-budgets", projectId],
+    enabled: canViewFinance,
+    queryFn: async () => {
+      const { data, error } = await sb
+        .from("finance_budgets")
+        .select("id,amount,period_start,period_end,category_id,notes,finance_categories(name)")
+        .eq("project_id", projectId)
+        .order("period_start", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as {
+        id: string;
+        amount: number;
+        period_start: string;
+        period_end: string;
+        category_id: string | null;
+        notes: string | null;
+        finance_categories?: { name: string } | null;
+      }[];
+    },
+  });
+
+  const { data: financeCategories = [] } = useQuery({
+    queryKey: ["finance_categories"],
+    enabled: canViewFinance,
+    queryFn: async () => {
+      const { data } = await sb.from("finance_categories").select("id,name").order("position");
+      return (data ?? []) as { id: string; name: string }[];
+    },
+  });
+
   const realized = useMemo(() => {
     let paid = 0;
     let openTotal = 0;
@@ -315,6 +356,12 @@ export function ProjectManagementSummary({
     }
     return { paid, open: openTotal, total, count: allocations.length };
   }, [allocations]);
+
+  const budgetTotal = useMemo(() => budgets.reduce((s, b) => s + Number(b.amount ?? 0), 0), [budgets]);
+  const budgetBalance = budgetTotal - realized.total;
+  const budgetConsumption = consumption(budgetTotal, realized.total);
+
+
 
 
   const finance = useMemo(() => {
@@ -448,6 +495,44 @@ export function ProjectManagementSummary({
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const createBudget = useMutation({
+    mutationFn: async () => {
+      const amount = Number(budgetForm.amount);
+      if (budgetForm.amount === "" || !(amount >= 0)) throw new Error("Informe um valor previsto igual ou maior que zero.");
+      if (budgetForm.period_end < budgetForm.period_start) throw new Error("O fim do período não pode ser anterior ao início.");
+      const { error } = await sb.from("finance_budgets").insert({
+        project_id: projectId,
+        category_id: budgetForm.category_id === "none" ? null : budgetForm.category_id,
+        period_start: budgetForm.period_start,
+        period_end: budgetForm.period_end,
+        amount,
+        notes: budgetForm.notes || null,
+        created_by: user?.id ?? null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Orçamento registrado");
+      setNewBudgetOpen(false);
+      setBudgetForm({
+        amount: "",
+        category_id: "none",
+        period_start: currentMonthRange().start,
+        period_end: currentMonthRange().end,
+        notes: "",
+      });
+      qc.invalidateQueries({ queryKey: ["project-budgets", projectId] });
+      qc.invalidateQueries({ queryKey: ["finance_budgets"] });
+      qc.invalidateQueries({ queryKey: ["project-detail", projectId] });
+    },
+    onError: (e: Error) =>
+      toast.error(
+        e.message.includes("uq_finance_budgets_scope")
+          ? "Já existe um orçamento para este projeto, categoria e período."
+          : e.message,
+      ),
+  });
+
   const changePromptStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const { error } = await sb.from("project_prompts").update({ status }).eq("id", id);
@@ -510,6 +595,27 @@ export function ProjectManagementSummary({
             <p className="text-xs text-muted-foreground">
               Pagos {money(realized.paid)} · em aberto {money(realized.open)}
             </p>
+          )}
+        </Card>
+        <Card className="p-3">
+          <div className="text-xs text-muted-foreground">Orçamento previsto</div>
+          <p className="text-lg font-semibold mt-1">{canViewFinance ? money(budgetTotal) : "Sem permissão"}</p>
+          {canViewFinance && <p className="text-xs text-muted-foreground">{budgets.length} orçamento(s) cadastrado(s)</p>}
+        </Card>
+        <Card className="p-3">
+          <div className="text-xs text-muted-foreground">Saldo orçamentário</div>
+          <p className="text-lg font-semibold mt-1">{canViewFinance ? money(budgetBalance) : "—"}</p>
+          <p className="text-xs text-muted-foreground">Orçamento previsto − custos realizados</p>
+        </Card>
+        <Card className="p-3">
+          <div className="text-xs text-muted-foreground">Consumo do orçamento</div>
+          <p className="text-lg font-semibold mt-1">
+            {canViewFinance && budgetConsumption.pct != null ? `${budgetConsumption.pct.toFixed(1)}%` : "—"}
+          </p>
+          {canViewFinance && (
+            <Badge className="mt-1" variant={levelVariant[budgetConsumption.level]}>
+              {levelLabels[budgetConsumption.level]}
+            </Badge>
           )}
         </Card>
         <Card className="p-3">
@@ -780,6 +886,117 @@ export function ProjectManagementSummary({
           )}
           <p className="text-xs text-muted-foreground">
             Valores estimados vêm dos serviços contratados; valores realizados vêm dos custos efetivamente registrados. Estimado não significa pago.
+          </p>
+        </div>
+      )}
+
+      {/* Orçamento previsto × realizado */}
+      {canViewFinance && (
+        <div className="space-y-3 border-t pt-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <SectionTitle>Orçamento — previsto × realizado</SectionTitle>
+            {canEditFinance && (
+              <Button size="sm" variant="outline" onClick={() => setNewBudgetOpen((v) => !v)}>
+                <Plus className="h-4 w-4" /> Adicionar orçamento
+              </Button>
+            )}
+          </div>
+
+          {newBudgetOpen && canEditFinance && (
+            <Card className="p-3 space-y-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <Label htmlFor="pb-valor">Valor previsto (R$) *</Label>
+                  <Input id="pb-valor" type="number" min="0" step="0.01" value={budgetForm.amount} onChange={(e) => setBudgetForm({ ...budgetForm, amount: e.target.value })} />
+                </div>
+                <div>
+                  <Label htmlFor="pb-cat">Categoria</Label>
+                  <Select value={budgetForm.category_id} onValueChange={(v) => setBudgetForm({ ...budgetForm, category_id: v })}>
+                    <SelectTrigger id="pb-cat"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Orçamento do projeto (sem categoria)</SelectItem>
+                      {financeCategories.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="pb-ini">Início do período *</Label>
+                  <Input id="pb-ini" type="date" value={budgetForm.period_start} onChange={(e) => setBudgetForm({ ...budgetForm, period_start: e.target.value })} />
+                </div>
+                <div>
+                  <Label htmlFor="pb-fim">Fim do período *</Label>
+                  <Input id="pb-fim" type="date" value={budgetForm.period_end} onChange={(e) => setBudgetForm({ ...budgetForm, period_end: e.target.value })} />
+                </div>
+                <div className="sm:col-span-2">
+                  <Label htmlFor="pb-notas">Observações</Label>
+                  <Textarea id="pb-notas" rows={2} value={budgetForm.notes} onChange={(e) => setBudgetForm({ ...budgetForm, notes: e.target.value })} />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={() => createBudget.mutate()} disabled={createBudget.isPending}>
+                  <Save className="h-4 w-4" /> Salvar orçamento
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setNewBudgetOpen(false)}>
+                  <X className="h-4 w-4" /> Cancelar
+                </Button>
+              </div>
+            </Card>
+          )}
+
+          {budgets.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Nenhum orçamento previsto para este projeto. Cadastre aqui ou em Financeiro · Orçamentos.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {budgets.map((b) => {
+                const r = realizedFor(
+                  allocations.map((a) => ({
+                    amount: Number(a.amount),
+                    project_id: projectId,
+                    finance_costs: a.finance_costs
+                      ? {
+                          status: a.finance_costs.status,
+                          competence: a.finance_costs.competence,
+                          category_id: (a.finance_costs as unknown as { category_id: string | null }).category_id ?? null,
+                        }
+                      : null,
+                  })),
+                  {
+                    projectId,
+                    categoryId: b.category_id ?? undefined,
+                    periodStart: b.period_start,
+                    periodEnd: b.period_end,
+                  },
+                );
+                const c = consumption(Number(b.amount ?? 0), r.total);
+                return (
+                  <Card key={b.id} className="p-3 text-sm space-y-1">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="font-medium break-words">
+                        {b.finance_categories?.name ?? "Projeto (sem categoria)"}
+                      </span>
+                      <Badge variant={levelVariant[c.level]}>{levelLabels[c.level]}</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Período {dd(b.period_start)} a {dd(b.period_end)}
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <div><span className="text-xs text-muted-foreground block">Previsto</span>{money(Number(b.amount ?? 0))}</div>
+                      <div><span className="text-xs text-muted-foreground block">Realizado</span>{money(r.total)}</div>
+                      <div><span className="text-xs text-muted-foreground block">Diferença</span>{money(Number(b.amount ?? 0) - r.total)}</div>
+                      <div><span className="text-xs text-muted-foreground block">Consumo</span>{c.pct == null ? "—" : `${c.pct.toFixed(1)}%`}</div>
+                    </div>
+                    {b.notes && <p className="text-xs text-muted-foreground break-words">{b.notes}</p>}
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+          <p className="text-xs text-muted-foreground">
+            Orçamento não é custo; custo em aberto não é custo pago; resultado bruto gerencial não é lucro líquido contábil.
           </p>
         </div>
       )}

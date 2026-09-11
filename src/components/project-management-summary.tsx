@@ -339,6 +339,12 @@ export function ProjectManagementSummary({
     return { paid, open: openTotal, total, count: allocations.length };
   }, [allocations]);
 
+  const budgetTotal = useMemo(() => budgets.reduce((s, b) => s + Number(b.amount ?? 0), 0), [budgets]);
+  const budgetBalance = budgetTotal - realized.total;
+  const budgetConsumption = consumption(budgetTotal, realized.total);
+
+
+
 
   const finance = useMemo(() => {
     const active = services.filter((s) => s.status === "active");

@@ -486,6 +486,44 @@ export function ProjectManagementSummary({
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const createBudget = useMutation({
+    mutationFn: async () => {
+      const amount = Number(budgetForm.amount);
+      if (budgetForm.amount === "" || !(amount >= 0)) throw new Error("Informe um valor previsto igual ou maior que zero.");
+      if (budgetForm.period_end < budgetForm.period_start) throw new Error("O fim do período não pode ser anterior ao início.");
+      const { error } = await sb.from("finance_budgets").insert({
+        project_id: projectId,
+        category_id: budgetForm.category_id === "none" ? null : budgetForm.category_id,
+        period_start: budgetForm.period_start,
+        period_end: budgetForm.period_end,
+        amount,
+        notes: budgetForm.notes || null,
+        created_by: user?.id ?? null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Orçamento registrado");
+      setNewBudgetOpen(false);
+      setBudgetForm({
+        amount: "",
+        category_id: "none",
+        period_start: currentMonthRange().start,
+        period_end: currentMonthRange().end,
+        notes: "",
+      });
+      qc.invalidateQueries({ queryKey: ["project-budgets", projectId] });
+      qc.invalidateQueries({ queryKey: ["finance_budgets"] });
+      qc.invalidateQueries({ queryKey: ["project-detail", projectId] });
+    },
+    onError: (e: Error) =>
+      toast.error(
+        e.message.includes("uq_finance_budgets_scope")
+          ? "Já existe um orçamento para este projeto, categoria e período."
+          : e.message,
+      ),
+  });
+
   const changePromptStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const { error } = await sb.from("project_prompts").update({ status }).eq("id", id);

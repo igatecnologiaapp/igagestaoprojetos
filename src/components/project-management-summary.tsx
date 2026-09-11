@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Pencil, Plus, Save, X } from "lucide-react";
+import { consumption, currentMonthRange, levelLabels, levelVariant, realizedFor } from "@/lib/finance-budgets";
 
 const sb = supabase as unknown as { from: (t: string) => any };
 

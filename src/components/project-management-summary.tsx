@@ -114,6 +114,14 @@ export function ProjectManagementSummary({
     status: "open",
     percentage: "100",
   });
+  const [newBudgetOpen, setNewBudgetOpen] = useState(false);
+  const [budgetForm, setBudgetForm] = useState({
+    amount: "",
+    category_id: "none",
+    period_start: currentMonthRange().start,
+    period_end: currentMonthRange().end,
+    notes: "",
+  });
   const [promptForm, setPromptForm] = useState({
     title: "",
     platform: "Lovable",

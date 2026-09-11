@@ -301,6 +301,29 @@ export function ProjectManagementSummary({
     },
   });
 
+  // Orçamentos do projeto (Bloco 4D)
+  const { data: budgets = [] } = useQuery({
+    queryKey: ["project-budgets", projectId],
+    enabled: canViewFinance,
+    queryFn: async () => {
+      const { data, error } = await sb
+        .from("finance_budgets")
+        .select("id,amount,period_start,period_end,category_id,notes,finance_categories(name)")
+        .eq("project_id", projectId)
+        .order("period_start", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as {
+        id: string;
+        amount: number;
+        period_start: string;
+        period_end: string;
+        category_id: string | null;
+        notes: string | null;
+        finance_categories?: { name: string } | null;
+      }[];
+    },
+  });
+
   const realized = useMemo(() => {
     let paid = 0;
     let openTotal = 0;

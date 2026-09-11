@@ -598,6 +598,27 @@ export function ProjectManagementSummary({
           )}
         </Card>
         <Card className="p-3">
+          <div className="text-xs text-muted-foreground">Orçamento previsto</div>
+          <p className="text-lg font-semibold mt-1">{canViewFinance ? money(budgetTotal) : "Sem permissão"}</p>
+          {canViewFinance && <p className="text-xs text-muted-foreground">{budgets.length} orçamento(s) cadastrado(s)</p>}
+        </Card>
+        <Card className="p-3">
+          <div className="text-xs text-muted-foreground">Saldo orçamentário</div>
+          <p className="text-lg font-semibold mt-1">{canViewFinance ? money(budgetBalance) : "—"}</p>
+          <p className="text-xs text-muted-foreground">Orçamento previsto − custos realizados</p>
+        </Card>
+        <Card className="p-3">
+          <div className="text-xs text-muted-foreground">Consumo do orçamento</div>
+          <p className="text-lg font-semibold mt-1">
+            {canViewFinance && budgetConsumption.pct != null ? `${budgetConsumption.pct.toFixed(1)}%` : "—"}
+          </p>
+          {canViewFinance && (
+            <Badge className="mt-1" variant={levelVariant[budgetConsumption.level]}>
+              {levelLabels[budgetConsumption.level]}
+            </Badge>
+          )}
+        </Card>
+        <Card className="p-3">
           <div className="text-xs text-muted-foreground">Resultado bruto gerencial</div>
           <p className="text-lg font-semibold mt-1">
             {canViewFinance && revenue != null ? money(revenue - realized.total) : "—"}

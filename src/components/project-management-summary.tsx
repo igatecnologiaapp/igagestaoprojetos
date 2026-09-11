@@ -288,7 +288,7 @@ export function ProjectManagementSummary({
     queryFn: async () => {
       const { data, error } = await sb
         .from("finance_cost_allocations")
-        .select("id,percentage,amount,finance_costs(id,description,competence,status,cost_type,currency,amount,amount_brl,paid_at)")
+        .select("id,percentage,amount,finance_costs(id,description,competence,status,cost_type,currency,amount,amount_brl,paid_at,category_id)")
         .eq("project_id", projectId);
       if (error) throw error;
       return (data ?? []) as {

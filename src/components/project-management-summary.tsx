@@ -333,6 +333,15 @@ export function ProjectManagementSummary({
     },
   });
 
+  const { data: financeCategories = [] } = useQuery({
+    queryKey: ["finance_categories"],
+    enabled: canViewFinance,
+    queryFn: async () => {
+      const { data } = await sb.from("finance_categories").select("id,name").order("position");
+      return (data ?? []) as { id: string; name: string }[];
+    },
+  });
+
   const realized = useMemo(() => {
     let paid = 0;
     let openTotal = 0;

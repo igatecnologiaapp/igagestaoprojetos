@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, FolderKanban, AlertTriangle, Pencil, Trash2, LayoutGrid, Rows3, Settings2, Search } from "lucide-react";
+import { Plus, FolderKanban, AlertTriangle, Pencil, Trash2, LayoutGrid, Rows3, Settings2, Search, ClipboardList } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
@@ -351,6 +351,10 @@ function ProjectsPage() {
                     {p.last_activity_at ? new Date(p.last_activity_at).toLocaleDateString("pt-BR") : "—"}
                   </TableCell>
                   <TableCell onClick={(e) => e.stopPropagation()}>
+                    <div className="flex gap-1 justify-end items-center">
+                      <Button size="sm" variant="outline" className="h-7" onClick={() => setDetailId(p.id)}>
+                        <ClipboardList className="h-3.5 w-3.5 mr-1" />Abrir Ficha
+                      </Button>
                     {canEdit && (
                       <div className="flex gap-1 justify-end">
                         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(p)}><Pencil className="h-3.5 w-3.5" /></Button>
@@ -360,7 +364,8 @@ function ProjectsPage() {
                           </Button>
                         )}
                       </div>
-                    )}
+                     )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -399,6 +404,11 @@ function ProjectsPage() {
                     {overdue && <span className="flex items-center gap-1 text-destructive"><AlertTriangle className="h-3 w-3" />Atrasado</span>}
                   </div>
                 </button>
+                <div className="mt-3">
+                  <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => setDetailId(p.id)}>
+                    <ClipboardList className="h-3.5 w-3.5 mr-1" />Abrir Ficha
+                  </Button>
+                </div>
                 {canEdit && (
                   <div className="absolute bottom-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-background/90 rounded-md border shadow-sm">
                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={(e) => { e.preventDefault(); openEdit(p); }}>

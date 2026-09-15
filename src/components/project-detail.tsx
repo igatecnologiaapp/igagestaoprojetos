@@ -183,7 +183,7 @@ export function ProjectDetailDialog({
         {projectId && (
           <Tabs defaultValue="management">
             <TabsList className="flex flex-wrap h-auto">
-              <TabsTrigger value="management">Gestão do Projeto</TabsTrigger>
+              <TabsTrigger value="management">Ficha Gerencial</TabsTrigger>
               <TabsTrigger value="overview">Visão geral</TabsTrigger>
               <TabsTrigger value="tasks">Tarefas</TabsTrigger>
               <TabsTrigger value="prompts">ChatGPT / Prompts</TabsTrigger>

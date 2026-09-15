@@ -87,6 +87,8 @@ function ProjectsPage() {
   const [view, setView] = useState<"cards" | "table">("cards");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [phaseFilter, setPhaseFilter] = useState<string>("all");
+  const [budgetFilter, setBudgetFilter] = useState<string>("all");
   const [form, setForm] = useState<ProjectForm>(emptyProject);
 
   const { data: projects = [], isLoading } = useQuery({
@@ -179,6 +181,11 @@ function ProjectsPage() {
   const today = new Date().toISOString().slice(0, 10);
   const nameOf = (uid: string | null | undefined) => profiles.find((pr) => pr.id === uid)?.full_name ?? "—";
 
+  const phases = useMemo(
+    () => [...new Set(projects.map((p) => (p.phase ?? "").trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, "pt-BR")),
+    [projects],
+  );
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return projects.filter((p) => {
@@ -187,9 +194,14 @@ function ProjectsPage() {
         || ((p.companies as { name: string } | null)?.name ?? "").toLowerCase().includes(q)
         || (p.phase ?? "").toLowerCase().includes(q);
       const matchesStatus = statusFilter === "all" || p.status === statusFilter;
-      return matchesText && matchesStatus;
+      const matchesPhase =
+        phaseFilter === "all"
+        || (phaseFilter === "__none__" ? !(p.phase ?? "").trim() : (p.phase ?? "").trim() === phaseFilter);
+      const b = budgetStatus[p.id] ?? "unknown";
+      const matchesBudget = budgetFilter === "all" || b === budgetFilter;
+      return matchesText && matchesStatus && matchesPhase && matchesBudget;
     });
-  }, [projects, search, statusFilter]);
+  }, [projects, search, statusFilter, phaseFilter, budgetFilter, budgetStatus]);
 
   return (
     <div className="space-y-6">

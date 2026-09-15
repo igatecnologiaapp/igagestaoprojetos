@@ -404,6 +404,11 @@ function ProjectsPage() {
                     {overdue && <span className="flex items-center gap-1 text-destructive"><AlertTriangle className="h-3 w-3" />Atrasado</span>}
                   </div>
                 </button>
+                <div className="mt-3">
+                  <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => setDetailId(p.id)}>
+                    <ClipboardList className="h-3.5 w-3.5 mr-1" />Abrir Ficha
+                  </Button>
+                </div>
                 {canEdit && (
                   <div className="absolute bottom-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-background/90 rounded-md border shadow-sm">
                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={(e) => { e.preventDefault(); openEdit(p); }}>

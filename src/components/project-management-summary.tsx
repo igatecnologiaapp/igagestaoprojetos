@@ -561,9 +561,19 @@ export function ProjectManagementSummary({
       {/* Indicadores */}
       <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         <Card className="p-3">
+          <div className="text-xs text-muted-foreground">Projeto</div>
+          <p className="text-sm font-semibold mt-1 break-words">{project.name}</p>
+          <p className="text-xs text-muted-foreground break-words">{project.companies?.name ?? "—"}</p>
+        </Card>
+        <Card className="p-3">
+          <div className="text-xs text-muted-foreground">Fase/etapa</div>
+          <p className="text-sm font-medium mt-1 break-words">{project.phase || "—"}</p>
+        </Card>
+        <Card className="p-3">
           <div className="text-xs text-muted-foreground">Status</div>
           <Badge className="mt-1">{labelOf(projectStatusOptions, project.status)}</Badge>
         </Card>
+
         <Card className="p-3">
           <div className="text-xs text-muted-foreground">Última atualização</div>
           <p className="text-sm font-medium mt-1">{dt(project.last_activity_at)}</p>

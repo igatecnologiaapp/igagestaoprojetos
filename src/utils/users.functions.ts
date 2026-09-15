@@ -99,6 +99,14 @@ export const adminUpdateUserAccess = createServerFn({ method: "POST" })
         .from("user_module_access")
         .insert(data.modules.map((m: AppModule) => ({ user_id: data.user_id, module: m })));
     }
+    await supabaseAdmin.from("security_access_log").insert({
+      actor_id: userId,
+      action: "user.access_update",
+      entity_type: "user",
+      entity_id: data.user_id,
+      origin: "admin.users",
+      metadata: { role: data.role, modules: data.modules } as never,
+    });
     return { ok: true };
   });
 

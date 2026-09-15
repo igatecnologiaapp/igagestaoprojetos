@@ -127,6 +127,34 @@ function ProjectsPage() {
     },
   });
 
+  // Situação orçamentária por projeto — reutiliza finance_budgets, custos e rateios existentes.
+  const { data: budgetStatus = {} } = useQuery({
+    queryKey: ["projects-budget-status"],
+    enabled: canViewFinance,
+    queryFn: async () => {
+      const [{ data: budgets }, { data: allocations }] = await Promise.all([
+        supabase.from("finance_budgets").select("project_id,category_id,period_start,period_end,amount"),
+        supabase
+          .from("finance_cost_allocations")
+          .select("amount,project_id,finance_costs(status,competence,category_id)"),
+      ]);
+      const map: Record<string, ConsumptionLevel> = {};
+      const order: Record<ConsumptionLevel, number> = { unknown: 0, normal: 1, attention: 2, exceeded: 3 };
+      for (const b of (budgets ?? []) as BudgetRow[]) {
+        const { total } = realizedFor((allocations ?? []) as unknown as RealizedAllocation[], {
+          projectId: b.project_id,
+          categoryId: b.category_id,
+          periodStart: b.period_start,
+          periodEnd: b.period_end,
+        });
+        const { level } = consumption(Number(b.amount ?? 0), total);
+        const current = map[b.project_id] ?? "unknown";
+        map[b.project_id] = order[level] > order[current] ? level : current;
+      }
+      return map;
+    },
+  });
+
   const saveMut = useMutation({
     mutationFn: async () => {
       const payload = {

@@ -54,7 +54,25 @@ export const adminCreateUser = createServerFn({ method: "POST" })
         .from("user_module_access")
         .insert(data.modules.map((m: AppModule) => ({ user_id: newId, module: m })));
     }
-    return { id: newId };
+    let link: string | null = null;
+    if (invite) {
+      const { data: generated } = await supabaseAdmin.auth.admin.generateLink({
+        type: "recovery",
+        email: data.email,
+      });
+      link = generated?.properties?.action_link ?? null;
+    }
+
+    await supabaseAdmin.from("security_access_log").insert({
+      actor_id: userId,
+      action: "user.create",
+      entity_type: "user",
+      entity_id: newId,
+      origin: "admin.users",
+      metadata: { role: data.role, modules: data.modules, invite } as never,
+    });
+
+    return { id: newId, link };
   });
 
 const updateSchema = z.object({

@@ -8,8 +8,9 @@ type AppModule = "companies" | "projects" | "tasks" | "appointments" | "reports"
 
 const schema = z.object({
   email: z.string().email().max(255),
-  password: z.string().min(6).max(72),
+  password: z.string().min(8).max(72).optional(),
   full_name: z.string().min(1).max(120),
+  job_title: z.string().max(120).optional(),
   role: z.enum(["owner", "collaborator", "viewer"]),
   modules: z.array(z.enum(["companies", "projects", "tasks", "appointments", "reports"])).default([]),
 });

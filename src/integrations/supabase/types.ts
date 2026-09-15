@@ -659,37 +659,58 @@ export type Database = {
       }
       project_accounts: {
         Row: {
+          amount: number | null
           created_at: string
           created_by: string | null
+          currency: string
           email: string | null
           id: string
           notes: string | null
+          plan: string | null
           platform: string
           project_id: string
+          purpose: string | null
+          recurrence: Database["public"]["Enums"]["finance_recurrence"] | null
+          renews_at: string | null
+          status: Database["public"]["Enums"]["finance_entity_status"]
           updated_at: string
           url: string | null
           username: string | null
         }
         Insert: {
+          amount?: number | null
           created_at?: string
           created_by?: string | null
+          currency?: string
           email?: string | null
           id?: string
           notes?: string | null
+          plan?: string | null
           platform: string
           project_id: string
+          purpose?: string | null
+          recurrence?: Database["public"]["Enums"]["finance_recurrence"] | null
+          renews_at?: string | null
+          status?: Database["public"]["Enums"]["finance_entity_status"]
           updated_at?: string
           url?: string | null
           username?: string | null
         }
         Update: {
+          amount?: number | null
           created_at?: string
           created_by?: string | null
+          currency?: string
           email?: string | null
           id?: string
           notes?: string | null
+          plan?: string | null
           platform?: string
           project_id?: string
+          purpose?: string | null
+          recurrence?: Database["public"]["Enums"]["finance_recurrence"] | null
+          renews_at?: string | null
+          status?: Database["public"]["Enums"]["finance_entity_status"]
           updated_at?: string
           url?: string | null
           username?: string | null

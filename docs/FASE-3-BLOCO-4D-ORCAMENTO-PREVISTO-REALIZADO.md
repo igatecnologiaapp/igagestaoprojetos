@@ -50,8 +50,8 @@ RLS habilitada. Grants: `authenticated` (CRUD) e `service_role` (total); `anon` 
 | --- | --- | --- |
 | `finance_budgets_select` | SELECT (authenticated) | `has_permission(auth.uid(),'financial.view')` OU `can_view_project(project_id, auth.uid())` |
 | `finance_budgets_insert` | INSERT (authenticated) | `has_permission(auth.uid(),'financial.edit')` E `can_view_project(...)` |
-| `finance_budgets_update` | UPDATE (authenticated) | `financial.edit` no USING e `financial.edit` + `can_view_project` no WITH CHECK |
-| `finance_budgets_delete` | DELETE (authenticated) | `has_permission(auth.uid(),'financial.edit')` |
+| `finance_budgets_update` | UPDATE (authenticated) | `financial.edit` E `can_view_project(project_id, auth.uid())` no USING e no WITH CHECK (ver Bloco 4D.1) |
+| `finance_budgets_delete` | DELETE (authenticated) | `financial.edit` E `can_view_project(project_id, auth.uid())` (ver Bloco 4D.1) |
 
 Nenhuma policy usa `USING (true)`. Nenhum RBAC paralelo foi criado.
 

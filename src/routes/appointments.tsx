@@ -17,7 +17,7 @@ import { useAuth } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/appointments")({
   component: () => <RequireAuth module="appointments"><AppointmentsPage /></RequireAuth>,
-  head: () => ({ meta: [{ title: "Agendamentos — FlowDesk" }] }),
+  head: () => ({ meta: [{ title: "Agendamentos — IGA Tecnologia" }] }),
 });
 
 const statusLabels: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {

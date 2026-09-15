@@ -12,7 +12,7 @@ export const Route = createFileRoute("/dashboard")({
       <DashboardPage />
     </RequireAuth>
   ),
-  head: () => ({ meta: [{ title: "Dashboard — FlowDesk" }] }),
+  head: () => ({ meta: [{ title: "Dashboard — IGA Tecnologia" }] }),
 });
 
 function DashboardPage() {

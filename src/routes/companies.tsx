@@ -17,7 +17,7 @@ import { AuditHistory } from "@/components/audit-history";
 
 export const Route = createFileRoute("/companies")({
   component: () => <RequireAuth module="companies"><CompaniesPage /></RequireAuth>,
-  head: () => ({ meta: [{ title: "Empresas — FlowDesk" }] }),
+  head: () => ({ meta: [{ title: "Empresas — IGA Tecnologia" }] }),
 });
 
 type CompanyForm = {

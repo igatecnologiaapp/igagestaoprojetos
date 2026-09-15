@@ -20,14 +20,15 @@ import { useAuth } from "@/lib/auth-context";
 import { ProjectShares } from "@/components/task-collaboration";
 import { ProjectDetailDialog } from "@/components/project-detail";
 import { CustomFieldDefinitions } from "@/components/project-custom-fields";
+import { consumption, levelLabels, realizedFor, type BudgetRow, type ConsumptionLevel, type RealizedAllocation } from "@/lib/finance-budgets";
 
 export const Route = createFileRoute("/projects")({
   component: () => <RequireAuth module="projects"><ProjectsPage /></RequireAuth>,
   head: () => ({
     meta: [
-      { title: "Projetos — FlowDesk" },
+      { title: "Projetos — IGA Tecnologia" },
       { name: "description", content: "Gerencie projetos, prompts, repositórios, créditos Lovable e campos personalizados." },
-      { property: "og:title", content: "Projetos — FlowDesk" },
+      { property: "og:title", content: "Projetos — IGA Tecnologia" },
       { property: "og:description", content: "Gerencie projetos, prompts, repositórios, créditos Lovable e campos personalizados." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -79,7 +80,8 @@ const emptyProject: ProjectForm = {
 
 function ProjectsPage() {
   const qc = useQueryClient();
-  const { canEdit, isOwner } = useAuth();
+  const { canEdit, isOwner, hasPermission } = useAuth();
+  const canViewFinance = isOwner || hasPermission("financial.view");
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
@@ -87,6 +89,8 @@ function ProjectsPage() {
   const [view, setView] = useState<"cards" | "table">("cards");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [phaseFilter, setPhaseFilter] = useState<string>("all");
+  const [budgetFilter, setBudgetFilter] = useState<string>("all");
   const [form, setForm] = useState<ProjectForm>(emptyProject);
 
   const { data: projects = [], isLoading } = useQuery({
@@ -122,6 +126,34 @@ function ProjectsPage() {
     queryFn: async () => {
       const { data } = await supabase.from("profiles").select("id,full_name").order("full_name");
       return data ?? [];
+    },
+  });
+
+  // Situação orçamentária por projeto — reutiliza finance_budgets, custos e rateios existentes.
+  const { data: budgetStatus = {} } = useQuery({
+    queryKey: ["projects-budget-status"],
+    enabled: canViewFinance,
+    queryFn: async () => {
+      const [{ data: budgets }, { data: allocations }] = await Promise.all([
+        supabase.from("finance_budgets").select("project_id,category_id,period_start,period_end,amount"),
+        supabase
+          .from("finance_cost_allocations")
+          .select("amount,project_id,finance_costs(status,competence,category_id)"),
+      ]);
+      const map: Record<string, ConsumptionLevel> = {};
+      const order: Record<ConsumptionLevel, number> = { unknown: 0, normal: 1, attention: 2, exceeded: 3 };
+      for (const b of (budgets ?? []) as BudgetRow[]) {
+        const { total } = realizedFor((allocations ?? []) as unknown as RealizedAllocation[], {
+          projectId: b.project_id,
+          categoryId: b.category_id,
+          periodStart: b.period_start,
+          periodEnd: b.period_end,
+        });
+        const { level } = consumption(Number(b.amount ?? 0), total);
+        const current = map[b.project_id] ?? "unknown";
+        map[b.project_id] = order[level] > order[current] ? level : current;
+      }
+      return map;
     },
   });
 
@@ -179,6 +211,11 @@ function ProjectsPage() {
   const today = new Date().toISOString().slice(0, 10);
   const nameOf = (uid: string | null | undefined) => profiles.find((pr) => pr.id === uid)?.full_name ?? "—";
 
+  const phases = useMemo(
+    () => [...new Set(projects.map((p) => (p.phase ?? "").trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, "pt-BR")),
+    [projects],
+  );
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return projects.filter((p) => {
@@ -187,9 +224,14 @@ function ProjectsPage() {
         || ((p.companies as { name: string } | null)?.name ?? "").toLowerCase().includes(q)
         || (p.phase ?? "").toLowerCase().includes(q);
       const matchesStatus = statusFilter === "all" || p.status === statusFilter;
-      return matchesText && matchesStatus;
+      const matchesPhase =
+        phaseFilter === "all"
+        || (phaseFilter === "__none__" ? !(p.phase ?? "").trim() : (p.phase ?? "").trim() === phaseFilter);
+      const b = budgetStatus[p.id] ?? "unknown";
+      const matchesBudget = budgetFilter === "all" || b === budgetFilter;
+      return matchesText && matchesStatus && matchesPhase && matchesBudget;
     });
-  }, [projects, search, statusFilter]);
+  }, [projects, search, statusFilter, phaseFilter, budgetFilter, budgetStatus]);
 
   return (
     <div className="space-y-6">
@@ -302,6 +344,26 @@ function ProjectsPage() {
             {Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
           </SelectContent>
         </Select>
+        <Select value={phaseFilter} onValueChange={setPhaseFilter}>
+          <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as fases</SelectItem>
+            <SelectItem value="__none__">Sem fase definida</SelectItem>
+            {phases.map((ph) => <SelectItem key={ph} value={ph}>{ph}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        {canViewFinance && (
+          <Select value={budgetFilter} onValueChange={setBudgetFilter}>
+            <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os orçamentos</SelectItem>
+              <SelectItem value="normal">{levelLabels.normal}</SelectItem>
+              <SelectItem value="attention">{levelLabels.attention}</SelectItem>
+              <SelectItem value="exceeded">{levelLabels.exceeded}</SelectItem>
+              <SelectItem value="unknown">{levelLabels.unknown}</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
         <div className="flex rounded-md border overflow-hidden">
           <Button size="sm" variant={view === "cards" ? "secondary" : "ghost"} className="rounded-none" onClick={() => setView("cards")}>
             <LayoutGrid className="h-4 w-4 mr-1" />Cards

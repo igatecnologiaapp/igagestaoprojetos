@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { Pencil, Plus, Save, X } from "lucide-react";
 import { consumption, currentMonthRange, levelLabels, levelVariant, realizedFor } from "@/lib/finance-budgets";
+import { ProjectPlatformAccounts } from "@/components/project-platform-accounts";
+
 
 const sb = supabase as unknown as { from: (t: string) => any };
 
@@ -162,79 +164,8 @@ export function ProjectManagementSummary({
     },
   });
 
-  const { data: platforms = [] } = useQuery({
-    queryKey: ["project-platforms", projectId, canViewCredentials],
-    queryFn: async () => {
-      const [accounts, lovable, repos, emails] = await Promise.all([
-        canViewCredentials ? sb.from("project_accounts").select("*").eq("project_id", projectId) : Promise.resolve({ data: [] }),
-        sb.from("project_lovable").select("*").eq("project_id", projectId),
-        sb.from("project_github_repos").select("*").eq("project_id", projectId),
-        sb.from("project_emails").select("*").eq("project_id", projectId),
-      ]);
-      const rows: {
-        id: string;
-        platform: string;
-        purpose: string | null;
-        url: string | null;
-        email: string | null;
-        username: string | null;
-        workspace: string | null;
-        notes: string | null;
-        source: string;
-      }[] = [];
-      for (const a of accounts.data ?? [])
-        rows.push({
-          id: `acc-${a.id}`,
-          platform: a.platform,
-          purpose: null,
-          url: a.url,
-          email: a.email,
-          username: a.username,
-          workspace: null,
-          notes: a.notes,
-          source: "Contas e acessos",
-        });
-      for (const l of lovable.data ?? [])
-        rows.push({
-          id: `lov-${l.id}`,
-          platform: "Lovable",
-          purpose: "Desenvolvimento",
-          url: l.project_url ?? l.public_url,
-          email: l.account_email,
-          username: null,
-          workspace: l.workspace,
-          notes: l.notes,
-          source: "Lovable",
-        });
-      for (const g of repos.data ?? [])
-        rows.push({
-          id: `gh-${g.id}`,
-          platform: "GitHub",
-          purpose: "Repositório",
-          url: g.url,
-          email: null,
-          username: g.owner,
-          workspace: g.repo_name,
-          notes: g.notes,
-          source: "GitHub",
-        });
-      for (const e of emails.data ?? [])
-        rows.push({
-          id: `em-${e.id}`,
-          platform: e.provider ?? "E-mail",
-          purpose: e.purpose,
-          url: null,
-          email: e.email,
-          username: null,
-          workspace: null,
-          notes: e.notes,
-          source: "E-mails",
-        });
-      return rows;
-    },
-  });
-
   const { data: prompts = [] } = useQuery({
+
     queryKey: ["project-prompts-pending", projectId],
     queryFn: async () => {
       const { data, error } = await sb
@@ -561,9 +492,19 @@ export function ProjectManagementSummary({
       {/* Indicadores */}
       <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         <Card className="p-3">
+          <div className="text-xs text-muted-foreground">Projeto</div>
+          <p className="text-sm font-semibold mt-1 break-words">{project.name}</p>
+          <p className="text-xs text-muted-foreground break-words">{project.companies?.name ?? "—"}</p>
+        </Card>
+        <Card className="p-3">
+          <div className="text-xs text-muted-foreground">Fase/etapa</div>
+          <p className="text-sm font-medium mt-1 break-words">{project.phase || "—"}</p>
+        </Card>
+        <Card className="p-3">
           <div className="text-xs text-muted-foreground">Status</div>
           <Badge className="mt-1">{labelOf(projectStatusOptions, project.status)}</Badge>
         </Card>
+
         <Card className="p-3">
           <div className="text-xs text-muted-foreground">Última atualização</div>
           <p className="text-sm font-medium mt-1">{dt(project.last_activity_at)}</p>
@@ -703,39 +644,9 @@ export function ProjectManagementSummary({
         )}
       </div>
 
-      {/* Plataformas e contas */}
-      <div className="space-y-2 border-t pt-4">
-        <SectionTitle>Plataformas e contas</SectionTitle>
-        {!canViewCredentials && (
-          <p className="text-xs text-muted-foreground">Contas de acesso ocultas: sem permissão para ver credenciais.</p>
-        )}
-        {platforms.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhuma plataforma registrada neste projeto.</p>
-        ) : (
-          <div className="grid gap-2 sm:grid-cols-2">
-            {platforms.map((p) => (
-              <Card key={p.id} className="p-3 text-sm">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-medium">{p.platform}</span>
-                  <Badge variant="outline">{p.source}</Badge>
-                </div>
-                <p className="text-xs text-muted-foreground break-words">
-                  {[p.purpose, p.email, p.username, p.workspace].filter(Boolean).join(" · ") || "Sem dados adicionais"}
-                </p>
-                {p.url && (
-                  <a className="text-xs text-primary underline break-all" href={p.url} target="_blank" rel="noreferrer">
-                    {p.url}
-                  </a>
-                )}
-                {p.notes && <p className="text-xs text-muted-foreground break-words">{p.notes}</p>}
-              </Card>
-            ))}
-          </div>
-        )}
-        <p className="text-xs text-muted-foreground">
-          Senhas não são armazenadas no sistema. Guarde-as em um gerenciador de senhas e registre aqui apenas conta, login e finalidade.
-        </p>
-      </div>
+      {/* Plataformas e contas (ficha gerencial) */}
+      <ProjectPlatformAccounts projectId={projectId} />
+
 
       {/* Resumo financeiro */}
       <div className="space-y-2 border-t pt-4">

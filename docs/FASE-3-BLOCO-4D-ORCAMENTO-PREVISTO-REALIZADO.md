@@ -50,8 +50,8 @@ RLS habilitada. Grants: `authenticated` (CRUD) e `service_role` (total); `anon` 
 | --- | --- | --- |
 | `finance_budgets_select` | SELECT (authenticated) | `has_permission(auth.uid(),'financial.view')` OU `can_view_project(project_id, auth.uid())` |
 | `finance_budgets_insert` | INSERT (authenticated) | `has_permission(auth.uid(),'financial.edit')` E `can_view_project(...)` |
-| `finance_budgets_update` | UPDATE (authenticated) | `financial.edit` no USING e `financial.edit` + `can_view_project` no WITH CHECK |
-| `finance_budgets_delete` | DELETE (authenticated) | `has_permission(auth.uid(),'financial.edit')` |
+| `finance_budgets_update` | UPDATE (authenticated) | `financial.edit` E `can_view_project(project_id, auth.uid())` no USING e no WITH CHECK (ver Bloco 4D.1) |
+| `finance_budgets_delete` | DELETE (authenticated) | `financial.edit` E `can_view_project(project_id, auth.uid())` (ver Bloco 4D.1) |
 
 Nenhuma policy usa `USING (true)`. Nenhum RBAC paralelo foi criado.
 
@@ -136,6 +136,69 @@ Dados de teste removidos ao final (banco sem registros `TESTE 4D` e sem o orçam
 ## 9. SHA final
 
 Commit-base autorizado: `490dafd47cf74ece83e32420b6de46241f819e3a`. O SHA final desta entrega será o commit gerado pela publicação desta rodada no repositório oficial; registrar aqui após o push.
+
+---
+
+## 10. Bloco 4D.1 — Ajuste de menor privilégio
+
+Commit-base autorizado: `1c39b76c911be1233a5ef5499b2cd3fdc8262bc1`.
+
+### 10.1 Causa
+
+As policies de escrita de alteração e exclusão exigiam apenas `has_permission(auth.uid(),'financial.edit')`. Um usuário com permissão financeira global poderia alterar ou excluir orçamento de projeto fora do seu escopo autorizado.
+
+### 10.2 Policy anterior
+
+```
+finance_budgets_update  USING      has_permission(auth.uid(),'financial.edit')
+                        WITH CHECK has_permission(...,'financial.edit') AND can_view_project(project_id, auth.uid())
+finance_budgets_delete  USING      has_permission(auth.uid(),'financial.edit')
+```
+
+### 10.3 Policy final
+
+```
+finance_budgets_update  USING      has_permission(auth.uid(),'financial.edit') AND can_view_project(project_id, auth.uid())
+                        WITH CHECK has_permission(auth.uid(),'financial.edit') AND can_view_project(project_id, auth.uid())
+finance_budgets_delete  USING      has_permission(auth.uid(),'financial.edit') AND can_view_project(project_id, auth.uid())
+```
+
+### 10.4 Migration
+
+Migration incremental que apenas substitui `finance_budgets_update` e `finance_budgets_delete` (DROP POLICY + CREATE POLICY, ambas `TO authenticated`). A migration original do Bloco 4D não foi editada. Tabela, constraints, índices, triggers, Auth, Storage, RBAC e demais tabelas financeiras permaneceram inalterados. O linter continuou com os mesmos 18 avisos preexistentes de funções `SECURITY DEFINER`, sem novo aumento.
+
+### 10.5 Testes
+
+Arquivo: `supabase/tests/bloco_4d_1_menor_privilegio_orcamento.sql`. Execução real neste ambiente — 13/13 aprovados:
+
+- UPDATE exige `financial.edit` e `can_view_project` no USING e no WITH CHECK;
+- DELETE exige `financial.edit` e `can_view_project`;
+- INSERT mantém `financial.edit` + `can_view_project`;
+- SELECT inalterado (autenticado, `financial.view` ou `can_view_project`);
+- nenhuma policy de escrita aceita apenas `financial.view`;
+- nenhuma policy `USING (true)`;
+- todas as policies restritas a `authenticated`; `anon` sem privilégio na tabela;
+- RLS habilitada; 2 constraints, 4 índices e 3 triggers preservados.
+
+Limitação metodológica mantida dos blocos anteriores: a simulação de sessões de usuários distintos exige acesso ao schema `auth`, indisponível ao usuário restrito deste ambiente. A restrição por escopo de projeto foi verificada pela expressão efetiva das policies (`can_view_project` presente em USING e WITH CHECK), que é a condição avaliada pelo Postgres em cada linha, e pela execução real de escrita com usuário autorizado. Nenhuma policy foi afrouxada para facilitar testes e nenhum resultado foi presumido.
+
+### 10.6 Regressão funcional
+
+Playwright com sessão autenticada:
+
+- `/finance/budgets` em 1280×1800 e 390×844: renderização correta, sem overflow horizontal, sem erros de console;
+- criação de orçamento (R$ 2.500,00), edição para R$ 3.000,00 e exclusão executadas com sucesso após o ajuste;
+- filtros de projeto, categoria e período, cards de previsto/realizado/saldo/consumo e bloco Previsto × Realizado operando normalmente;
+- aba Gestão do Projeto mantida sem alteração de código nesta rodada;
+- `bunx tsgo --noEmit` sem erros; build OK.
+
+Massa de validação removida (`finance_budgets` sem registros `VALIDACAO 4D1` / `TESTE 4D`).
+
+### 10.7 SHA final
+
+Commit-base: `1c39b76c911be1233a5ef5499b2cd3fdc8262bc1`. O SHA final será o commit gerado pela publicação desta rodada no repositório oficial; registrar aqui após o push.
+
+**BLOCO 4D HOMOLOGÁVEL E ENCERRADO.**
 
 ---
 

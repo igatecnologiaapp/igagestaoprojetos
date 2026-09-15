@@ -164,79 +164,8 @@ export function ProjectManagementSummary({
     },
   });
 
-  const { data: platforms = [] } = useQuery({
-    queryKey: ["project-platforms", projectId, canViewCredentials],
-    queryFn: async () => {
-      const [accounts, lovable, repos, emails] = await Promise.all([
-        canViewCredentials ? sb.from("project_accounts").select("*").eq("project_id", projectId) : Promise.resolve({ data: [] }),
-        sb.from("project_lovable").select("*").eq("project_id", projectId),
-        sb.from("project_github_repos").select("*").eq("project_id", projectId),
-        sb.from("project_emails").select("*").eq("project_id", projectId),
-      ]);
-      const rows: {
-        id: string;
-        platform: string;
-        purpose: string | null;
-        url: string | null;
-        email: string | null;
-        username: string | null;
-        workspace: string | null;
-        notes: string | null;
-        source: string;
-      }[] = [];
-      for (const a of accounts.data ?? [])
-        rows.push({
-          id: `acc-${a.id}`,
-          platform: a.platform,
-          purpose: null,
-          url: a.url,
-          email: a.email,
-          username: a.username,
-          workspace: null,
-          notes: a.notes,
-          source: "Contas e acessos",
-        });
-      for (const l of lovable.data ?? [])
-        rows.push({
-          id: `lov-${l.id}`,
-          platform: "Lovable",
-          purpose: "Desenvolvimento",
-          url: l.project_url ?? l.public_url,
-          email: l.account_email,
-          username: null,
-          workspace: l.workspace,
-          notes: l.notes,
-          source: "Lovable",
-        });
-      for (const g of repos.data ?? [])
-        rows.push({
-          id: `gh-${g.id}`,
-          platform: "GitHub",
-          purpose: "Repositório",
-          url: g.url,
-          email: null,
-          username: g.owner,
-          workspace: g.repo_name,
-          notes: g.notes,
-          source: "GitHub",
-        });
-      for (const e of emails.data ?? [])
-        rows.push({
-          id: `em-${e.id}`,
-          platform: e.provider ?? "E-mail",
-          purpose: e.purpose,
-          url: null,
-          email: e.email,
-          username: null,
-          workspace: null,
-          notes: e.notes,
-          source: "E-mails",
-        });
-      return rows;
-    },
-  });
-
   const { data: prompts = [] } = useQuery({
+
     queryKey: ["project-prompts-pending", projectId],
     queryFn: async () => {
       const { data, error } = await sb

@@ -489,6 +489,7 @@ export function ProjectManagementSummary({
 
   return (
     <div className="space-y-6">
+      <h2 className="text-lg font-display font-semibold">Ficha Gerencial do Projeto</h2>
       {/* Indicadores */}
       <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         <Card className="p-3">

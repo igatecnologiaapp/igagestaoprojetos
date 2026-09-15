@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, FolderKanban, AlertTriangle, Pencil, Trash2, LayoutGrid, Rows3, Settings2, Search } from "lucide-react";
+import { Plus, FolderKanban, AlertTriangle, Pencil, Trash2, LayoutGrid, Rows3, Settings2, Search, ClipboardList } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";

@@ -364,7 +364,8 @@ function ProjectsPage() {
                           </Button>
                         )}
                       </div>
-                    )}
+                     )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

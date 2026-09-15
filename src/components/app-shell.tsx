@@ -23,7 +23,7 @@ import { useAuth, type AppModule } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
-import igaLogo from "@/assets/iga-logo.png.asset.json";
+import igaLogo from "@/assets/iga-logo-oficial.png.asset.json";
 
 type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; module?: AppModule; ownerOnly?: boolean; permission?: string };
 type NavGroup = { id: string; label: string; items: NavItem[] };

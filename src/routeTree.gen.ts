@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UsersRouteImport } from './routes/users'
 import { Route as TasksRouteImport } from './routes/tasks'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as PermissionsRouteImport } from './routes/permissions'
@@ -34,6 +35,11 @@ const UsersRoute = UsersRouteImport.update({
 const TasksRoute = TasksRouteImport.update({
   id: '/tasks',
   path: '/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReportsRoute = ReportsRouteImport.update({
@@ -117,6 +123,7 @@ export interface FileRoutesByFullPath {
   '/permissions': typeof PermissionsRoute
   '/projects': typeof ProjectsRoute
   '/reports': typeof ReportsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/tasks': typeof TasksRoute
   '/users': typeof UsersRoute
   '/finance/budgets': typeof FinanceBudgetsRoute
@@ -135,6 +142,7 @@ export interface FileRoutesByTo {
   '/permissions': typeof PermissionsRoute
   '/projects': typeof ProjectsRoute
   '/reports': typeof ReportsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/tasks': typeof TasksRoute
   '/users': typeof UsersRoute
   '/finance/budgets': typeof FinanceBudgetsRoute
@@ -154,6 +162,7 @@ export interface FileRoutesById {
   '/permissions': typeof PermissionsRoute
   '/projects': typeof ProjectsRoute
   '/reports': typeof ReportsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/tasks': typeof TasksRoute
   '/users': typeof UsersRoute
   '/finance/budgets': typeof FinanceBudgetsRoute
@@ -174,6 +183,7 @@ export interface FileRouteTypes {
     | '/permissions'
     | '/projects'
     | '/reports'
+    | '/reset-password'
     | '/tasks'
     | '/users'
     | '/finance/budgets'
@@ -192,6 +202,7 @@ export interface FileRouteTypes {
     | '/permissions'
     | '/projects'
     | '/reports'
+    | '/reset-password'
     | '/tasks'
     | '/users'
     | '/finance/budgets'
@@ -210,6 +221,7 @@ export interface FileRouteTypes {
     | '/permissions'
     | '/projects'
     | '/reports'
+    | '/reset-password'
     | '/tasks'
     | '/users'
     | '/finance/budgets'
@@ -229,6 +241,7 @@ export interface RootRouteChildren {
   PermissionsRoute: typeof PermissionsRoute
   ProjectsRoute: typeof ProjectsRoute
   ReportsRoute: typeof ReportsRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   TasksRoute: typeof TasksRoute
   UsersRoute: typeof UsersRoute
   FinanceBudgetsRoute: typeof FinanceBudgetsRoute
@@ -252,6 +265,13 @@ declare module '@tanstack/react-router' {
       path: '/tasks'
       fullPath: '/tasks'
       preLoaderRoute: typeof TasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reports': {
@@ -365,6 +385,7 @@ const rootRouteChildren: RootRouteChildren = {
   PermissionsRoute: PermissionsRoute,
   ProjectsRoute: ProjectsRoute,
   ReportsRoute: ReportsRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   TasksRoute: TasksRoute,
   UsersRoute: UsersRoute,
   FinanceBudgetsRoute: FinanceBudgetsRoute,

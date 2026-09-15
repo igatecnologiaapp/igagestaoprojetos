@@ -191,7 +191,7 @@ export function ProjectDetailDialog({
               <TabsTrigger value="lovable">Lovable</TabsTrigger>
               <TabsTrigger value="emails">E-mails</TabsTrigger>
               <TabsTrigger value="links">Links</TabsTrigger>
-              {isOwner && <TabsTrigger value="accounts">Acessos</TabsTrigger>}
+              {isOwner && <TabsTrigger value="accounts">Contas e Credenciais</TabsTrigger>}
               <TabsTrigger value="shares">Compartilhamento</TabsTrigger>
               <TabsTrigger value="governance">Governança</TabsTrigger>
               <TabsTrigger value="history">Histórico</TabsTrigger>

@@ -351,6 +351,10 @@ function ProjectsPage() {
                     {p.last_activity_at ? new Date(p.last_activity_at).toLocaleDateString("pt-BR") : "—"}
                   </TableCell>
                   <TableCell onClick={(e) => e.stopPropagation()}>
+                    <div className="flex gap-1 justify-end items-center">
+                      <Button size="sm" variant="outline" className="h-7" onClick={() => setDetailId(p.id)}>
+                        <ClipboardList className="h-3.5 w-3.5 mr-1" />Abrir Ficha
+                      </Button>
                     {canEdit && (
                       <div className="flex gap-1 justify-end">
                         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(p)}><Pencil className="h-3.5 w-3.5" /></Button>

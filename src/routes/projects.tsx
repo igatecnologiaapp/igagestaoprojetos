@@ -20,6 +20,7 @@ import { useAuth } from "@/lib/auth-context";
 import { ProjectShares } from "@/components/task-collaboration";
 import { ProjectDetailDialog } from "@/components/project-detail";
 import { CustomFieldDefinitions } from "@/components/project-custom-fields";
+import { consumption, levelLabels, realizedFor, type BudgetRow, type ConsumptionLevel, type RealizedAllocation } from "@/lib/finance-budgets";
 
 export const Route = createFileRoute("/projects")({
   component: () => <RequireAuth module="projects"><ProjectsPage /></RequireAuth>,
@@ -79,7 +80,8 @@ const emptyProject: ProjectForm = {
 
 function ProjectsPage() {
   const qc = useQueryClient();
-  const { canEdit, isOwner } = useAuth();
+  const { canEdit, isOwner, hasPermission } = useAuth();
+  const canViewFinance = isOwner || hasPermission("financial.view");
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);

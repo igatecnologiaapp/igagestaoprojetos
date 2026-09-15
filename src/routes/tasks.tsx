@@ -23,7 +23,7 @@ const searchSchema = z.object({ project: z.string().optional(), task: z.string()
 export const Route = createFileRoute("/tasks")({
   component: () => <RequireAuth module="tasks"><TasksPage /></RequireAuth>,
   validateSearch: searchSchema,
-  head: () => ({ meta: [{ title: "Tarefas — FlowDesk" }] }),
+  head: () => ({ meta: [{ title: "Tarefas — IGA Tecnologia" }] }),
 });
 
 const statusColumns = [

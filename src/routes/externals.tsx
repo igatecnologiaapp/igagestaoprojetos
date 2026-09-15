@@ -16,7 +16,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/externals")({
   component: () => <RequireAuth><ExternalsPage /></RequireAuth>,
-  head: () => ({ meta: [{ title: "Colaboradores externos — FlowDesk" }] }),
+  head: () => ({ meta: [{ title: "Colaboradores externos — IGA Tecnologia" }] }),
 });
 
 type Role = "owner" | "collaborator" | "viewer";

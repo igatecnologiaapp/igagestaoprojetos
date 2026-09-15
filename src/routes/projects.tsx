@@ -25,9 +25,9 @@ export const Route = createFileRoute("/projects")({
   component: () => <RequireAuth module="projects"><ProjectsPage /></RequireAuth>,
   head: () => ({
     meta: [
-      { title: "Projetos — FlowDesk" },
+      { title: "Projetos — IGA Tecnologia" },
       { name: "description", content: "Gerencie projetos, prompts, repositórios, créditos Lovable e campos personalizados." },
-      { property: "og:title", content: "Projetos — FlowDesk" },
+      { property: "og:title", content: "Projetos — IGA Tecnologia" },
       { property: "og:description", content: "Gerencie projetos, prompts, repositórios, créditos Lovable e campos personalizados." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

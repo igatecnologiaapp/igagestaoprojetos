@@ -18,7 +18,7 @@ import { adminCreateUser, adminUpdateUserAccess, adminDeleteUser } from "@/utils
 
 export const Route = createFileRoute("/users")({
   component: () => <RequireAuth><UsersPage /></RequireAuth>,
-  head: () => ({ meta: [{ title: "Usuários — FlowDesk" }] }),
+  head: () => ({ meta: [{ title: "Usuários — IGA Tecnologia" }] }),
 });
 
 type Role = "owner" | "collaborator" | "viewer";

@@ -14,10 +14,10 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
   head: () => ({
     meta: [
-      { title: "Entrar — FlowDesk" },
-      { name: "description", content: "Acesse o sistema de gestão de projetos FlowDesk." },
-      { property: "og:title", content: "Entrar — FlowDesk" },
-      { property: "og:description", content: "Acesse o sistema de gestão de projetos FlowDesk." },
+      { title: "Entrar — IGA Tecnologia" },
+      { name: "description", content: "Acesse o sistema de gestão de projetos IGA Tecnologia." },
+      { property: "og:title", content: "Entrar — IGA Tecnologia" },
+      { property: "og:description", content: "Acesse o sistema de gestão de projetos IGA Tecnologia." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -106,7 +106,7 @@ function AuthPage() {
           <div className="grid place-items-center h-10 w-10 rounded-lg bg-primary text-primary-foreground">
             <Sparkles className="h-5 w-5" />
           </div>
-          <h1 className="text-2xl font-display font-semibold">FlowDesk</h1>
+          <h1 className="text-2xl font-display font-semibold">IGA Tecnologia</h1>
         </div>
         <Card className="p-6 shadow-lg">
           <Tabs defaultValue="signin">

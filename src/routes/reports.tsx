@@ -14,7 +14,7 @@ import { Download, FileText } from "lucide-react";
 
 export const Route = createFileRoute("/reports")({
   component: () => <RequireAuth module="reports"><ReportsPage /></RequireAuth>,
-  head: () => ({ meta: [{ title: "Relatórios — FlowDesk" }] }),
+  head: () => ({ meta: [{ title: "Relatórios — IGA Tecnologia" }] }),
 });
 
 const statusLabels: Record<string, string> = {

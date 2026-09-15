@@ -703,39 +703,9 @@ export function ProjectManagementSummary({
         )}
       </div>
 
-      {/* Plataformas e contas */}
-      <div className="space-y-2 border-t pt-4">
-        <SectionTitle>Plataformas e contas</SectionTitle>
-        {!canViewCredentials && (
-          <p className="text-xs text-muted-foreground">Contas de acesso ocultas: sem permissão para ver credenciais.</p>
-        )}
-        {platforms.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhuma plataforma registrada neste projeto.</p>
-        ) : (
-          <div className="grid gap-2 sm:grid-cols-2">
-            {platforms.map((p) => (
-              <Card key={p.id} className="p-3 text-sm">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-medium">{p.platform}</span>
-                  <Badge variant="outline">{p.source}</Badge>
-                </div>
-                <p className="text-xs text-muted-foreground break-words">
-                  {[p.purpose, p.email, p.username, p.workspace].filter(Boolean).join(" · ") || "Sem dados adicionais"}
-                </p>
-                {p.url && (
-                  <a className="text-xs text-primary underline break-all" href={p.url} target="_blank" rel="noreferrer">
-                    {p.url}
-                  </a>
-                )}
-                {p.notes && <p className="text-xs text-muted-foreground break-words">{p.notes}</p>}
-              </Card>
-            ))}
-          </div>
-        )}
-        <p className="text-xs text-muted-foreground">
-          Senhas não são armazenadas no sistema. Guarde-as em um gerenciador de senhas e registre aqui apenas conta, login e finalidade.
-        </p>
-      </div>
+      {/* Plataformas e contas (ficha gerencial) */}
+      <ProjectPlatformAccounts projectId={projectId} />
+
 
       {/* Resumo financeiro */}
       <div className="space-y-2 border-t pt-4">

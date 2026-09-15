@@ -344,6 +344,26 @@ function ProjectsPage() {
             {Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
           </SelectContent>
         </Select>
+        <Select value={phaseFilter} onValueChange={setPhaseFilter}>
+          <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as fases</SelectItem>
+            <SelectItem value="__none__">Sem fase definida</SelectItem>
+            {phases.map((ph) => <SelectItem key={ph} value={ph}>{ph}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        {canViewFinance && (
+          <Select value={budgetFilter} onValueChange={setBudgetFilter}>
+            <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os orçamentos</SelectItem>
+              <SelectItem value="normal">{levelLabels.normal}</SelectItem>
+              <SelectItem value="attention">{levelLabels.attention}</SelectItem>
+              <SelectItem value="exceeded">{levelLabels.exceeded}</SelectItem>
+              <SelectItem value="unknown">{levelLabels.unknown}</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
         <div className="flex rounded-md border overflow-hidden">
           <Button size="sm" variant={view === "cards" ? "secondary" : "ghost"} className="rounded-none" onClick={() => setView("cards")}>
             <LayoutGrid className="h-4 w-4 mr-1" />Cards

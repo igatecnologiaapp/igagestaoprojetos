@@ -28,14 +28,22 @@ export const adminCreateUser = createServerFn({ method: "POST" })
       throw new Error("Apenas administradores podem cadastrar usuários.");
     }
 
+    // Sem senha informada: cria com senha aleatória descartável e exige definição por link seguro.
+    const invite = !data.password;
+    const password = data.password ?? crypto.randomUUID() + crypto.randomUUID();
+
     const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
       email: data.email,
-      password: data.password,
+      password,
       email_confirm: true,
       user_metadata: { full_name: data.full_name },
     });
     if (error || !created.user) throw new Error(error?.message ?? "Falha ao criar");
     const newId = created.user.id;
+
+    if (data.job_title) {
+      await supabaseAdmin.from("profiles").update({ job_title: data.job_title }).eq("id", newId);
+    }
 
     // Override default role
     await supabaseAdmin.from("user_roles").delete().eq("user_id", newId);

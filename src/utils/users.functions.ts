@@ -214,5 +214,6 @@ export const adminDeleteUser = createServerFn({ method: "POST" })
     if (!roles?.some((r) => r.role === "owner")) throw new Error("Sem permissão");
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.user_id);
     if (error) throw new Error(error.message);
+    await audit(userId, "user.delete", data.user_id);
     return { ok: true };
   });

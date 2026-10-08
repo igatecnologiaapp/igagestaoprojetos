@@ -41,5 +41,28 @@ Todas as 17 rotas existentes permanecem idênticas; nenhuma rota criada ou remov
 - Typecheck: sem erros no arquivo alterado; permanece 1 aviso preexistente em `src/routes/__root.tsx` (tipo do errorComponent), não relacionado a R1.
 - Perfis sem permissão: as regras de filtro (isOwner / financial.view / módulos) não foram alteradas; teste com outro perfil real não executado por não haver usuário de teste não administrador.
 
+## Complemento de homologação
+
+### Commit
+- SHA informado: `6c06878bf19d9ee2540987ffce8b7634777c4857` ("Reorganizou o novo menu").
+- Conferido: é exatamente o HEAD do código testado no preview; não há diferença entre esse commit e o código em execução.
+
+### Aviso preexistente da verificação automática
+- Origem: `src/routes/__root.tsx`, linha 83 — `errorComponent: ErrorComponent`. A função declara as props como `{ error: Error; reset: () => void }`, enquanto o roteador espera o tipo `ErrorComponentProps`.
+- Existe desde antes de R1 (arquivo não alterado nesta etapa).
+- Impacto: apenas de tipagem. A tela de erro funciona normalmente; não afeta build, publicação, permissões nem dados.
+
+### Teste RBAC com usuário não administrador — INTERROMPIDO
+Ao criar o usuário de teste pela tela Usuários (fluxo administrativo oficial), foi encontrada uma falha preexistente, não causada por R1:
+
+- Sintoma: a tela `/users` exibe "Algo deu errado — authUsers.find is not a function" e não carrega.
+- Causa comprovada: as funções administrativas do servidor (listar, criar, ativar/desativar usuários, link de senha) respondem **401 — "No authorization header provided"**. O arquivo `src/start.ts` não registra o mecanismo que envia o login do usuário ao servidor (`attachSupabaseAuth`); o arquivo está igual ao modelo original desde a criação do projeto.
+- Impacto: a administração de usuários (criação, ativação/desativação, links de senha) não funciona no preview e, pelo mesmo código, no site publicado. A segurança não é afetada: o servidor recusa as chamadas (falha fechada); nenhum acesso indevido.
+- Consequência: não foi possível criar o usuário de teste não administrador; o teste de menus/rotas por perfil não foi executado. Nenhuma regra de permissão foi alterada.
+- Correção proposta (aguardando autorização): registrar `attachSupabaseAuth` em `functionMiddleware` no `src/start.ts` e tratar a resposta de erro na tela Usuários. Sem alteração de banco, RLS, RBAC ou Auth.
+
+### Cadastros Financeiros
+Mantidos os dois itens; consolidação em R2.
+
 ## Publicação
-Não publicado nesta etapa; aguardando homologação.
+Não publicado; aguardando análise da falha e homologação final.

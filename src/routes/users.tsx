@@ -14,6 +14,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Pencil, ShieldAlert, KeyRound, Power } from "lucide-react";
 import { toast } from "sonner";
+
+function friendlyAdminError(e: unknown): string {
+  const raw = e instanceof Error ? e.message : String(e ?? "");
+  const m = raw.toLowerCase();
+  if (m.includes("unauthorized") || m.includes("401") || m.includes("jwt") || m.includes("authorization"))
+    return "Sessão expirada ou inválida. Entre novamente no sistema.";
+  if (m.includes("forbidden") || m.includes("403") || m.includes("apenas") || m.includes("permiss"))
+    return "Permissão insuficiente para esta ação.";
+  if (m.includes("failed to fetch") || m.includes("network"))
+    return "Falha de comunicação com o servidor. Verifique sua conexão.";
+  if (m.includes("último") || m.includes("administrador") || m.includes("já") || m.includes("email"))
+    return raw.slice(0, 200);
+  return "Erro temporário do servidor. Tente novamente em instantes.";
+}
 import {
   adminCreateUser,
   adminUpdateUserAccess,
@@ -60,11 +74,13 @@ function UsersPage() {
     modules: [] as AppModule[],
   });
 
-  const { data: authUsers = [] } = useQuery({
+  const { data: authUsersRaw, error: authUsersError } = useQuery({
     queryKey: ["auth-users"],
     queryFn: () => adminListAuthUsers(),
     enabled: isOwner,
+    retry: false,
   });
+  const authUsers = Array.isArray(authUsersRaw) ? authUsersRaw : [];
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["all-users"],
@@ -115,31 +131,31 @@ function UsersPage() {
       setOpen(false);
       reset();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyAdminError(e)),
   });
 
   const updateMut = useMutation({
     mutationFn: () => adminUpdateUserAccess({ data: { user_id: editing!, role: form.role, modules: form.modules } }),
     onSuccess: () => { toast.success("Atualizado"); refresh(); setOpen(false); reset(); },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyAdminError(e)),
   });
 
   const deleteMut = useMutation({
     mutationFn: (id: string) => adminDeleteUser({ data: { user_id: id } }),
     onSuccess: () => { toast.success("Usuário removido"); refresh(); },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyAdminError(e)),
   });
 
   const activeMut = useMutation({
     mutationFn: (v: { id: string; active: boolean }) => adminSetUserActive({ data: { user_id: v.id, active: v.active } }),
     onSuccess: () => { toast.success("Situação de acesso atualizada"); refresh(); },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyAdminError(e)),
   });
 
   const setupMut = useMutation({
     mutationFn: (id: string) => adminSendPasswordSetup({ data: { user_id: id } }),
     onSuccess: (r) => { setSetupLink(r.link); toast.success("Link de definição de senha gerado"); },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyAdminError(e)),
   });
 
   if (!isOwner) {

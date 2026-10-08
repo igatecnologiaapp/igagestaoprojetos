@@ -15,6 +15,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Trash2, Pencil, ShieldAlert, KeyRound, Power } from "lucide-react";
 import { toast } from "sonner";
 
+// Funções do servidor podem devolver uma resposta HTTP de recusa (401/403) em vez de lançar erro.
+async function adminCall<T>(p: Promise<T>): Promise<Exclude<T, Response>> {
+  const v = await p;
+  if (typeof Response !== "undefined" && v instanceof Response) {
+    if (v.status === 401) throw new Error("unauthorized");
+    if (v.status === 403) throw new Error("forbidden");
+    throw new Error("server");
+  }
+  return v as Exclude<T, Response>;
+}
+
 function friendlyAdminError(e: unknown): string {
   const raw = e instanceof Error ? e.message : String(e ?? "");
   const m = raw.toLowerCase();
@@ -76,7 +87,7 @@ function UsersPage() {
 
   const { data: authUsersRaw, error: authUsersError } = useQuery({
     queryKey: ["auth-users"],
-    queryFn: () => adminListAuthUsers(),
+    queryFn: () => adminCall(adminListAuthUsers()),
     enabled: isOwner,
     retry: false,
   });
@@ -114,7 +125,7 @@ function UsersPage() {
 
   const createMut = useMutation({
     mutationFn: () =>
-      adminCreateUser({
+      adminCall(adminCreateUser({
         data: {
           email: form.email,
           full_name: form.full_name,
@@ -123,7 +134,7 @@ function UsersPage() {
           modules: form.modules,
           ...(inviteMode ? {} : { password: form.password }),
         },
-      }),
+      })),
     onSuccess: (r) => {
       toast.success("Usuário criado");
       if (r.link) setSetupLink(r.link);
@@ -135,25 +146,25 @@ function UsersPage() {
   });
 
   const updateMut = useMutation({
-    mutationFn: () => adminUpdateUserAccess({ data: { user_id: editing!, role: form.role, modules: form.modules } }),
+    mutationFn: () => adminCall(adminUpdateUserAccess({ data: { user_id: editing!, role: form.role, modules: form.modules } })),
     onSuccess: () => { toast.success("Atualizado"); refresh(); setOpen(false); reset(); },
     onError: (e: Error) => toast.error(friendlyAdminError(e)),
   });
 
   const deleteMut = useMutation({
-    mutationFn: (id: string) => adminDeleteUser({ data: { user_id: id } }),
+    mutationFn: (id: string) => adminCall(adminDeleteUser({ data: { user_id: id } })),
     onSuccess: () => { toast.success("Usuário removido"); refresh(); },
     onError: (e: Error) => toast.error(friendlyAdminError(e)),
   });
 
   const activeMut = useMutation({
-    mutationFn: (v: { id: string; active: boolean }) => adminSetUserActive({ data: { user_id: v.id, active: v.active } }),
+    mutationFn: (v: { id: string; active: boolean }) => adminCall(adminSetUserActive({ data: { user_id: v.id, active: v.active } })),
     onSuccess: () => { toast.success("Situação de acesso atualizada"); refresh(); },
     onError: (e: Error) => toast.error(friendlyAdminError(e)),
   });
 
   const setupMut = useMutation({
-    mutationFn: (id: string) => adminSendPasswordSetup({ data: { user_id: id } }),
+    mutationFn: (id: string) => adminCall(adminSendPasswordSetup({ data: { user_id: id } })),
     onSuccess: (r) => { setSetupLink(r.link); toast.success("Link de definição de senha gerado"); },
     onError: (e: Error) => toast.error(friendlyAdminError(e)),
   });

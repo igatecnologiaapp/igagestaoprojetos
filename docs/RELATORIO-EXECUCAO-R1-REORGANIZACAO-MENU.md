@@ -109,3 +109,46 @@ Não publicado; aguardando análise da falha e homologação final.
 - Políticas RLS, RBAC, Auth e Storage: **inalteradas**. Nenhuma tabela ou migration criada.
 - SHA base: `6c06878bf19d9ee2540987ffce8b7634777c4857`; SHA antes desta correção: `d4fef87c7061f5b2cee9ff442ce6a7db1bd62023`. O SHA final é gerado automaticamente após esta mensagem (conferir no GitHub).
 - Não publicado. R2 não iniciada.
+
+---
+
+## Publicação e homologação em produção
+
+### Versão anterior (rollback)
+- Publicado antes: pacote `index-C_nh_QV_.js` (anterior a R1; menu antigo, sem a correção de Usuários).
+- Rollback: restaurar a versão anterior pelo histórico do projeto e republicar.
+
+### Publicação
+- SHA publicado: `ed71885aa19a2768bb524cc311183efc1df72e5e` (contém R1 `6c06878` + correção administrativa). Nenhuma outra funcionalidade incluída; diferença entre os dois commits: `src/start.ts`, `src/routes/users.tsx`, `src/utils/users.functions.ts`, relatório.
+- Data: 08/10/2026, 14:49 UTC. Resultado: OK — novo pacote `index-BWxfWQun.js` servido em https://igagestaoprojetos.lovable.app.
+
+### Testes em produção (Administrador, desktop 1280 e mobile 390×844)
+| Teste | Resultado |
+|---|---|
+| Login do Administrador | OK |
+| Novo menu (6 grupos) e navegação: Dashboard, Projetos, Usuários, Permissões, Custos, Empresas, Relatórios | OK, sem erros de página |
+| Projetos → Abrir Ficha → "Ficha Gerencial do Projeto" | OK |
+| Administração de Usuários (lista carrega, "Novo usuário" disponível) | OK — falha "authUsers.find" não ocorre mais |
+| Tela de login sem "Criar conta" | OK |
+| Autocadastro direto pelo servidor | Recusado (422) |
+| Menu mobile (gaveta, item ativo destacado, logotipo oficial) | OK |
+
+### Convite e definição de senha
+- Validado no preview (mesmo backend e mesmo código publicado): criação por convite, link, definição de senha e login do convidado — OK.
+- Em produção: **não executado** de ponta a ponta nesta rodada. Pendente confirmar que o link abre `/reset-password` no endereço publicado (depende da lista de endereços de retorno permitidos).
+
+### Ficha Gerencial com usuário não administrador
+- Não executado com projeto fictício nesta rodada. Isolamento já comprovado: usuário sem vínculo vê 0 projetos/0 empresas.
+
+### Segurança
+- Auth, RLS, RBAC, isolamento, auditoria, proteção do último Administrador e bloqueio de autocadastro: inalterados.
+- Varredura de segurança aponta 3 avisos **preexistentes** (leitura do catálogo de permissões e definições de campos por qualquer usuário logado). Não foram introduzidos por R1; não contêm dados de clientes. Ficam para análise futura.
+
+### Pendências
+1. Teste de convite ponta a ponta no site publicado.
+2. Teste da Ficha com usuário restrito e projeto fictício.
+3. Avaliar os 3 avisos de segurança preexistentes.
+4. Aviso de tipagem em `src/routes/__root.tsx` (sem impacto).
+
+### Situação final: **APROVADO COM RESSALVAS**
+Desenvolvimento parado. R2 não iniciada.

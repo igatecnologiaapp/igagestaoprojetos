@@ -9,72 +9,27 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as UsersRouteImport } from './routes/users'
-import { Route as TasksRouteImport } from './routes/tasks'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as ReportsRouteImport } from './routes/reports'
-import { Route as ProjectsRouteImport } from './routes/projects'
-import { Route as PermissionsRouteImport } from './routes/permissions'
-import { Route as ExternalsRouteImport } from './routes/externals'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as CompaniesRouteImport } from './routes/companies'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AppointmentsRouteImport } from './routes/appointments'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as FinanceVendorsRouteImport } from './routes/finance/vendors'
-import { Route as FinanceServicesRouteImport } from './routes/finance/services'
-import { Route as FinanceCostsRouteImport } from './routes/finance/costs'
-import { Route as FinanceCategoriesRouteImport } from './routes/finance/categories'
+import { Route as AppointmentsRouteImport } from './routes/appointments'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CompaniesRouteImport } from './routes/companies'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ExternalsRouteImport } from './routes/externals'
+import { Route as PermissionsRouteImport } from './routes/permissions'
+import { Route as ProjectsRouteImport } from './routes/projects'
+import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as TasksRouteImport } from './routes/tasks'
+import { Route as UsersRouteImport } from './routes/users'
 import { Route as FinanceBudgetsRouteImport } from './routes/finance/budgets'
+import { Route as FinanceCategoriesRouteImport } from './routes/finance/categories'
+import { Route as FinanceCostsRouteImport } from './routes/finance/costs'
+import { Route as FinanceServicesRouteImport } from './routes/finance/services'
+import { Route as FinanceVendorsRouteImport } from './routes/finance/vendors'
 
-const UsersRoute = UsersRouteImport.update({
-  id: '/users',
-  path: '/users',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TasksRoute = TasksRouteImport.update({
-  id: '/tasks',
-  path: '/tasks',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReportsRoute = ReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProjectsRoute = ProjectsRouteImport.update({
-  id: '/projects',
-  path: '/projects',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PermissionsRoute = PermissionsRouteImport.update({
-  id: '/permissions',
-  path: '/permissions',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ExternalsRoute = ExternalsRouteImport.update({
-  id: '/externals',
-  path: '/externals',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CompaniesRoute = CompaniesRouteImport.update({
-  id: '/companies',
-  path: '/companies',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppointmentsRoute = AppointmentsRouteImport.update({
@@ -82,24 +37,59 @@ const AppointmentsRoute = AppointmentsRouteImport.update({
   path: '/appointments',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FinanceVendorsRoute = FinanceVendorsRouteImport.update({
-  id: '/finance/vendors',
-  path: '/finance/vendors',
+const CompaniesRoute = CompaniesRouteImport.update({
+  id: '/companies',
+  path: '/companies',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FinanceServicesRoute = FinanceServicesRouteImport.update({
-  id: '/finance/services',
-  path: '/finance/services',
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FinanceCostsRoute = FinanceCostsRouteImport.update({
-  id: '/finance/costs',
-  path: '/finance/costs',
+const ExternalsRoute = ExternalsRouteImport.update({
+  id: '/externals',
+  path: '/externals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PermissionsRoute = PermissionsRouteImport.update({
+  id: '/permissions',
+  path: '/permissions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectsRoute = ProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportsRoute = ReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TasksRoute = TasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UsersRoute = UsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FinanceBudgetsRoute = FinanceBudgetsRouteImport.update({
+  id: '/finance/budgets',
+  path: '/finance/budgets',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FinanceCategoriesRoute = FinanceCategoriesRouteImport.update({
@@ -107,9 +97,19 @@ const FinanceCategoriesRoute = FinanceCategoriesRouteImport.update({
   path: '/finance/categories',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FinanceBudgetsRoute = FinanceBudgetsRouteImport.update({
-  id: '/finance/budgets',
-  path: '/finance/budgets',
+const FinanceCostsRoute = FinanceCostsRouteImport.update({
+  id: '/finance/costs',
+  path: '/finance/costs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FinanceServicesRoute = FinanceServicesRouteImport.update({
+  id: '/finance/services',
+  path: '/finance/services',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FinanceVendorsRoute = FinanceVendorsRouteImport.update({
+  id: '/finance/vendors',
+  path: '/finance/vendors',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -253,74 +253,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/users': {
-      id: '/users'
-      path: '/users'
-      fullPath: '/users'
-      preLoaderRoute: typeof UsersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/tasks': {
-      id: '/tasks'
-      path: '/tasks'
-      fullPath: '/tasks'
-      preLoaderRoute: typeof TasksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reports': {
-      id: '/reports'
-      path: '/reports'
-      fullPath: '/reports'
-      preLoaderRoute: typeof ReportsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/projects': {
-      id: '/projects'
-      path: '/projects'
-      fullPath: '/projects'
-      preLoaderRoute: typeof ProjectsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/permissions': {
-      id: '/permissions'
-      path: '/permissions'
-      fullPath: '/permissions'
-      preLoaderRoute: typeof PermissionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/externals': {
-      id: '/externals'
-      path: '/externals'
-      fullPath: '/externals'
-      preLoaderRoute: typeof ExternalsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/companies': {
-      id: '/companies'
-      path: '/companies'
-      fullPath: '/companies'
-      preLoaderRoute: typeof CompaniesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/appointments': {
@@ -330,32 +267,81 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppointmentsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/finance/vendors': {
-      id: '/finance/vendors'
-      path: '/finance/vendors'
-      fullPath: '/finance/vendors'
-      preLoaderRoute: typeof FinanceVendorsRouteImport
+    '/companies': {
+      id: '/companies'
+      path: '/companies'
+      fullPath: '/companies'
+      preLoaderRoute: typeof CompaniesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/finance/services': {
-      id: '/finance/services'
-      path: '/finance/services'
-      fullPath: '/finance/services'
-      preLoaderRoute: typeof FinanceServicesRouteImport
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/finance/costs': {
-      id: '/finance/costs'
-      path: '/finance/costs'
-      fullPath: '/finance/costs'
-      preLoaderRoute: typeof FinanceCostsRouteImport
+    '/externals': {
+      id: '/externals'
+      path: '/externals'
+      fullPath: '/externals'
+      preLoaderRoute: typeof ExternalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/permissions': {
+      id: '/permissions'
+      path: '/permissions'
+      fullPath: '/permissions'
+      preLoaderRoute: typeof PermissionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projects': {
+      id: '/projects'
+      path: '/projects'
+      fullPath: '/projects'
+      preLoaderRoute: typeof ProjectsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reports': {
+      id: '/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tasks': {
+      id: '/tasks'
+      path: '/tasks'
+      fullPath: '/tasks'
+      preLoaderRoute: typeof TasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/users': {
+      id: '/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof UsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/finance/budgets': {
+      id: '/finance/budgets'
+      path: '/finance/budgets'
+      fullPath: '/finance/budgets'
+      preLoaderRoute: typeof FinanceBudgetsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/finance/categories': {
@@ -365,11 +351,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FinanceCategoriesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/finance/budgets': {
-      id: '/finance/budgets'
-      path: '/finance/budgets'
-      fullPath: '/finance/budgets'
-      preLoaderRoute: typeof FinanceBudgetsRouteImport
+    '/finance/costs': {
+      id: '/finance/costs'
+      path: '/finance/costs'
+      fullPath: '/finance/costs'
+      preLoaderRoute: typeof FinanceCostsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/finance/services': {
+      id: '/finance/services'
+      path: '/finance/services'
+      fullPath: '/finance/services'
+      preLoaderRoute: typeof FinanceServicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/finance/vendors': {
+      id: '/finance/vendors'
+      path: '/finance/vendors'
+      fullPath: '/finance/vendors'
+      preLoaderRoute: typeof FinanceVendorsRouteImport
       parentRoute: typeof rootRouteImport
     }
   }

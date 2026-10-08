@@ -36,7 +36,10 @@ Visão geral (Dashboard) · Organização (Empresas, Usuários, Permissões) · 
 Todas as 17 rotas existentes permanecem idênticas; nenhuma rota criada ou removida.
 
 ## Testes
-Ver evidências registradas no fechamento da conversa (build, typecheck, Playwright desktop 1280 e mobile 390×844).
+- Playwright, perfil Administrador: as 14 rotas do menu abriram corretamente em desktop 1280×1800 e mobile 390×844, sem erros de página.
+- Grupos recolhíveis e destaque do item ativo conferidos por captura de tela (desktop e gaveta mobile); logotipo oficial preservado.
+- Typecheck: sem erros no arquivo alterado; permanece 1 aviso preexistente em `src/routes/__root.tsx` (tipo do errorComponent), não relacionado a R1.
+- Perfis sem permissão: as regras de filtro (isOwner / financial.view / módulos) não foram alteradas; teste com outro perfil real não executado por não haver usuário de teste não administrador.
 
 ## Publicação
 Não publicado nesta etapa; aguardando homologação.

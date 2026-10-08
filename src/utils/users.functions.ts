@@ -2,6 +2,17 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { getRequest } from "@tanstack/react-start/server";
+
+// Link de definição de senha deve abrir a tela de nova senha do próprio site.
+function passwordSetupRedirect(): string | undefined {
+  try {
+    const origin = new URL(getRequest().url).origin;
+    return `${origin}/reset-password`;
+  } catch {
+    return undefined;
+  }
+}
 
 type AppRole = "owner" | "collaborator" | "viewer";
 type AppModule = "companies" | "projects" | "tasks" | "appointments" | "reports";
@@ -59,6 +70,7 @@ export const adminCreateUser = createServerFn({ method: "POST" })
       const { data: generated } = await supabaseAdmin.auth.admin.generateLink({
         type: "recovery",
         email: data.email,
+        options: { redirectTo: passwordSetupRedirect() },
       });
       link = generated?.properties?.action_link ?? null;
     }
@@ -182,6 +194,7 @@ export const adminSendPasswordSetup = createServerFn({ method: "POST" })
     const { data: link, error } = await supabaseAdmin.auth.admin.generateLink({
       type: "recovery",
       email: target.user.email,
+      options: { redirectTo: passwordSetupRedirect() },
     });
     if (error) throw new Error(error.message);
     await audit(context.userId, "user.password_setup_link", data.user_id);
@@ -201,5 +214,6 @@ export const adminDeleteUser = createServerFn({ method: "POST" })
     if (!roles?.some((r) => r.role === "owner")) throw new Error("Sem permissão");
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.user_id);
     if (error) throw new Error(error.message);
+    await audit(userId, "user.delete", data.user_id);
     return { ok: true };
   });

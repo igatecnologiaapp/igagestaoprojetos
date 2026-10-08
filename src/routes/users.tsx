@@ -182,6 +182,9 @@ function UsersPage() {
             O acesso é concedido apenas por Administradores. Não existe autocadastro público.
           </p>
         </div>
+        {authUsersError && (
+          <p role="alert" className="w-full text-sm text-destructive">{friendlyAdminError(authUsersError)}</p>
+        )}
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
           <DialogTrigger asChild>
             <Button onClick={reset}><Plus className="h-4 w-4" /> Novo usuário</Button>

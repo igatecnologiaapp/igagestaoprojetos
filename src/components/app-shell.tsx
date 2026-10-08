@@ -18,6 +18,8 @@ import {
   Wallet,
   Tags,
   Server,
+  PiggyBank,
+  Store,
 } from "lucide-react";
 import { useAuth, type AppModule } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -31,43 +33,47 @@ type NavGroup = { id: string; label: string; items: NavItem[] };
 const groups: NavGroup[] = [
   {
     id: "overview",
-    label: "Visão geral",
+    label: "Visão Geral",
     items: [{ to: "/dashboard", label: "Dashboard", icon: LayoutDashboard }],
   },
   {
-    id: "organization",
-    label: "Organização",
-    items: [
-      { to: "/companies", label: "Empresas", icon: Building2, module: "companies" },
-      { to: "/users", label: "Usuários", icon: Users, ownerOnly: true },
-      { to: "/permissions", label: "Permissões", icon: ShieldCheck, ownerOnly: true },
-    ],
-  },
-  {
     id: "projects",
-    label: "Gestão de projetos",
+    label: "Projetos",
     items: [
-      { to: "/projects", label: "Projetos", icon: FolderKanban, module: "projects" },
+      { to: "/projects", label: "Todos os Projetos", icon: FolderKanban, module: "projects" },
       { to: "/tasks", label: "Tarefas", icon: ListChecks, module: "tasks" },
-      { to: "/appointments", label: "Agendamentos", icon: Calendar, module: "appointments" },
+      { to: "/appointments", label: "Agenda", icon: Calendar, module: "appointments" },
     ],
   },
   {
-    id: "governance",
-    label: "Governança e controle",
+    id: "finance",
+    label: "Gestão Financeira",
     items: [
-      { to: "/reports", label: "Relatórios", icon: FileText, module: "reports" },
-      { to: "/finance/vendors", label: "Financeiro · Fornecedores", icon: Wallet, permission: "financial.view" },
-      { to: "/finance/categories", label: "Financeiro · Categorias", icon: Tags, permission: "financial.view" },
-      { to: "/finance/services", label: "Financeiro · Serviços", icon: Server, permission: "financial.view" },
-      { to: "/finance/costs", label: "Financeiro · Custos", icon: Wallet, permission: "financial.view" },
-      { to: "/finance/budgets", label: "Financeiro · Orçamentos", icon: Wallet, permission: "financial.view" },
+      { to: "/finance/costs", label: "Custos", icon: Wallet, permission: "financial.view" },
+      { to: "/finance/services", label: "Assinaturas e Créditos", icon: Server, permission: "financial.view" },
+      { to: "/finance/budgets", label: "Orçamentos", icon: PiggyBank, permission: "financial.view" },
+      { to: "/finance/vendors", label: "Cadastros · Fornecedores", icon: Store, permission: "financial.view" },
+      { to: "/finance/categories", label: "Cadastros · Categorias", icon: Tags, permission: "financial.view" },
     ],
   },
   {
-    id: "stakeholders",
-    label: "Partes interessadas",
-    items: [{ to: "/externals", label: "Externos", icon: UserPlus }],
+    id: "clients",
+    label: "Clientes",
+    items: [{ to: "/companies", label: "Empresas Clientes", icon: Building2, module: "companies" }],
+  },
+  {
+    id: "reports",
+    label: "Relatórios",
+    items: [{ to: "/reports", label: "Relatórios e Exportações", icon: FileText, module: "reports" }],
+  },
+  {
+    id: "admin",
+    label: "Administração",
+    items: [
+      { to: "/users", label: "Usuários", icon: Users, ownerOnly: true },
+      { to: "/permissions", label: "Perfis e Permissões", icon: ShieldCheck, ownerOnly: true },
+      { to: "/externals", label: "Colaboradores Externos", icon: UserPlus },
+    ],
   },
 ];
 

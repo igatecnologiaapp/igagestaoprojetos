@@ -6,7 +6,7 @@ import { ProjectFolder, folderSections, type FolderSection } from "@/components/
 const sectionIds = folderSections.map((s) => s.id) as [FolderSection, ...FolderSection[]];
 const searchSchema = z.object({ secao: z.enum(sectionIds).optional() });
 
-export const Route = createFileRoute("/projetos/$projectId")({
+export const Route = createFileRoute("/projetos_/$projectId")({
   validateSearch: searchSchema,
   component: ProjectFolderPage,
   head: () => ({

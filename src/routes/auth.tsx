@@ -46,7 +46,7 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: "/dashboard" });
+    if (!loading && user) navigate({ to: "/painel" });
   }, [loading, user, navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -58,7 +58,7 @@ function AuthPage() {
         toast.error(authErrorMessage(error));
         return;
       }
-      navigate({ to: "/dashboard" });
+      navigate({ to: "/painel" });
     } catch (error) {
       toast.error(authErrorMessage(error));
     } finally {

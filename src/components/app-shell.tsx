@@ -34,52 +34,52 @@ const groups: NavGroup[] = [
   {
     id: "overview",
     label: "Visão Geral",
-    items: [{ to: "/dashboard", label: "Dashboard", icon: LayoutDashboard }],
+    items: [{ to: "/painel", label: "Painel do Gestor", icon: LayoutDashboard }],
   },
   {
     id: "projects",
     label: "Projetos",
     items: [
-      { to: "/projects", label: "Todos os Projetos", icon: FolderKanban, module: "projects" },
-      { to: "/tasks", label: "Tarefas", icon: ListChecks, module: "tasks" },
-      { to: "/appointments", label: "Agenda", icon: Calendar, module: "appointments" },
+      { to: "/projetos", label: "Todos os Projetos", icon: FolderKanban, module: "projects" },
+      { to: "/tarefas", label: "Tarefas", icon: ListChecks, module: "tasks" },
+      { to: "/agenda", label: "Agenda", icon: Calendar, module: "appointments" },
     ],
   },
   {
     id: "finance",
     label: "Gestão Financeira",
     items: [
-      { to: "/finance/costs", label: "Custos", icon: Wallet, permission: "financial.view" },
-      { to: "/finance/services", label: "Assinaturas e Créditos", icon: Server, permission: "financial.view" },
-      { to: "/finance/budgets", label: "Orçamentos", icon: PiggyBank, permission: "financial.view" },
-      { to: "/finance/vendors", label: "Cadastros · Fornecedores", icon: Store, permission: "financial.view" },
-      { to: "/finance/categories", label: "Cadastros · Categorias", icon: Tags, permission: "financial.view" },
+      { to: "/financeiro/custos", label: "Custos", icon: Wallet, permission: "financial.view" },
+      { to: "/financeiro/assinaturas", label: "Assinaturas e Créditos", icon: Server, permission: "financial.view" },
+      { to: "/financeiro/orcamentos", label: "Orçamentos", icon: PiggyBank, permission: "financial.view" },
+      { to: "/financeiro/fornecedores", label: "Cadastros · Fornecedores", icon: Store, permission: "financial.view" },
+      { to: "/financeiro/categorias", label: "Cadastros · Categorias", icon: Tags, permission: "financial.view" },
     ],
   },
   {
     id: "clients",
     label: "Clientes",
-    items: [{ to: "/companies", label: "Empresas Clientes", icon: Building2, module: "companies" }],
+    items: [{ to: "/clientes", label: "Empresas Clientes", icon: Building2, module: "companies" }],
   },
   {
     id: "reports",
     label: "Relatórios",
-    items: [{ to: "/reports", label: "Relatórios e Exportações", icon: FileText, module: "reports" }],
+    items: [{ to: "/relatorios", label: "Relatórios e Exportações", icon: FileText, module: "reports" }],
   },
   {
     id: "admin",
     label: "Administração",
     items: [
-      { to: "/users", label: "Usuários", icon: Users, ownerOnly: true },
-      { to: "/permissions", label: "Perfis e Permissões", icon: ShieldCheck, ownerOnly: true },
-      { to: "/externals", label: "Colaboradores Externos", icon: UserPlus },
+      { to: "/usuarios", label: "Usuários", icon: Users, ownerOnly: true },
+      { to: "/permissoes", label: "Perfis e Permissões", icon: ShieldCheck, ownerOnly: true },
+      { to: "/externos", label: "Colaboradores Externos", icon: UserPlus },
     ],
   },
 ];
 
 function Brand({ collapsed, onNavigate }: { collapsed?: boolean; onNavigate?: () => void }) {
   return (
-    <Link to="/dashboard" onClick={onNavigate} className="flex items-center gap-3 min-w-0">
+    <Link to="/painel" onClick={onNavigate} className="flex items-center gap-3 min-w-0">
       <img
         src={igaLogo.url}
         alt="IGA Tecnologia"
@@ -87,7 +87,7 @@ function Brand({ collapsed, onNavigate }: { collapsed?: boolean; onNavigate?: ()
       />
       {!collapsed && (
         <div className="min-w-0">
-          <div className="font-display font-semibold text-base leading-none truncate">IGA TECNOLOGIA</div>
+          <div className="font-display font-semibold text-base leading-none truncate">IGA Tecnologia</div>
           <div className="text-xs text-muted-foreground mt-1">Gestão de Projetos</div>
         </div>
       )}
@@ -272,7 +272,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <UserFooter />
             </SheetContent>
           </Sheet>
-          <Link to="/dashboard" className="flex items-center gap-2 min-w-0">
+          <Link to="/painel" className="flex items-center gap-2 min-w-0">
             <img src={igaLogo.url} alt="IGA Tecnologia" className="h-8 w-8 rounded-md object-cover" />
             <span className="font-display font-semibold truncate">IGA TECNOLOGIA</span>
           </Link>

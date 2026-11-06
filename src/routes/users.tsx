@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Pencil, ShieldAlert, KeyRound, Power } from "lucide-react";
+import { Plus, Trash2, Pencil, ShieldAlert, KeyRound, Power, Mail, Link2 } from "lucide-react";
 import { toast } from "sonner";
 
 // Funções do servidor podem devolver uma resposta HTTP de recusa (401/403) em vez de lançar erro.
@@ -47,6 +47,7 @@ import {
   adminListAuthUsers,
   adminSetUserActive,
   adminSendPasswordSetup,
+  adminResetPassword,
 } from "@/utils/users.functions";
 
 export const Route = createFileRoute("/users")({
@@ -80,6 +81,8 @@ function UsersPage() {
   const [editing, setEditing] = useState<string | null>(null);
   const [inviteMode, setInviteMode] = useState(true);
   const [setupLink, setSetupLink] = useState<string | null>(null);
+  const [resetFor, setResetFor] = useState<{ id: string; name: string; email: string | null; pending: boolean } | null>(null);
+  const [newPassword, setNewPassword] = useState("");
   const [form, setForm] = useState({
     email: "", password: "", full_name: "", job_title: "",
     role: "collaborator" as Role,
@@ -137,8 +140,11 @@ function UsersPage() {
         },
       })),
     onSuccess: (r) => {
-      toast.success("Usuário criado");
-      if (r.link) setSetupLink(r.link);
+      toast.success(
+        r.invited
+          ? `Convite enviado para ${form.email}.`
+          : "Usuário criado. Ele deverá trocar a senha provisória no primeiro acesso.",
+      );
       refresh();
       setOpen(false);
       reset();
@@ -166,7 +172,29 @@ function UsersPage() {
 
   const setupMut = useMutation({
     mutationFn: (id: string) => adminCall(adminSendPasswordSetup({ data: { user_id: id } })),
-    onSuccess: (r) => { setSetupLink(r.link); toast.success("Link de definição de senha gerado"); },
+    onSuccess: (r) => { setSetupLink(r.link); setResetFor(null); toast.success("Link gerado. Copie e envie ao usuário."); },
+    onError: (e: Error) => toast.error(friendlyAdminError(e)),
+  });
+
+  const resetEmailMut = useMutation({
+    mutationFn: (id: string) => adminCall(adminResetPassword({ data: { mode: "email", user_id: id } })),
+    onSuccess: (r) => {
+      toast.success(r.pending ? `Convite reenviado para ${r.email}.` : `Link de redefinição enviado para ${r.email}.`);
+      setResetFor(null);
+      refresh();
+    },
+    onError: (e: Error) => toast.error(friendlyAdminError(e)),
+  });
+
+  const resetSetMut = useMutation({
+    mutationFn: (v: { id: string; password: string }) =>
+      adminCall(adminResetPassword({ data: { mode: "set", user_id: v.id, password: v.password } })),
+    onSuccess: () => {
+      toast.success("Nova senha definida. O usuário deverá trocá-la no próximo acesso.");
+      setResetFor(null);
+      setNewPassword("");
+      refresh();
+    },
     onError: (e: Error) => toast.error(friendlyAdminError(e)),
   });
 
@@ -211,12 +239,15 @@ function UsersPage() {
                   <div><Label>Cargo/função</Label><Input value={form.job_title} onChange={(e) => setForm({ ...form, job_title: e.target.value })} /></div>
                   <label className="flex items-center gap-2 text-sm">
                     <Checkbox checked={inviteMode} onCheckedChange={(v) => setInviteMode(v === true)} />
-                    Enviar convite para o próprio usuário definir a senha (recomendado)
+                    Enviar convite por e-mail para o próprio usuário criar a senha (recomendado)
                   </label>
                   {!inviteMode && (
                     <div>
-                      <Label>Senha provisória</Label>
-                      <PasswordInput minLength={8} autoComplete="new-password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+                      <Label htmlFor="new-user-password">Senha provisória</Label>
+                      <PasswordInput id="new-user-password" minLength={8} autoComplete="new-password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Mínimo de 8 caracteres. O usuário será obrigado a trocá-la no primeiro acesso.
+                      </p>
                     </div>
                   )}
                 </>
@@ -280,6 +311,68 @@ function UsersPage() {
         </Card>
       )}
 
+      <Dialog open={!!resetFor} onOpenChange={(v) => { if (!v) { setResetFor(null); setNewPassword(""); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{resetFor?.pending ? "Convite e senha" : "Redefinir senha"} — {resetFor?.name}</DialogTitle>
+          </DialogHeader>
+          {resetFor && (
+            <div className="space-y-5">
+              <section className="space-y-2">
+                <h3 className="text-sm font-semibold">{resetFor.pending ? "Reenviar convite por e-mail" : "Enviar link por e-mail"}</h3>
+                <p className="text-xs text-muted-foreground">
+                  {resetFor.pending
+                    ? "O usuário ainda não aceitou o convite. Um novo e-mail será enviado"
+                    : "O usuário recebe um link para criar uma nova senha"}
+                  {resetFor.email ? ` para ${resetFor.email}.` : "."}
+                </p>
+                <Button
+                  className="w-full"
+                  disabled={!resetFor.email || resetEmailMut.isPending}
+                  onClick={() => resetEmailMut.mutate(resetFor.id)}
+                >
+                  <Mail className="h-4 w-4" /> {resetEmailMut.isPending ? "Enviando…" : resetFor.pending ? "Reenviar convite" : "Enviar link por e-mail"}
+                </Button>
+              </section>
+
+              <section className="space-y-2 border-t pt-4">
+                <h3 className="text-sm font-semibold">Definir uma nova senha agora</h3>
+                <p className="text-xs text-muted-foreground">
+                  Informe a nova senha ao usuário. Ele deverá trocá-la no próximo acesso.
+                </p>
+                <Label htmlFor="admin-new-password" className="sr-only">Nova senha</Label>
+                <PasswordInput
+                  id="admin-new-password"
+                  minLength={8}
+                  autoComplete="new-password"
+                  placeholder="Mínimo de 8 caracteres"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  disabled={newPassword.length < 8 || resetSetMut.isPending}
+                  onClick={() => resetSetMut.mutate({ id: resetFor.id, password: newPassword })}
+                >
+                  <KeyRound className="h-4 w-4" /> {resetSetMut.isPending ? "Salvando…" : "Definir nova senha"}
+                </Button>
+              </section>
+
+              <section className="space-y-2 border-t pt-4">
+                <h3 className="text-sm font-semibold">Gerar link para copiar</h3>
+                <p className="text-xs text-muted-foreground">
+                  Use se o e-mail não chegar: copie o link e envie por outro canal. O link é de uso único.
+                </p>
+                <Button variant="ghost" className="w-full" disabled={setupMut.isPending} onClick={() => setupMut.mutate(resetFor.id)}>
+                  <Link2 className="h-4 w-4" /> Gerar link
+                </Button>
+              </section>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {isLoading ? <p className="text-muted-foreground">Carregando…</p> : (
         <div className="grid gap-3">
           {users.map((u) => {
@@ -294,6 +387,8 @@ function UsersPage() {
                   </div>
                   <div className="flex flex-wrap gap-1 mt-1">
                     <Badge variant={active ? "secondary" : "destructive"}>{active ? "Ativo" : "Desativado"}</Badge>
+                    {auth?.pending && <Badge variant="outline">Convite pendente</Badge>}
+                    {auth?.must_change_password && <Badge variant="outline">Troca de senha pendente</Badge>}
                     {u.roles.map((r) => <Badge key={r} variant="secondary">{roleLabels[r]}</Badge>)}
                     {u.modules.length === 0
                       ? <Badge variant="outline">Todos os módulos</Badge>
@@ -308,7 +403,16 @@ function UsersPage() {
                   }}>
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button size="icon" variant="ghost" aria-label="Gerar link de definição de senha" onClick={() => setupMut.mutate(u.id)}>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label="Redefinir senha"
+                    title="Redefinir senha"
+                    onClick={() => {
+                      setNewPassword("");
+                      setResetFor({ id: u.id, name: u.full_name ?? "usuário", email: auth?.email ?? null, pending: auth?.pending ?? false });
+                    }}
+                  >
                     <KeyRound className="h-4 w-4" />
                   </Button>
                   <Button size="icon" variant="ghost" aria-label={active ? "Desativar acesso" : "Ativar acesso"} onClick={() => activeMut.mutate({ id: u.id, active: !active })}>

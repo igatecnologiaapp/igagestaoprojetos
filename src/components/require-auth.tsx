@@ -9,9 +9,14 @@ export function RequireAuth({ children, module }: { children: ReactNode; module?
   const { user, loading, canAccess } = useAuth();
   const navigate = useNavigate();
 
+  // Senha provisória ou definida pelo Administrador: troca obrigatória antes de usar o sistema.
+  const mustChangePassword =
+    (user?.app_metadata as { must_change_password?: boolean } | undefined)?.must_change_password === true;
+
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
-  }, [loading, user, navigate]);
+    else if (!loading && mustChangePassword) navigate({ to: "/reset-password" });
+  }, [loading, user, mustChangePassword, navigate]);
 
   if (loading) {
     return (
@@ -20,7 +25,7 @@ export function RequireAuth({ children, module }: { children: ReactNode; module?
       </div>
     );
   }
-  if (!user) return null;
+  if (!user || mustChangePassword) return null;
 
   if (module && !canAccess(module)) {
     return (

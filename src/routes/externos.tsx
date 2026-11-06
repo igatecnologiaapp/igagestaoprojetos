@@ -16,7 +16,14 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/externos")({
   component: () => <RequireAuth><ExternalsPage /></RequireAuth>,
-  head: () => ({ meta: [{ title: "Colaboradores externos — IGA Tecnologia" }] }),
+  head: () => ({ meta: [
+    { title: "Colaboradores externos — IGA Tecnologia" },
+    { name: "description", content: "Cadastro de colaboradores externos para compartilhamento de projetos e tarefas da IGA Tecnologia." },
+    { property: "og:title", content: "Colaboradores externos — IGA Tecnologia" },
+    { property: "og:description", content: "Cadastro de colaboradores externos para compartilhamento de projetos e tarefas da IGA Tecnologia." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
 });
 
 type Role = "owner" | "collaborator" | "viewer";

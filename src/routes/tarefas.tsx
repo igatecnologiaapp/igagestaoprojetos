@@ -23,7 +23,14 @@ const searchSchema = z.object({ project: z.string().optional(), task: z.string()
 export const Route = createFileRoute("/tarefas")({
   component: () => <RequireAuth module="tasks"><TasksPage /></RequireAuth>,
   validateSearch: searchSchema,
-  head: () => ({ meta: [{ title: "Tarefas — IGA Tecnologia" }] }),
+  head: () => ({ meta: [
+    { title: "Tarefas — IGA Tecnologia" },
+    { name: "description", content: "Organização de tarefas por projeto, prioridade, prazo e status na IGA Tecnologia." },
+    { property: "og:title", content: "Tarefas — IGA Tecnologia" },
+    { property: "og:description", content: "Organização de tarefas por projeto, prioridade, prazo e status na IGA Tecnologia." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
 });
 
 const statusColumns = [

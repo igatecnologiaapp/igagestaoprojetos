@@ -17,7 +17,14 @@ import { useAuth } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/agenda")({
   component: () => <RequireAuth module="appointments"><AppointmentsPage /></RequireAuth>,
-  head: () => ({ meta: [{ title: "Agendamentos — IGA Tecnologia" }] }),
+  head: () => ({ meta: [
+    { title: "Agendamentos — IGA Tecnologia" },
+    { name: "description", content: "Agenda de compromissos, projetos e participantes da IGA Tecnologia." },
+    { property: "og:title", content: "Agendamentos — IGA Tecnologia" },
+    { property: "og:description", content: "Agenda de compromissos, projetos e participantes da IGA Tecnologia." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
 });
 
 const statusLabels: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {

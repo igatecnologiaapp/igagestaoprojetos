@@ -17,7 +17,14 @@ import { AuditHistory } from "@/components/audit-history";
 
 export const Route = createFileRoute("/clientes")({
   component: () => <RequireAuth module="companies"><CompaniesPage /></RequireAuth>,
-  head: () => ({ meta: [{ title: "Empresas — IGA Tecnologia" }] }),
+  head: () => ({ meta: [
+    { title: "Empresas — IGA Tecnologia" },
+    { name: "description", content: "Gestão de empresas clientes, contatos e projetos relacionados da IGA Tecnologia." },
+    { property: "og:title", content: "Empresas — IGA Tecnologia" },
+    { property: "og:description", content: "Gestão de empresas clientes, contatos e projetos relacionados da IGA Tecnologia." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
 });
 
 type CompanyForm = {

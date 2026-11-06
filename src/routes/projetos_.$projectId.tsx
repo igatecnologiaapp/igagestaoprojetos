@@ -13,6 +13,10 @@ export const Route = createFileRoute("/projetos_/$projectId")({
     meta: [
       { title: "Pasta do projeto — IGA Tecnologia" },
       { name: "description", content: "Pasta digital do projeto: visão geral, tarefas, financeiro, ferramentas, documentos, histórico e equipe." },
+      { property: "og:title", content: "Pasta do projeto — IGA Tecnologia" },
+      { property: "og:description", content: "Pasta digital do projeto: visão geral, tarefas, financeiro, ferramentas, documentos, histórico e equipe." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
 });

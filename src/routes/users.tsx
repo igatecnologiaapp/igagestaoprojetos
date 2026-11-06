@@ -7,6 +7,7 @@ import { useAuth, type AppModule } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/password-input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -215,7 +216,7 @@ function UsersPage() {
                   {!inviteMode && (
                     <div>
                       <Label>Senha provisória</Label>
-                      <Input type="password" minLength={8} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+                      <PasswordInput minLength={8} autoComplete="new-password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
                     </div>
                   )}
                 </>

@@ -14,6 +14,7 @@ import { ProjectCustomFieldValues } from "@/components/project-custom-fields";
 import { ProjectPromptsTimeline } from "@/components/project-prompts-timeline";
 import { ProjectDevelopmentTimeline } from "@/components/project-development-timeline";
 import { ProjectManagementSummary } from "@/components/project-management-summary";
+import { ProjectDocuments } from "@/components/project-documents";
 import { useAuth } from "@/lib/auth-context";
 import { Coins, Github, Sparkles, ListChecks, ArrowLeft, CalendarDays, Lock, FolderOpen } from "lucide-react";
 
@@ -502,9 +503,8 @@ export function ProjectFolder({
 
         {current === "documentos" && (
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Links do projeto (contratos, briefing, layouts, entregas). O envio de arquivos em pastas chega no próximo bloco.
-            </p>
+            <ProjectDocuments projectId={projectId} />
+            <h3 className="pt-4 text-sm font-semibold border-t">Links do projeto</h3>
             <RecordSection
               table="project_links"
               projectId={projectId}

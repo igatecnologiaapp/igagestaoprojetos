@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { RequireAuth } from "@/components/require-auth";
@@ -18,7 +18,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 import { ProjectShares } from "@/components/task-collaboration";
-import { ProjectDetailDialog } from "@/components/project-detail";
 import { CustomFieldDefinitions } from "@/components/project-custom-fields";
 import { consumption, levelLabels, realizedFor, type BudgetRow, type ConsumptionLevel, type RealizedAllocation } from "@/lib/finance-budgets";
 
@@ -84,7 +83,8 @@ function ProjectsPage() {
   const canViewFinance = isOwner || hasPermission("financial.view");
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [detailId, setDetailId] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const openFolder = (id: string) => navigate({ to: "/projetos/$projectId", params: { projectId: id } });
   const [fieldsOpen, setFieldsOpen] = useState(false);
   const [view, setView] = useState<"cards" | "table">("cards");
   const [search, setSearch] = useState("");
@@ -400,7 +400,7 @@ function ProjectsPage() {
             </TableHeader>
             <TableBody>
               {filtered.map((p) => (
-                <TableRow key={p.id} className="cursor-pointer" onClick={() => setDetailId(p.id)}>
+                <TableRow key={p.id} className="cursor-pointer" onClick={() => openFolder(p.id)}>
                   <TableCell className="font-medium">{p.name}</TableCell>
                   <TableCell>{(p.companies as { name: string } | null)?.name ?? "—"}</TableCell>
                   <TableCell><Badge variant={statusVariant[p.status]}>{statusLabels[p.status]}</Badge></TableCell>
@@ -414,8 +414,8 @@ function ProjectsPage() {
                   </TableCell>
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <div className="flex gap-1 justify-end items-center">
-                      <Button size="sm" variant="outline" className="h-7" onClick={() => setDetailId(p.id)}>
-                        <ClipboardList className="h-3.5 w-3.5 mr-1" />Abrir Ficha
+                      <Button size="sm" variant="outline" className="h-7" onClick={() => openFolder(p.id)}>
+                        <ClipboardList className="h-3.5 w-3.5 mr-1" />Abrir pasta
                       </Button>
                     {canEdit && (
                       <div className="flex gap-1 justify-end">
@@ -440,7 +440,7 @@ function ProjectsPage() {
             const overdue = p.end_date && p.end_date < today && p.status !== "completed";
             return (
               <Card key={p.id} className="p-5 hover:shadow-md transition-shadow h-full group relative min-w-0">
-                <button type="button" className="block w-full text-left" onClick={() => setDetailId(p.id)}>
+                <button type="button" className="block w-full text-left" onClick={() => openFolder(p.id)}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <h3 className="font-display font-semibold truncate">{p.name}</h3>
@@ -467,8 +467,8 @@ function ProjectsPage() {
                   </div>
                 </button>
                 <div className="mt-3">
-                  <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => setDetailId(p.id)}>
-                    <ClipboardList className="h-3.5 w-3.5 mr-1" />Abrir Ficha
+                  <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => openFolder(p.id)}>
+                    <ClipboardList className="h-3.5 w-3.5 mr-1" />Abrir pasta
                   </Button>
                 </div>
                 {canEdit && (
@@ -489,7 +489,6 @@ function ProjectsPage() {
         </div>
       )}
 
-      <ProjectDetailDialog projectId={detailId} onOpenChange={(o) => { if (!o) setDetailId(null); }} />
     </div>
   );
 }

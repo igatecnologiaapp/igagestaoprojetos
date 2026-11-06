@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -16,7 +15,7 @@ import { ProjectPromptsTimeline } from "@/components/project-prompts-timeline";
 import { ProjectDevelopmentTimeline } from "@/components/project-development-timeline";
 import { ProjectManagementSummary } from "@/components/project-management-summary";
 import { useAuth } from "@/lib/auth-context";
-import { Coins, Github, Sparkles, ListChecks } from "lucide-react";
+import { Coins, Github, Sparkles, ListChecks, ArrowLeft, CalendarDays, Lock, FolderOpen } from "lucide-react";
 
 const sb = supabase as unknown as { from: (t: string) => any };
 
@@ -98,17 +97,46 @@ export function useProjectCredits(projectId: string | null) {
   });
 }
 
-export function ProjectDetailDialog({
+/** As 7 seções da pasta digital do projeto (Fase 1 da proposta de unificação). */
+export const folderSections = [
+  { id: "visao-geral", label: "Visão geral" },
+  { id: "tarefas", label: "Estrutura e tarefas" },
+  { id: "financeiro", label: "Financeiro" },
+  { id: "ferramentas", label: "Ferramentas e acessos" },
+  { id: "documentos", label: "Documentos e links" },
+  { id: "historico", label: "Histórico" },
+  { id: "equipe", label: "Equipe" },
+] as const;
+export type FolderSection = (typeof folderSections)[number]["id"];
+
+const statusLabels: Record<string, string> = {
+  planning: "Planejamento",
+  in_progress: "Em andamento",
+  paused: "Pausado",
+  completed: "Concluído",
+  cancelled: "Cancelado",
+};
+
+/**
+ * Pasta digital do projeto: página própria (/projetos/:id) com 7 seções.
+ * Reúne, sem alterar regras de acesso, o conteúdo das 12 abas da antiga janela do projeto.
+ * A RLS do banco continua sendo a única fonte de autorização; a tela só esconde
+ * o que o usuário já não poderia ver.
+ */
+export function ProjectFolder({
   projectId,
-  onOpenChange,
+  section,
+  onSectionChange,
 }: {
-  projectId: string | null;
-  onOpenChange: (open: boolean) => void;
+  projectId: string;
+  section: FolderSection;
+  onSectionChange: (s: FolderSection) => void;
 }) {
-  const { isOwner } = useAuth();
+  const { isOwner, hasPermission, loading: authLoading } = useAuth();
+  const canViewFinance = hasPermission("financial.view");
   const [promptView, setPromptView] = useState("timeline");
 
-  const { data: project } = useQuery({
+  const { data: project, isLoading: projectLoading } = useQuery({
     queryKey: ["project-detail", projectId],
     enabled: !!projectId,
     queryFn: async () => {
@@ -170,40 +198,86 @@ export function ProjectDetailDialog({
   const done = tasks.filter((t) => t.status === "completed").length;
   const progress = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
 
+
+  const visibleSections = folderSections.filter((s) => s.id !== "financeiro" || canViewFinance);
+  const current: FolderSection = visibleSections.some((s) => s.id === section) ? section : "visao-geral";
+  const company = (project?.companies as { name: string } | null)?.name ?? "—";
+
+  if (projectLoading || authLoading) {
+    return <p className="text-sm text-muted-foreground">Carregando pasta do projeto…</p>;
+  }
+  if (!project) {
+    return (
+      <Card className="p-8 text-center space-y-3">
+        <Lock className="h-10 w-10 mx-auto text-muted-foreground" />
+        <h1 className="font-semibold">Projeto não encontrado</h1>
+        <p className="text-sm text-muted-foreground">O projeto não existe ou não foi compartilhado com você.</p>
+        <Button asChild variant="outline"><Link to="/projects">Voltar para Projetos</Link></Button>
+      </Card>
+    );
+  }
+
   return (
-    <Dialog open={!!projectId} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] sm:max-w-4xl max-h-[90vh] overflow-y-auto overflow-x-hidden p-4 sm:p-6">
-        <DialogHeader>
-          <DialogTitle className="font-display">{project?.name ?? "Projeto"}</DialogTitle>
-          <p className="text-sm text-muted-foreground">
-            {(project?.companies as { name: string } | null)?.name ?? "—"}
-          </p>
-        </DialogHeader>
+    <div className="space-y-5">
+      <div className="flex flex-col gap-1">
+        <Link to="/projects" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground w-fit">
+          <ArrowLeft className="h-4 w-4" /> Projetos
+        </Link>
+      </div>
 
-        {projectId && (
-          <Tabs defaultValue="management">
-            <TabsList className="flex flex-wrap h-auto">
-              <TabsTrigger value="management">Ficha Gerencial</TabsTrigger>
-              <TabsTrigger value="overview">Visão geral</TabsTrigger>
-              <TabsTrigger value="tasks">Tarefas</TabsTrigger>
-              <TabsTrigger value="prompts">ChatGPT / Prompts</TabsTrigger>
-              <TabsTrigger value="github">GitHub</TabsTrigger>
-              <TabsTrigger value="lovable">Lovable</TabsTrigger>
-              <TabsTrigger value="emails">E-mails</TabsTrigger>
-              <TabsTrigger value="links">Links</TabsTrigger>
-              {isOwner && <TabsTrigger value="accounts">Contas e Credenciais</TabsTrigger>}
-              <TabsTrigger value="shares">Compartilhamento</TabsTrigger>
-              <TabsTrigger value="governance">Governança</TabsTrigger>
-              <TabsTrigger value="history">Histórico</TabsTrigger>
-            </TabsList>
+      <Card className="p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4">
+        <div className="min-w-0 space-y-1">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <FolderOpen className="h-4 w-4" /> Pasta do projeto
+          </div>
+          <h1 className="font-display text-2xl font-semibold break-words">{project.name}</h1>
+          <p className="text-sm text-muted-foreground">{company}</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-5">
+          <Badge variant="secondary">{statusLabels[String(project.status)] ?? String(project.status ?? "—")}</Badge>
+          <div className="min-w-[160px] space-y-1">
+            <div className="text-xs text-muted-foreground">{progress}% das tarefas concluídas</div>
+            <Progress value={progress} />
+          </div>
+          <div className="flex items-start gap-2 text-xs text-muted-foreground">
+            <CalendarDays className="h-4 w-4 mt-0.5" />
+            <div>
+              <div>Início {fmtDate(project.start_date)}</div>
+              <div>Conclusão {fmtDate(project.end_date)}</div>
+            </div>
+          </div>
+        </div>
+      </Card>
 
-            {/* Bloco 4B.1 — Resumo gerencial */}
-            <TabsContent value="management" className="pt-4">
-              <ProjectManagementSummary projectId={projectId} responsibleName={responsibleName} />
-            </TabsContent>
+      <nav aria-label="Seções da pasta" className="-mx-1 overflow-x-auto">
+        <div role="tablist" className="flex gap-1.5 px-1 pb-1 w-max">
+          {visibleSections.map((s, i) => {
+            const active = s.id === current;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => onSectionChange(s.id)}
+                className={`min-h-11 whitespace-nowrap rounded-md border px-4 text-sm transition-colors ${
+                  active
+                    ? "border-primary bg-primary text-primary-foreground font-medium"
+                    : "bg-card hover:bg-accent hover:text-accent-foreground"
+                }`}
+              >
+                {i + 1} · {s.label}
+              </button>
+            );
+          })}
+        </div>
+      </nav>
 
-            {/* Visão geral */}
-            <TabsContent value="overview" className="space-y-4 pt-4">
+      <section aria-label={visibleSections.find((s) => s.id === current)?.label}>
+        {current === "visao-geral" && (
+          <div className="space-y-6">
+            <ProjectManagementSummary projectId={projectId} responsibleName={responsibleName} />
+            <Card className="p-4 space-y-4">
               <div className="grid gap-3 sm:grid-cols-3">
                 <Card className="p-4">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground"><ListChecks className="h-4 w-4" />Progresso</div>
@@ -236,81 +310,83 @@ export function ProjectDetailDialog({
                 <h3 className="text-sm font-medium mb-2">Campos personalizados</h3>
                 <ProjectCustomFieldValues projectId={projectId} />
               </div>
-            </TabsContent>
+            </Card>
+          </div>
+        )}
 
-            {/* Tarefas */}
-            <TabsContent value="tasks" className="space-y-3 pt-4">
-              <Button asChild size="sm" variant="outline">
-                <Link to="/tasks" search={{ project: projectId }}>Abrir Kanban do projeto</Link>
-              </Button>
-              {tasks.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhuma tarefa neste projeto.</p>
-              ) : (
-                <ul className="space-y-2">
-                  {tasks.map((t) => (
-                    <li key={t.id} className="flex items-center justify-between gap-3 rounded-md border p-3 text-sm">
-                      <span className="truncate">{t.name}</span>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Badge variant="outline">{t.priority}</Badge>
-                        <Badge variant={t.status === "completed" ? "default" : "secondary"}>{t.status}</Badge>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </TabsContent>
-
-            {/* Prompts */}
-            <TabsContent value="prompts" className="space-y-4 pt-4">
-              <Tabs value={promptView} onValueChange={setPromptView}>
-                <TabsList className="h-8">
-                  <TabsTrigger value="timeline" className="text-xs">Linha do tempo</TabsTrigger>
-                  <TabsTrigger value="list" className="text-xs">Lista</TabsTrigger>
-                </TabsList>
-              </Tabs>
-              <RecordSection
-                hideList={promptView === "timeline"}
-                table="project_prompts"
-                projectId={projectId}
-                addLabel="Novo prompt"
-                emptyLabel="Nenhum prompt registrado."
-                orderBy={{ column: "prompt_date", ascending: false }}
-                fields={[
-                  { key: "title", label: "Título", required: true, full: true },
-                  { key: "url", label: "Link do chat", type: "url", full: true },
-                  { key: "prompt_type", label: "Tipo", type: "select", options: promptTypes },
-                  { key: "prompt_date", label: "Data do prompt", type: "date" },
-                  { key: "sent_to_lovable_at", label: "Enviado ao Lovable em", type: "date" },
-                  { key: "purpose", label: "Finalidade" },
-                  { key: "commit_ref", label: "Referência de commit" },
-                  { key: "notes", label: "Observações", type: "textarea" },
-                ]}
-                render={(r) => (
-                  <>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium">{String(r['title'])}</span>
-                      <Badge variant="secondary">{promptTypes.find((p) => p.value === r['prompt_type'])?.label ?? String(r['prompt_type'])}</Badge>
-                      <span className="text-xs text-muted-foreground">{fmtDate(r['prompt_date'])}</span>
+        {current === "tarefas" && (
+          <div className="space-y-3">
+            <Button asChild size="sm" variant="outline">
+              <Link to="/tasks" search={{ project: projectId }}>Abrir Kanban do projeto</Link>
+            </Button>
+            {tasks.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhuma tarefa neste projeto.</p>
+            ) : (
+              <ul className="space-y-2">
+                {tasks.map((t) => (
+                  <li key={t.id} className="flex items-center justify-between gap-3 rounded-md border p-3 text-sm">
+                    <span className="truncate">{t.name}</span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge variant="outline">{t.priority}</Badge>
+                      <Badge variant={t.status === "completed" ? "default" : "secondary"}>{t.status}</Badge>
                     </div>
-                    {str(r['purpose']) && <p className="text-muted-foreground">{String(r['purpose'])}</p>}
-                    {str(r['url']) && <ExternalUrl url={String(r['url'])} label="Abrir conversa" />}
-                    {str(r['sent_to_lovable_at']) && (
-                      <p className="text-xs text-muted-foreground">Enviado ao Lovable em {fmtDate(r['sent_to_lovable_at'])}</p>
-                    )}
-                    {str(r['commit_ref']) && (
-                      <p className="text-xs text-muted-foreground font-mono break-all">commit: {String(r['commit_ref'])}</p>
-                    )}
-                    {str(r['notes']) && <p className="text-xs text-muted-foreground">{String(r['notes'])}</p>}
-                  </>
-                )}
-              />
-              {promptView === "timeline" && (
-                <ProjectPromptsTimeline projectId={projectId} typeLabels={promptTypes} />
-              )}
-            </TabsContent>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
 
+        {current === "financeiro" && canViewFinance && (
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              O resumo financeiro, os custos realizados e o orçamento do projeto estão na Visão geral (Ficha Gerencial).
+              O rateio por consumo das contas de ferramentas, as receitas e o resultado (Superávit ou Déficit) chegam na Fase 2.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild size="sm" variant="outline"><Link to="/finance/costs">Custos e rateios</Link></Button>
+              <Button asChild size="sm" variant="outline"><Link to="/finance/budgets">Orçamentos</Link></Button>
+              <Button asChild size="sm" variant="outline"><Link to="/finance/services">Assinaturas e serviços</Link></Button>
+            </div>
+            <div className="border-t pt-4">
+                <h3 className="text-sm font-medium mb-2 flex items-center gap-1.5">
+                  <Coins className="h-4 w-4" />Créditos — total: {totalCredits.toLocaleString("pt-BR")}
+                </h3>
+                <RecordSection
+                  table="project_credits"
+                  projectId={projectId}
+                  addLabel="Novo lançamento"
+                  emptyLabel="Nenhum crédito lançado."
+                  orderBy={{ column: "entry_date", ascending: false }}
+                  fields={[
+                    { key: "entry_date", label: "Data", type: "date", required: true },
+                    { key: "amount", label: "Quantidade", type: "number", required: true },
+                    { key: "description", label: "Descrição", full: true },
+                    { key: "notes", label: "Observações", type: "textarea" },
+                  ]}
+                  render={(r) => (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{Number(r['amount']).toLocaleString("pt-BR")}</span>
+                        <span className="text-xs text-muted-foreground">{fmtDate(r['entry_date'])}</span>
+                      </div>
+                      {str(r['description']) && <p className="text-muted-foreground">{String(r['description'])}</p>}
+                      {str(r['notes']) && <p className="text-xs text-muted-foreground">{String(r['notes'])}</p>}
+                    </>
+                  )}
+                />
+            </div>
+          </div>
+        )}
 
-            {/* GitHub */}
+        {current === "ferramentas" && (
+          <Tabs defaultValue="github">
+            <TabsList className="flex flex-wrap h-auto">
+              <TabsTrigger value="github">GitHub</TabsTrigger>
+              <TabsTrigger value="lovable">Lovable</TabsTrigger>
+              <TabsTrigger value="emails">E-mails</TabsTrigger>
+              {isOwner && <TabsTrigger value="accounts">Contas e credenciais</TabsTrigger>}
+            </TabsList>
             <TabsContent value="github" className="pt-4">
               <RecordSection
                 table="project_github_repos"
@@ -340,9 +416,7 @@ export function ProjectDetailDialog({
                 )}
               />
             </TabsContent>
-
-            {/* Lovable */}
-            <TabsContent value="lovable" className="space-y-6 pt-4">
+            <TabsContent value="lovable" className="pt-4">
               <div>
                 <h3 className="text-sm font-medium mb-2 flex items-center gap-1.5"><Sparkles className="h-4 w-4" />Projeto Lovable</h3>
                 <RecordSection
@@ -368,38 +442,7 @@ export function ProjectDetailDialog({
                   )}
                 />
               </div>
-
-              <div className="border-t pt-4">
-                <h3 className="text-sm font-medium mb-2 flex items-center gap-1.5">
-                  <Coins className="h-4 w-4" />Créditos — total: {totalCredits.toLocaleString("pt-BR")}
-                </h3>
-                <RecordSection
-                  table="project_credits"
-                  projectId={projectId}
-                  addLabel="Novo lançamento"
-                  emptyLabel="Nenhum crédito lançado."
-                  orderBy={{ column: "entry_date", ascending: false }}
-                  fields={[
-                    { key: "entry_date", label: "Data", type: "date", required: true },
-                    { key: "amount", label: "Quantidade", type: "number", required: true },
-                    { key: "description", label: "Descrição", full: true },
-                    { key: "notes", label: "Observações", type: "textarea" },
-                  ]}
-                  render={(r) => (
-                    <>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{Number(r['amount']).toLocaleString("pt-BR")}</span>
-                        <span className="text-xs text-muted-foreground">{fmtDate(r['entry_date'])}</span>
-                      </div>
-                      {str(r['description']) && <p className="text-muted-foreground">{String(r['description'])}</p>}
-                      {str(r['notes']) && <p className="text-xs text-muted-foreground">{String(r['notes'])}</p>}
-                    </>
-                  )}
-                />
-              </div>
             </TabsContent>
-
-            {/* E-mails */}
             <TabsContent value="emails" className="pt-4">
               <RecordSection
                 table="project_emails"
@@ -423,35 +466,6 @@ export function ProjectDetailDialog({
                 )}
               />
             </TabsContent>
-
-            {/* Links */}
-            <TabsContent value="links" className="pt-4">
-              <RecordSection
-                table="project_links"
-                projectId={projectId}
-                addLabel="Novo link"
-                emptyLabel="Nenhum link cadastrado."
-                fields={[
-                  { key: "name", label: "Nome", required: true },
-                  { key: "category", label: "Categoria", type: "select", options: linkCategories },
-                  { key: "url", label: "URL", type: "url", required: true, full: true },
-                  { key: "description", label: "Descrição", type: "textarea" },
-                ]}
-                filterKey="category"
-                render={(r) => (
-                  <>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{String(r['name'])}</span>
-                      <Badge variant="secondary">{str(r['category']) ?? "Outro"}</Badge>
-                    </div>
-                    <ExternalUrl url={String(r['url'])} />
-                    {str(r['description']) && <p className="text-xs text-muted-foreground">{String(r['description'])}</p>}
-                  </>
-                )}
-              />
-            </TabsContent>
-
-            {/* Acessos */}
             {isOwner && (
               <TabsContent value="accounts" className="space-y-3 pt-4">
                 <p className="text-xs text-muted-foreground">
@@ -483,13 +497,48 @@ export function ProjectDetailDialog({
                 />
               </TabsContent>
             )}
+          </Tabs>
+        )}
 
-            <TabsContent value="shares" className="pt-4">
-              <ProjectShares projectId={projectId} />
-            </TabsContent>
+        {current === "documentos" && (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Links do projeto (contratos, briefing, layouts, entregas). O envio de arquivos em pastas chega no próximo bloco.
+            </p>
+            <RecordSection
+              table="project_links"
+              projectId={projectId}
+              addLabel="Novo link"
+              emptyLabel="Nenhum link cadastrado."
+              fields={[
+                { key: "name", label: "Nome", required: true },
+                { key: "category", label: "Categoria", type: "select", options: linkCategories },
+                { key: "url", label: "URL", type: "url", required: true, full: true },
+                { key: "description", label: "Descrição", type: "textarea" },
+              ]}
+              filterKey="category"
+              render={(r) => (
+                <>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{String(r['name'])}</span>
+                    <Badge variant="secondary">{str(r['category']) ?? "Outro"}</Badge>
+                  </div>
+                  <ExternalUrl url={String(r['url'])} />
+                  {str(r['description']) && <p className="text-xs text-muted-foreground">{String(r['description'])}</p>}
+                </>
+              )}
+            />
+          </div>
+        )}
 
-            {/* Bloco 3A — Governança do desenvolvimento / Bloco 3B — Linha do tempo */}
-            <TabsContent value="governance" className="space-y-6 pt-4">
+        {current === "historico" && (
+          <Tabs defaultValue="desenvolvimento">
+            <TabsList className="flex flex-wrap h-auto">
+              <TabsTrigger value="desenvolvimento">Desenvolvimento</TabsTrigger>
+              <TabsTrigger value="prompts">Prompts</TabsTrigger>
+              <TabsTrigger value="auditoria">Auditoria</TabsTrigger>
+            </TabsList>
+            <TabsContent value="desenvolvimento" className="space-y-6 pt-4">
               <div>
                 <h4 className="text-sm font-semibold mb-2">Linha do tempo do desenvolvimento</h4>
                 <ProjectDevelopmentTimeline
@@ -597,14 +646,63 @@ export function ProjectDetailDialog({
                 />
               </div>
             </TabsContent>
-
-
-            <TabsContent value="history" className="pt-4">
+            <TabsContent value="prompts" className="space-y-4 pt-4">
+              <Tabs value={promptView} onValueChange={setPromptView}>
+                <TabsList className="h-8">
+                  <TabsTrigger value="timeline" className="text-xs">Linha do tempo</TabsTrigger>
+                  <TabsTrigger value="list" className="text-xs">Lista</TabsTrigger>
+                </TabsList>
+              </Tabs>
+              <RecordSection
+                hideList={promptView === "timeline"}
+                table="project_prompts"
+                projectId={projectId}
+                addLabel="Novo prompt"
+                emptyLabel="Nenhum prompt registrado."
+                orderBy={{ column: "prompt_date", ascending: false }}
+                fields={[
+                  { key: "title", label: "Título", required: true, full: true },
+                  { key: "url", label: "Link do chat", type: "url", full: true },
+                  { key: "prompt_type", label: "Tipo", type: "select", options: promptTypes },
+                  { key: "prompt_date", label: "Data do prompt", type: "date" },
+                  { key: "sent_to_lovable_at", label: "Enviado ao Lovable em", type: "date" },
+                  { key: "purpose", label: "Finalidade" },
+                  { key: "commit_ref", label: "Referência de commit" },
+                  { key: "notes", label: "Observações", type: "textarea" },
+                ]}
+                render={(r) => (
+                  <>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-medium">{String(r['title'])}</span>
+                      <Badge variant="secondary">{promptTypes.find((p) => p.value === r['prompt_type'])?.label ?? String(r['prompt_type'])}</Badge>
+                      <span className="text-xs text-muted-foreground">{fmtDate(r['prompt_date'])}</span>
+                    </div>
+                    {str(r['purpose']) && <p className="text-muted-foreground">{String(r['purpose'])}</p>}
+                    {str(r['url']) && <ExternalUrl url={String(r['url'])} label="Abrir conversa" />}
+                    {str(r['sent_to_lovable_at']) && (
+                      <p className="text-xs text-muted-foreground">Enviado ao Lovable em {fmtDate(r['sent_to_lovable_at'])}</p>
+                    )}
+                    {str(r['commit_ref']) && (
+                      <p className="text-xs text-muted-foreground font-mono break-all">commit: {String(r['commit_ref'])}</p>
+                    )}
+                    {str(r['notes']) && <p className="text-xs text-muted-foreground">{String(r['notes'])}</p>}
+                  </>
+                )}
+              />
+              {promptView === "timeline" && (
+                <ProjectPromptsTimeline projectId={projectId} typeLabels={promptTypes} />
+              )}
+            </TabsContent>
+            <TabsContent value="auditoria" className="pt-4">
               <AuditHistory entityType="project" entityId={projectId} extraIds={[...taskIds, ...auditScope]} />
             </TabsContent>
           </Tabs>
         )}
-      </DialogContent>
-    </Dialog>
+
+        {current === "equipe" && (
+          <ProjectShares projectId={projectId} />
+        )}
+      </section>
+    </div>
   );
 }

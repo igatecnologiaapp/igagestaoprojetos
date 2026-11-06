@@ -26,6 +26,7 @@ import { Route as FinanceCategoriesRouteImport } from './routes/finance/categori
 import { Route as FinanceCostsRouteImport } from './routes/finance/costs'
 import { Route as FinanceServicesRouteImport } from './routes/finance/services'
 import { Route as FinanceVendorsRouteImport } from './routes/finance/vendors'
+import { Route as ProjetosProjectIdRouteImport } from './routes/projetos.$projectId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -112,6 +113,11 @@ const FinanceVendorsRoute = FinanceVendorsRouteImport.update({
   path: '/finance/vendors',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProjetosProjectIdRoute = ProjetosProjectIdRouteImport.update({
+  id: '/projetos/$projectId',
+  path: '/projetos/$projectId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -131,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/finance/costs': typeof FinanceCostsRoute
   '/finance/services': typeof FinanceServicesRoute
   '/finance/vendors': typeof FinanceVendorsRoute
+  '/projetos/$projectId': typeof ProjetosProjectIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -150,6 +157,7 @@ export interface FileRoutesByTo {
   '/finance/costs': typeof FinanceCostsRoute
   '/finance/services': typeof FinanceServicesRoute
   '/finance/vendors': typeof FinanceVendorsRoute
+  '/projetos/$projectId': typeof ProjetosProjectIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -170,6 +178,7 @@ export interface FileRoutesById {
   '/finance/costs': typeof FinanceCostsRoute
   '/finance/services': typeof FinanceServicesRoute
   '/finance/vendors': typeof FinanceVendorsRoute
+  '/projetos/$projectId': typeof ProjetosProjectIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -191,6 +200,7 @@ export interface FileRouteTypes {
     | '/finance/costs'
     | '/finance/services'
     | '/finance/vendors'
+    | '/projetos/$projectId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
     | '/finance/costs'
     | '/finance/services'
     | '/finance/vendors'
+    | '/projetos/$projectId'
   id:
     | '__root__'
     | '/'
@@ -229,6 +240,7 @@ export interface FileRouteTypes {
     | '/finance/costs'
     | '/finance/services'
     | '/finance/vendors'
+    | '/projetos/$projectId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -249,6 +261,7 @@ export interface RootRouteChildren {
   FinanceCostsRoute: typeof FinanceCostsRoute
   FinanceServicesRoute: typeof FinanceServicesRoute
   FinanceVendorsRoute: typeof FinanceVendorsRoute
+  ProjetosProjectIdRoute: typeof ProjetosProjectIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -372,6 +385,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FinanceVendorsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/projetos/$projectId': {
+      id: '/projetos/$projectId'
+      path: '/projetos/$projectId'
+      fullPath: '/projetos/$projectId'
+      preLoaderRoute: typeof ProjetosProjectIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -393,6 +413,7 @@ const rootRouteChildren: RootRouteChildren = {
   FinanceCostsRoute: FinanceCostsRoute,
   FinanceServicesRoute: FinanceServicesRoute,
   FinanceVendorsRoute: FinanceVendorsRoute,
+  ProjetosProjectIdRoute: ProjetosProjectIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

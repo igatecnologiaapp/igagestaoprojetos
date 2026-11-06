@@ -213,7 +213,7 @@ export function ProjectFolder({
         <Lock className="h-10 w-10 mx-auto text-muted-foreground" />
         <h1 className="font-semibold">Projeto não encontrado</h1>
         <p className="text-sm text-muted-foreground">O projeto não existe ou não foi compartilhado com você.</p>
-        <Button asChild variant="outline"><Link to="/projects">Voltar para Projetos</Link></Button>
+        <Button asChild variant="outline"><Link to="/projetos">Voltar para Projetos</Link></Button>
       </Card>
     );
   }
@@ -221,7 +221,7 @@ export function ProjectFolder({
   return (
     <div className="space-y-5">
       <div className="flex flex-col gap-1">
-        <Link to="/projects" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground w-fit">
+        <Link to="/projetos" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground w-fit">
           <ArrowLeft className="h-4 w-4" /> Projetos
         </Link>
       </div>
@@ -318,7 +318,7 @@ export function ProjectFolder({
         {current === "tarefas" && (
           <div className="space-y-3">
             <Button asChild size="sm" variant="outline">
-              <Link to="/tasks" search={{ project: projectId }}>Abrir Kanban do projeto</Link>
+              <Link to="/tarefas" search={{ project: projectId }}>Abrir Kanban do projeto</Link>
             </Button>
             {tasks.length === 0 ? (
               <p className="text-sm text-muted-foreground">Nenhuma tarefa neste projeto.</p>
@@ -345,9 +345,9 @@ export function ProjectFolder({
               O rateio por consumo das contas de ferramentas, as receitas e o resultado (Superávit ou Déficit) chegam na Fase 2.
             </p>
             <div className="flex flex-wrap gap-2">
-              <Button asChild size="sm" variant="outline"><Link to="/finance/costs">Custos e rateios</Link></Button>
-              <Button asChild size="sm" variant="outline"><Link to="/finance/budgets">Orçamentos</Link></Button>
-              <Button asChild size="sm" variant="outline"><Link to="/finance/services">Assinaturas e serviços</Link></Button>
+              <Button asChild size="sm" variant="outline"><Link to="/financeiro/custos">Custos e rateios</Link></Button>
+              <Button asChild size="sm" variant="outline"><Link to="/financeiro/orcamentos">Orçamentos</Link></Button>
+              <Button asChild size="sm" variant="outline"><Link to="/financeiro/assinaturas">Assinaturas e serviços</Link></Button>
             </div>
             <div className="border-t pt-4">
                 <h3 className="text-sm font-medium mb-2 flex items-center gap-1.5">

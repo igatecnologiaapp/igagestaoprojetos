@@ -59,7 +59,7 @@ function ResetPasswordPage() {
         }
       }
       toast.success("Senha definida com sucesso.");
-      navigate({ to: "/dashboard" });
+      navigate({ to: "/painel" });
     } finally {
       setBusy(false);
     }

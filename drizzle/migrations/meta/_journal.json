@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1793971841605,
+      "tag": "0000_fase1_documentos_projeto_sem_bucket",
+      "breakpoints": true
+    }
+  ]
+}

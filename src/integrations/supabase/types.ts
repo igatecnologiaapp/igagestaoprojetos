@@ -959,6 +959,59 @@ export type Database = {
           },
         ]
       }
+      project_files: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          file_name: string
+          folder: string
+          id: string
+          mime_type: string | null
+          project_id: string
+          shared_with_externals: boolean
+          size_bytes: number | null
+          storage_path: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          file_name: string
+          folder?: string
+          id?: string
+          mime_type?: string | null
+          project_id: string
+          shared_with_externals?: boolean
+          size_bytes?: number | null
+          storage_path: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          file_name?: string
+          folder?: string
+          id?: string
+          mime_type?: string | null
+          project_id?: string
+          shared_with_externals?: boolean
+          size_bytes?: number | null
+          storage_path?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_files_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_github_repos: {
         Row: {
           created_at: string
@@ -1732,6 +1785,10 @@ export type Database = {
       is_appointment_participant: {
         Args: { _appointment_id: string; _user_id: string }
         Returns: boolean
+      }
+      project_file_project_id: {
+        Args: { _object_name: string }
+        Returns: string
       }
       shares_workspace_with: {
         Args: { _target: string; _viewer: string }

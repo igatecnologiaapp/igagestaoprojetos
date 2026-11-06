@@ -14,7 +14,14 @@ import { Download, FileText } from "lucide-react";
 
 export const Route = createFileRoute("/relatorios")({
   component: () => <RequireAuth module="reports"><ReportsPage /></RequireAuth>,
-  head: () => ({ meta: [{ title: "Relatórios — IGA Tecnologia" }] }),
+  head: () => ({ meta: [
+    { title: "Relatórios — IGA Tecnologia" },
+    { name: "description", content: "Relatórios de projetos, tarefas e agendamentos da IGA Tecnologia com exportação em PDF." },
+    { property: "og:title", content: "Relatórios — IGA Tecnologia" },
+    { property: "og:description", content: "Relatórios de projetos, tarefas e agendamentos da IGA Tecnologia com exportação em PDF." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
 });
 
 const statusLabels: Record<string, string> = {

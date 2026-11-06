@@ -12,7 +12,14 @@ export const Route = createFileRoute("/painel")({
       <DashboardPage />
     </RequireAuth>
   ),
-  head: () => ({ meta: [{ title: "Painel do Gestor — IGA Tecnologia" }] }),
+  head: () => ({ meta: [
+    { title: "Painel do Gestor — IGA Tecnologia" },
+    { name: "description", content: "Visão geral de empresas, projetos e andamento das tarefas da IGA Tecnologia." },
+    { property: "og:title", content: "Painel do Gestor — IGA Tecnologia" },
+    { property: "og:description", content: "Visão geral de empresas, projetos e andamento das tarefas da IGA Tecnologia." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
 });
 
 function DashboardPage() {

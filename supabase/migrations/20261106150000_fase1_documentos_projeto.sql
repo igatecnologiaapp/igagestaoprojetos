@@ -11,10 +11,12 @@
 -- Idempotente: pode ser reaplicada sem erro.
 -- =====================================================================
 
--- 1. Bucket privado (50 MB por arquivo)
-INSERT INTO storage.buckets (id, name, public, file_size_limit)
-VALUES ('project-files', 'project-files', false, 52428800)
-ON CONFLICT (id) DO UPDATE SET public = false, file_size_limit = EXCLUDED.file_size_limit;
+-- 1. Bucket privado `project-files` (50 MB por arquivo)
+--    NÃO é criado por esta migration: o Lovable Cloud recusa INSERT em storage.buckets
+--    por migration. O bucket foi criado em 06/11/2026 pela ferramenta de storage do
+--    Lovable Cloud (privado, limite 50 MB). Em outro ambiente, criar o bucket antes,
+--    com essas mesmas configurações.
+--    Registro da aplicação pelo Lovable: drizzle/migrations/0000_fase1_documentos_projeto_sem_bucket.sql
 
 -- 2. Extrai o project_id do caminho do objeto (primeiro segmento)
 CREATE OR REPLACE FUNCTION public.project_file_project_id(_object_name text)

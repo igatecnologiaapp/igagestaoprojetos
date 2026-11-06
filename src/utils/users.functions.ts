@@ -14,6 +14,21 @@ function passwordSetupRedirect(): string | undefined {
   }
 }
 
+/** Mensagem clara quando o Supabase não consegue enviar o e-mail de convite. */
+function inviteErrorMessage(raw?: string): string {
+  const m = (raw ?? "").toLowerCase();
+  if (m.includes("already") || m.includes("registered") || m.includes("exists")) {
+    return "Já existe um usuário com este e-mail.";
+  }
+  if (m.includes("rate limit")) {
+    return "Limite de envio de e-mails atingido. Aguarde alguns minutos ou crie o usuário com senha provisória.";
+  }
+  if (m.includes("email") || m.includes("smtp") || m.includes("sending")) {
+    return "Não foi possível enviar o e-mail de convite. Tente novamente ou crie o usuário com senha provisória.";
+  }
+  return raw || "Falha ao enviar o convite.";
+}
+
 type AppRole = "owner" | "collaborator" | "viewer";
 type AppModule = "companies" | "projects" | "tasks" | "appointments" | "reports";
 
@@ -39,18 +54,29 @@ export const adminCreateUser = createServerFn({ method: "POST" })
       throw new Error("Apenas administradores podem cadastrar usuários.");
     }
 
-    // Sem senha informada: cria com senha aleatória descartável e exige definição por link seguro.
+    // Sem senha informada: o Supabase cria a conta e envia o convite por e-mail;
+    // o próprio usuário define a senha pelo link recebido.
+    // Com senha provisória: a conta já nasce ativa e a troca é obrigatória no 1º acesso.
     const invite = !data.password;
-    const password = data.password ?? crypto.randomUUID() + crypto.randomUUID();
-
-    const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
-      email: data.email,
-      password,
-      email_confirm: true,
-      user_metadata: { full_name: data.full_name },
-    });
-    if (error || !created.user) throw new Error(error?.message ?? "Falha ao criar");
-    const newId = created.user.id;
+    let newId: string;
+    if (invite) {
+      const { data: invited, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(data.email, {
+        data: { full_name: data.full_name },
+        redirectTo: passwordSetupRedirect(),
+      });
+      if (error || !invited.user) throw new Error(inviteErrorMessage(error?.message));
+      newId = invited.user.id;
+    } else {
+      const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
+        email: data.email,
+        password: data.password,
+        email_confirm: true,
+        user_metadata: { full_name: data.full_name },
+        app_metadata: { must_change_password: true },
+      });
+      if (error || !created.user) throw new Error(error?.message ?? "Falha ao criar");
+      newId = created.user.id;
+    }
 
     if (data.job_title) {
       await supabaseAdmin.from("profiles").update({ job_title: data.job_title }).eq("id", newId);
@@ -65,16 +91,6 @@ export const adminCreateUser = createServerFn({ method: "POST" })
         .from("user_module_access")
         .insert(data.modules.map((m: AppModule) => ({ user_id: newId, module: m })));
     }
-    let link: string | null = null;
-    if (invite) {
-      const { data: generated } = await supabaseAdmin.auth.admin.generateLink({
-        type: "recovery",
-        email: data.email,
-        options: { redirectTo: passwordSetupRedirect() },
-      });
-      link = generated?.properties?.action_link ?? null;
-    }
-
     await supabaseAdmin.from("security_access_log").insert({
       actor_id: userId,
       action: "user.create",
@@ -84,7 +100,7 @@ export const adminCreateUser = createServerFn({ method: "POST" })
       metadata: { role: data.role, modules: data.modules, invite } as never,
     });
 
-    return { id: newId, link };
+    return { id: newId, invited: invite };
   });
 
 const updateSchema = z.object({
@@ -150,6 +166,8 @@ export const adminListAuthUsers = createServerFn({ method: "POST" })
       id: u.id,
       email: u.email ?? null,
       active: !(u as { banned_until?: string | null }).banned_until,
+      pending: !u.email_confirmed_at && !u.last_sign_in_at,
+      must_change_password: (u.app_metadata as { must_change_password?: boolean } | undefined)?.must_change_password === true,
       last_sign_in_at: u.last_sign_in_at ?? null,
       created_at: u.created_at,
     }));
@@ -191,8 +209,9 @@ export const adminSendPasswordSetup = createServerFn({ method: "POST" })
     await assertOwner(context.userId);
     const { data: target, error: getErr } = await supabaseAdmin.auth.admin.getUserById(data.user_id);
     if (getErr || !target.user?.email) throw new Error("Usuário sem e-mail cadastrado.");
+    const pending = !target.user.email_confirmed_at && !target.user.last_sign_in_at;
     const { data: link, error } = await supabaseAdmin.auth.admin.generateLink({
-      type: "recovery",
+      type: pending ? "invite" : "recovery",
       email: target.user.email,
       options: { redirectTo: passwordSetupRedirect() },
     });
@@ -215,5 +234,72 @@ export const adminDeleteUser = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.user_id);
     if (error) throw new Error(error.message);
     await audit(userId, "user.delete", data.user_id);
+    return { ok: true };
+  });
+
+const resetSchema = z.discriminatedUnion("mode", [
+  z.object({ mode: z.literal("email"), user_id: z.string().uuid() }),
+  z.object({ mode: z.literal("set"), user_id: z.string().uuid(), password: z.string().min(8).max(72) }),
+]);
+
+/**
+ * Redefinição de senha pelo Administrador:
+ * - "email": envia por e-mail o link de redefinição (ou reenvia o convite, se ainda pendente);
+ * - "set": define uma nova senha na hora; o usuário é obrigado a trocá-la no próximo acesso.
+ * Nunca registra a senha, o token ou o link na auditoria.
+ */
+export const adminResetPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => resetSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertOwner(context.userId);
+    const { data: target, error: getErr } = await supabaseAdmin.auth.admin.getUserById(data.user_id);
+    if (getErr || !target.user) throw new Error("Usuário não encontrado.");
+    const email = target.user.email;
+
+    if (data.mode === "set") {
+      const { error } = await supabaseAdmin.auth.admin.updateUserById(data.user_id, {
+        password: data.password,
+        app_metadata: { ...(target.user.app_metadata ?? {}), must_change_password: true },
+      });
+      if (error) throw new Error(error.message);
+      await audit(context.userId, "user.password_set_by_admin", data.user_id);
+      return { ok: true, email };
+    }
+
+    if (!email) throw new Error("Usuário sem e-mail cadastrado.");
+    const pending = !target.user.email_confirmed_at && !target.user.last_sign_in_at;
+    if (pending) {
+      const { error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+        redirectTo: passwordSetupRedirect(),
+      });
+      if (error) throw new Error(inviteErrorMessage(error.message));
+      await audit(context.userId, "user.invite_resent", data.user_id);
+    } else {
+      const { error } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
+        redirectTo: passwordSetupRedirect(),
+      });
+      if (error) throw new Error(inviteErrorMessage(error.message));
+      await audit(context.userId, "user.password_reset_email", data.user_id);
+    }
+    return { ok: true, email, pending };
+  });
+
+/**
+ * Chamado pelo próprio usuário depois de trocar a senha:
+ * remove a exigência de troca obrigatória (senha provisória ou definida pelo Administrador).
+ */
+export const clearMustChangePassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: me, error: getErr } = await supabaseAdmin.auth.admin.getUserById(context.userId);
+    if (getErr || !me.user) throw new Error("Usuário não encontrado.");
+    const meta = (me.user.app_metadata ?? {}) as Record<string, unknown>;
+    if (meta.must_change_password !== true) return { ok: true };
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(context.userId, {
+      app_metadata: { ...meta, must_change_password: false },
+    });
+    if (error) throw new Error(error.message);
+    await audit(context.userId, "user.password_changed_first_access", context.userId);
     return { ok: true };
   });

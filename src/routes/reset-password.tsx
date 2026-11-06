@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-context";
+import { clearMustChangePassword } from "@/utils/users.functions";
 import { Button } from "@/components/ui/button";
 import { PasswordInput } from "@/components/password-input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +26,9 @@ export const Route = createFileRoute("/reset-password")({
 
 function ResetPasswordPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const firstAccess =
+    (user?.app_metadata as { must_change_password?: boolean } | undefined)?.must_change_password === true;
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
@@ -40,6 +45,18 @@ function ResetPasswordPage() {
       if (error) {
         toast.error("Não foi possível definir a senha. Solicite um novo link de acesso.");
         return;
+      }
+      if (firstAccess) {
+        // Remove a exigência de troca e atualiza a sessão para refletir isso.
+        try {
+          await clearMustChangePassword();
+          await supabase.auth.refreshSession();
+        } catch {
+          toast.error("Senha alterada, mas não foi possível concluir o primeiro acesso. Entre novamente.");
+          await supabase.auth.signOut();
+          navigate({ to: "/auth" });
+          return;
+        }
       }
       toast.success("Senha definida com sucesso.");
       navigate({ to: "/dashboard" });
@@ -60,6 +77,16 @@ function ResetPasswordPage() {
         </div>
         <Card className="p-6 shadow-lg">
           <form onSubmit={submit} className="space-y-4">
+            <div className="space-y-1">
+              <h2 className="font-display text-lg font-semibold">
+                {firstAccess ? "Crie sua senha pessoal" : "Defina sua nova senha"}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {firstAccess
+                  ? "Por segurança, troque a senha provisória antes de continuar. Use pelo menos 8 caracteres."
+                  : "Use pelo menos 8 caracteres."}
+              </p>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="new-password">Nova senha</Label>
               <PasswordInput id="new-password" required minLength={8} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />

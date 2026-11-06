@@ -16,9 +16,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// project_files ainda não consta nos tipos gerados do Supabase; o Lovable os regenera após a migration.
-const sb = supabase as unknown as { from: (t: string) => any };
-
 const BUCKET = "project-files";
 const MAX_BYTES = 50 * 1024 * 1024; // igual ao limite do bucket
 const DEFAULT_FOLDERS = [
@@ -80,7 +77,7 @@ export function ProjectDocuments({ projectId }: { projectId: string }) {
   } = useQuery({
     queryKey,
     queryFn: async () => {
-      const { data, error } = await sb
+      const { data, error } = await supabase
         .from("project_files")
         .select("id,folder,file_name,storage_path,size_bytes,mime_type,description,created_at")
         .eq("project_id", projectId)
@@ -120,7 +117,7 @@ export function ProjectDocuments({ projectId }: { projectId: string }) {
           upsert: false,
         });
         if (upErr) throw new Error(`Falha ao enviar "${file.name}".`);
-        const { error: dbErr } = await sb.from("project_files").insert({
+        const { error: dbErr } = await supabase.from("project_files").insert({
           project_id: projectId,
           folder: targetFolder,
           file_name: file.name.slice(0, 255),
@@ -148,7 +145,7 @@ export function ProjectDocuments({ projectId }: { projectId: string }) {
 
   const remove = useMutation({
     mutationFn: async (f: ProjectFile) => {
-      const { error } = await sb.from("project_files").delete().eq("id", f.id);
+      const { error } = await supabase.from("project_files").delete().eq("id", f.id);
       if (error) throw error;
       await supabase.storage.from(BUCKET).remove([f.storage_path]);
     },

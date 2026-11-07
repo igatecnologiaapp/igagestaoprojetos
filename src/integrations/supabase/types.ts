@@ -1489,128 +1489,6 @@ export type Database = {
           },
         ]
       }
-      project_revenue_installments: {
-        Row: {
-          amount: number
-          created_at: string
-          due_date: string
-          id: string
-          invoice_ref: string | null
-          invoiced_at: string | null
-          number: number
-          project_id: string
-          received_amount: number | null
-          received_at: string | null
-          revenue_id: string
-          updated_at: string
-        }
-        Insert: {
-          amount: number
-          created_at?: string
-          due_date: string
-          id?: string
-          invoice_ref?: string | null
-          invoiced_at?: string | null
-          number: number
-          project_id?: string
-          received_amount?: number | null
-          received_at?: string | null
-          revenue_id: string
-          updated_at?: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string
-          due_date?: string
-          id?: string
-          invoice_ref?: string | null
-          invoiced_at?: string | null
-          number?: number
-          project_id?: string
-          received_amount?: number | null
-          received_at?: string | null
-          revenue_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "project_revenue_installments_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_revenue_installments_revenue_id_fkey"
-            columns: ["revenue_id"]
-            isOneToOne: false
-            referencedRelation: "project_revenues"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      project_revenues: {
-        Row: {
-          amount: number
-          billing_day: number | null
-          cancelled_at: string | null
-          created_at: string
-          created_by: string | null
-          description: string | null
-          end_date: string | null
-          id: string
-          installments: number
-          kind: string
-          notes: string | null
-          project_id: string
-          start_date: string
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          amount: number
-          billing_day?: number | null
-          cancelled_at?: string | null
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          end_date?: string | null
-          id?: string
-          installments?: number
-          kind: string
-          notes?: string | null
-          project_id: string
-          start_date: string
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          amount?: number
-          billing_day?: number | null
-          cancelled_at?: string | null
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          end_date?: string | null
-          id?: string
-          installments?: number
-          kind?: string
-          notes?: string | null
-          project_id?: string
-          start_date?: string
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "project_revenues_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       projects: {
         Row: {
           company_id: string
@@ -2018,23 +1896,6 @@ export type Database = {
       }
     }
     Views: {
-      v_project_financial_result: {
-        Row: {
-          cost_paid: number | null
-          cost_total: number | null
-          implementation_total: number | null
-          label_contracted: string | null
-          label_received: string | null
-          project_id: string | null
-          project_name: string | null
-          result_contracted: number | null
-          result_received: number | null
-          revenue_contracted: number | null
-          revenue_invoiced: number | null
-          revenue_received: number | null
-        }
-        Relationships: []
-      }
       v_finance_unallocated_costs: {
         Row: {
           allocated: number | null
@@ -2059,10 +1920,6 @@ export type Database = {
       }
     }
     Functions: {
-      project_revenue_generate_installments: {
-        Args: { _until?: string }
-        Returns: number
-      }
       can_edit: { Args: { _user_id: string }; Returns: boolean }
       can_edit_project: {
         Args: { _project_id: string; _user_id: string }

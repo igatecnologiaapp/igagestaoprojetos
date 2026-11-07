@@ -68,8 +68,16 @@ Envie os dois resultados para análise. A decisão sai do cruzamento:
 - Aplique em ordem de nome, exatamente como está, uma migration por vez, e rode as duas consultas de novo.
 - Bucket `project-files`: privado, limite de 50 MB (painel → Storage).
 - A consulta de estado não confere GRANTs. Para a gestão de Clientes (Fase 4b), confira à parte, só leitura:
-  `select p, has_table_privilege('service_role','public.client_users',p) from unnest(array['SELECT','INSERT','UPDATE','DELETE']) p;`
-  (esperado: `true` nos quatro) e `select has_function_privilege('service_role','public.admin_apply_user_access(uuid,text,uuid,uuid)','EXECUTE');`.
+  ```sql
+  SELECT tb, p, has_table_privilege('service_role', 'public.' || tb, p) AS concedido
+    FROM (VALUES ('client_users','SELECT'),('client_users','INSERT'),('client_users','UPDATE'),('client_users','DELETE'),
+                 ('user_roles','SELECT'),('user_roles','INSERT'),('user_roles','DELETE'),
+                 ('project_shares','SELECT'),('task_shares','SELECT')) v(tb, p)
+  UNION ALL
+  SELECT 'admin_apply_user_access', 'EXECUTE',
+         has_function_privilege('service_role', 'public.admin_apply_user_access(uuid,text,uuid,uuid)', 'EXECUTE');
+  ```
+  Esperado: `true` nas 10 linhas.
 - Ao final: histórico `registrada` e objetos `completa` em todas as linhas.
 
 ### 2.3 Configurar a autenticação

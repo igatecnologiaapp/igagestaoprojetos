@@ -6,7 +6,8 @@
 -- servidor de usuários usam o `service_role`, que ficava sem acesso e falhava ao criar ou
 -- converter um usuário em Cliente.
 --
--- 1. Privilégios mínimos do service_role em client_users (nada para anon; nada além disso).
+-- 1. Privilégios mínimos do service_role nas tabelas que a troca de perfil toca: client_users,
+--    user_roles, project_shares e task_shares (nada para anon; nada além disso).
 -- 2. admin_apply_user_access: troca de perfil (interno <-> Cliente) numa única transação.
 --    Antes eram chamadas separadas (apaga o papel, depois grava o Cliente); se a segunda
 --    falhasse, o usuário ficava sem papel nenhum. Agora qualquer falha desfaz tudo.
@@ -16,10 +17,21 @@
 -- =============================================================================
 
 -- 1. Privilégios mínimos -------------------------------------------------------
--- SELECT: filtros por user_id (DELETE ... WHERE) e alvo do ON CONFLICT
--- INSERT/UPDATE: vincular ou trocar a empresa do Cliente (INSERT ... ON CONFLICT DO UPDATE)
--- DELETE: deixar de ser Cliente ao receber um perfil interno
+-- admin_apply_user_access roda com os privilégios de quem chama (service_role). Sem privilégios
+-- automáticos, cada tabela que ela toca precisa de GRANT explícito:
+--
+-- client_users:
+--   SELECT: filtros por user_id (DELETE ... WHERE) e alvo do ON CONFLICT
+--   INSERT/UPDATE: vincular ou trocar a empresa do Cliente (INSERT ... ON CONFLICT DO UPDATE)
+--   DELETE: deixar de ser Cliente ao receber um perfil interno
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.client_users TO service_role;
+-- user_roles:
+--   SELECT: filtro por user_id no DELETE; INSERT: gravar o perfil interno; DELETE: retirar o perfil
+GRANT SELECT, INSERT, DELETE ON public.user_roles TO service_role;
+-- project_shares / task_shares:
+--   SELECT: conferir se o usuário participa de projeto/tarefa interna antes de virar Cliente
+GRANT SELECT ON public.project_shares TO service_role;
+GRANT SELECT ON public.task_shares TO service_role;
 
 -- 2. Troca de perfil atômica ---------------------------------------------------
 CREATE OR REPLACE FUNCTION public.admin_apply_user_access(

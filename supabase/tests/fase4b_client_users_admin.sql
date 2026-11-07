@@ -1,10 +1,11 @@
 -- =====================================================================
 -- FASE 4b — Gestão de Clientes pelo caminho administrativo (service_role)
 --
--- Simula a homologação (sem privilégios automáticos em tabelas novas): retira todos os
--- privilégios do service_role em client_users, comprova que a conversão falha SEM deixar o
--- usuário sem papel, reaplica a migration 20261108120000 a partir do próprio arquivo e testa
--- criação, conversão, troca de empresa, volta a perfil interno e falhas atômicas.
+-- Simula a homologação (sem privilégios automáticos): retira TODOS os privilégios do
+-- service_role nas tabelas que a troca de perfil toca (client_users, user_roles,
+-- project_shares, task_shares), comprova que a conversão falha SEM deixar o usuário sem
+-- papel, reaplica a migration 20261108120000 a partir do próprio arquivo e testa criação,
+-- conversão, troca de empresa, volta a perfil interno e falhas atômicas.
 -- Roda em transação e faz ROLLBACK ao final. Rode com psql a partir deste diretório (usa \ir).
 -- =====================================================================
 BEGIN;
@@ -12,8 +13,8 @@ CREATE TEMP TABLE _r(cenario text, esperado text, obtido text, ok boolean) ON CO
 CREATE TEMP TABLE _ids(k text PRIMARY KEY, v uuid) ON COMMIT DROP;
 GRANT ALL ON _r, _ids TO service_role, authenticated, anon;
 
--- Homologação: nenhum privilégio do service_role em client_users antes da Fase 4b.
-REVOKE ALL ON public.client_users FROM service_role;
+-- Homologação: nenhum privilégio automático do service_role nas tabelas da troca de perfil.
+REVOKE ALL ON public.client_users, public.user_roles, public.project_shares, public.task_shares FROM service_role;
 
 DO $$
 DECLARE
@@ -40,8 +41,11 @@ BEGIN
   INSERT INTO public.project_shares(project_id, user_id, permission, created_by) VALUES (p1, u_share, 'view', u_owner);
   INSERT INTO _ids VALUES ('owner',u_owner),('colab',u_colab),('share',u_share),('view',u_view),('new',u_new),('c1',c1),('c2',c2);
 
-  t := has_table_privilege('service_role', 'public.client_users', 'INSERT')::text;
-  INSERT INTO _r VALUES ('simulação: service_role sem privilégio em client_users', 'false', t, t = 'false');
+  SELECT count(*)::text INTO t
+    FROM unnest(ARRAY['public.client_users','public.user_roles','public.project_shares','public.task_shares']) tb,
+         unnest(ARRAY['SELECT','INSERT','UPDATE','DELETE']) p
+   WHERE has_table_privilege('service_role', tb, p);
+  INSERT INTO _r VALUES ('simulação: service_role sem privilégio nas 4 tabelas', '0', t, t = '0');
 
   -- Antes da Fase 4b: a conversão falha, e o colaborador CONTINUA colaborador.
   EXECUTE 'set local role service_role';
@@ -72,10 +76,16 @@ DECLARE
   c2 uuid := (SELECT v FROM _ids WHERE k='c2');
   t text; n int;
 BEGIN
-  -- Privilégios: exatamente os quatro necessários, e nada para anon.
-  SELECT string_agg(p, ',' ORDER BY p) INTO t FROM unnest(ARRAY['SELECT','INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER']) p
-   WHERE has_table_privilege('service_role', 'public.client_users', p);
-  INSERT INTO _r VALUES ('service_role recebe só o necessário', 'DELETE,INSERT,SELECT,UPDATE', t, t = 'DELETE,INSERT,SELECT,UPDATE');
+  -- Privilégios: exatamente os necessários em cada tabela, e nada para anon.
+  SELECT string_agg(tb || ':' || ps, ' ' ORDER BY tb) INTO t FROM (
+    SELECT tb, string_agg(p, ',' ORDER BY p) AS ps
+      FROM unnest(ARRAY['client_users','user_roles','project_shares','task_shares']) tb,
+           unnest(ARRAY['SELECT','INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER']) p
+     WHERE has_table_privilege('service_role', 'public.' || tb, p)
+     GROUP BY tb) x;
+  INSERT INTO _r VALUES ('service_role recebe só o necessário em cada tabela',
+    'client_users:DELETE,INSERT,SELECT,UPDATE project_shares:SELECT task_shares:SELECT user_roles:DELETE,INSERT,SELECT', t,
+    t = 'client_users:DELETE,INSERT,SELECT,UPDATE project_shares:SELECT task_shares:SELECT user_roles:DELETE,INSERT,SELECT');
   SELECT count(*) INTO n FROM unnest(ARRAY['SELECT','INSERT','UPDATE','DELETE']) p WHERE has_table_privilege('anon', 'public.client_users', p);
   INSERT INTO _r VALUES ('anon continua sem acesso a client_users', '0', n::text, n = 0);
 

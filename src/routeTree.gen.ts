@@ -21,6 +21,7 @@ import { Route as ExternosRouteImport } from './routes/externos'
 import { Route as PainelRouteImport } from './routes/painel'
 import { Route as PermissionsRouteImport } from './routes/permissions'
 import { Route as PermissoesRouteImport } from './routes/permissoes'
+import { Route as PortalRouteImport } from './routes/portal'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as ProjetosRouteImport } from './routes/projetos'
 import { Route as RelatoriosRouteImport } from './routes/relatorios'
@@ -101,6 +102,11 @@ const PermissionsRoute = PermissionsRouteImport.update({
 const PermissoesRoute = PermissoesRouteImport.update({
   id: '/permissoes',
   path: '/permissoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortalRoute = PortalRouteImport.update({
+  id: '/portal',
+  path: '/portal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProjectsRoute = ProjectsRouteImport.update({
@@ -222,6 +228,7 @@ export interface FileRoutesByFullPath {
   '/painel': typeof PainelRoute
   '/permissions': typeof PermissionsRoute
   '/permissoes': typeof PermissoesRoute
+  '/portal': typeof PortalRoute
   '/projects': typeof ProjectsRoute
   '/projetos': typeof ProjetosRoute
   '/relatorios': typeof RelatoriosRoute
@@ -257,6 +264,7 @@ export interface FileRoutesByTo {
   '/painel': typeof PainelRoute
   '/permissions': typeof PermissionsRoute
   '/permissoes': typeof PermissoesRoute
+  '/portal': typeof PortalRoute
   '/projects': typeof ProjectsRoute
   '/projetos': typeof ProjetosRoute
   '/relatorios': typeof RelatoriosRoute
@@ -293,6 +301,7 @@ export interface FileRoutesById {
   '/painel': typeof PainelRoute
   '/permissions': typeof PermissionsRoute
   '/permissoes': typeof PermissoesRoute
+  '/portal': typeof PortalRoute
   '/projects': typeof ProjectsRoute
   '/projetos': typeof ProjetosRoute
   '/relatorios': typeof RelatoriosRoute
@@ -330,6 +339,7 @@ export interface FileRouteTypes {
     | '/painel'
     | '/permissions'
     | '/permissoes'
+    | '/portal'
     | '/projects'
     | '/projetos'
     | '/relatorios'
@@ -365,6 +375,7 @@ export interface FileRouteTypes {
     | '/painel'
     | '/permissions'
     | '/permissoes'
+    | '/portal'
     | '/projects'
     | '/projetos'
     | '/relatorios'
@@ -400,6 +411,7 @@ export interface FileRouteTypes {
     | '/painel'
     | '/permissions'
     | '/permissoes'
+    | '/portal'
     | '/projects'
     | '/projetos'
     | '/relatorios'
@@ -436,6 +448,7 @@ export interface RootRouteChildren {
   PainelRoute: typeof PainelRoute
   PermissionsRoute: typeof PermissionsRoute
   PermissoesRoute: typeof PermissoesRoute
+  PortalRoute: typeof PortalRoute
   ProjectsRoute: typeof ProjectsRoute
   ProjetosRoute: typeof ProjetosRoute
   RelatoriosRoute: typeof RelatoriosRoute
@@ -543,6 +556,13 @@ declare module '@tanstack/react-router' {
       path: '/permissoes'
       fullPath: '/permissoes'
       preLoaderRoute: typeof PermissoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portal': {
+      id: '/portal'
+      path: '/portal'
+      fullPath: '/portal'
+      preLoaderRoute: typeof PortalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/projects': {
@@ -708,6 +728,7 @@ const rootRouteChildren: RootRouteChildren = {
   PainelRoute: PainelRoute,
   PermissionsRoute: PermissionsRoute,
   PermissoesRoute: PermissoesRoute,
+  PortalRoute: PortalRoute,
   ProjectsRoute: ProjectsRoute,
   ProjetosRoute: ProjetosRoute,
   RelatoriosRoute: RelatoriosRoute,

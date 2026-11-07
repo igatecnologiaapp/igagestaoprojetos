@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -12,6 +12,8 @@ interface AuthContextValue {
   modules: AppModule[]; // empty = all allowed (legacy/default)
   permissions: string[];
   loading: boolean;
+  /** Usuário do Portal do Cliente (sem perfil interno). */
+  isClient: boolean;
   signOut: () => Promise<void>;
   canEdit: boolean;
   isOwner: boolean;
@@ -29,15 +31,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [permissions, setPermissions] = useState<string[]>([]);
   const [denied, setDenied] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
+  const [accessLoading, setAccessLoading] = useState(false);
 
   // Precedência idêntica à função has_permission() do banco:
   // 1) deny individual  2) owner  3) grant individual  4) herança do papel
+  // Só o primeiro carregamento de cada usuário segura a tela; renovações de sessão atualizam em segundo plano.
+  const loadedUid = useRef<string | null>(null);
   const loadAccess = async (uid: string) => {
-    const [{ data: ur, error: rolesError }, { data: ov, error: overridesError }, { data: moduleRows, error: modulesError }] = await Promise.all([
+    const first = loadedUid.current !== uid;
+    if (first) setAccessLoading(true);
+    try {
+      await loadAccessInner(uid);
+      loadedUid.current = uid;
+    } finally {
+      if (first) setAccessLoading(false);
+    }
+  };
+
+  const loadAccessInner = async (uid: string) => {
+    const [
+      { data: ur, error: rolesError },
+      { data: ov, error: overridesError },
+      { data: moduleRows, error: modulesError },
+      { data: clientRow },
+    ] = await Promise.all([
       supabase.from("user_roles").select("role").eq("user_id", uid),
-      supabase.from("user_permission_overrides").select("permission_key,granted").eq("user_id", uid),
+      supabase
+        .from("user_permission_overrides")
+        .select("permission_key,granted")
+        .eq("user_id", uid),
       supabase.from("user_module_access").select("module").eq("user_id", uid),
+      supabase.from("client_users").select("id").eq("user_id", uid).maybeSingle(),
     ]);
+    setIsClient(!!clientRow);
 
     if (rolesError || overridesError || modulesError) {
       console.error("[auth] Não foi possível carregar os acessos do usuário.");
@@ -71,25 +98,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPermissions([...new Set([...inherited, ...granted])]);
   };
 
-
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
+        if (loadedUid.current !== s.user.id) setAccessLoading(true);
         setTimeout(() => void loadAccess(s.user.id), 0);
       } else {
         setRoles([]);
         setModules([]);
         setPermissions([]);
         setDenied([]);
+        setIsClient(false);
+        loadedUid.current = null;
       }
     });
 
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s);
       setUser(s?.user ?? null);
-      if (s?.user) void loadAccess(s.user.id);
+      if (s?.user) {
+        if (loadedUid.current !== s.user.id) setAccessLoading(true);
+        void loadAccess(s.user.id);
+      }
       setLoading(false);
     });
 
@@ -104,7 +136,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     roles,
     modules,
     permissions,
-    loading,
+    loading: loading || accessLoading,
+    isClient,
     signOut: async () => {
       await supabase.auth.signOut();
     },

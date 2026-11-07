@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, FileText, FolderOpen, Loader2, Trash2, Upload } from "lucide-react";
+import { Download, Eye, EyeOff, FileText, FolderOpen, Loader2, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -37,6 +37,7 @@ type ProjectFile = {
   mime_type: string | null;
   description: string | null;
   created_at: string;
+  client_visible: boolean;
 };
 
 function formatSize(bytes: number | null) {
@@ -79,7 +80,9 @@ export function ProjectDocuments({ projectId }: { projectId: string }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("project_files")
-        .select("id,folder,file_name,storage_path,size_bytes,mime_type,description,created_at")
+        .select(
+          "id,folder,file_name,storage_path,size_bytes,mime_type,description,created_at,client_visible",
+        )
         .eq("project_id", projectId)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -141,6 +144,25 @@ export function ProjectDocuments({ projectId }: { projectId: string }) {
       qc.invalidateQueries({ queryKey });
     },
     onError: (e: Error) => toast.error(e.message || "Não foi possível enviar."),
+  });
+
+  // Fase 4: compartilhar (ou não) o documento no Portal do Cliente.
+  const shareClient = useMutation({
+    mutationFn: async (f: ProjectFile) => {
+      const { error } = await supabase
+        .from("project_files")
+        .update({ client_visible: !f.client_visible })
+        .eq("id", f.id);
+      if (error) throw error;
+      return !f.client_visible;
+    },
+    onSuccess: (v) => {
+      toast.success(
+        v ? "Documento compartilhado com o cliente." : "Documento deixou de ser compartilhado.",
+      );
+      qc.invalidateQueries({ queryKey });
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const remove = useMutation({
@@ -292,6 +314,9 @@ export function ProjectDocuments({ projectId }: { projectId: string }) {
                       <p className="text-xs text-muted-foreground">
                         {formatSize(f.size_bytes)} ·{" "}
                         {new Date(f.created_at).toLocaleDateString("pt-BR")}
+                        {f.client_visible && (
+                          <span className="ml-1 font-medium text-primary">· Cliente vê</span>
+                        )}
                       </p>
                     </div>
                     <Button
@@ -303,6 +328,31 @@ export function ProjectDocuments({ projectId }: { projectId: string }) {
                     >
                       <Download className="h-4 w-4" />
                     </Button>
+                    {canEdit && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        aria-pressed={f.client_visible}
+                        aria-label={
+                          f.client_visible
+                            ? `Parar de compartilhar ${f.file_name} com o cliente`
+                            : `Compartilhar ${f.file_name} com o cliente`
+                        }
+                        title={
+                          f.client_visible
+                            ? "Parar de compartilhar com o cliente"
+                            : "Compartilhar com o cliente"
+                        }
+                        disabled={shareClient.isPending}
+                        onClick={() => shareClient.mutate(f)}
+                      >
+                        {f.client_visible ? (
+                          <Eye className="h-4 w-4 text-primary" />
+                        ) : (
+                          <EyeOff className="h-4 w-4" />
+                        )}
+                      </Button>
+                    )}
                     {canEdit && (
                       <Button
                         size="icon"

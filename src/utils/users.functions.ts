@@ -30,6 +30,39 @@ function inviteErrorMessage(raw?: string): string {
 }
 
 type AppRole = "owner" | "collaborator" | "viewer";
+type AccessRole = AppRole | "client";
+
+/**
+ * Aplica o perfil do usuário. Cliente (Portal do Cliente) não tem papel interno:
+ * fica só vinculado à empresa em client_users. O banco recusa misturar os dois.
+ */
+async function applyAccess(targetId: string, role: AccessRole, companyId: string | undefined, actorId: string) {
+  if (role === "client") {
+    const [{ count: ps }, { count: ts }] = await Promise.all([
+      supabaseAdmin.from("project_shares").select("id", { count: "exact", head: true }).eq("user_id", targetId),
+      supabaseAdmin.from("task_shares").select("id", { count: "exact", head: true }).eq("user_id", targetId),
+    ]);
+    if ((ps ?? 0) + (ts ?? 0) > 0) {
+      throw new Error("Este usuário participa de projetos ou tarefas internos. Remova-o dessas equipes antes de torná-lo Cliente.");
+    }
+    await supabaseAdmin.from("user_roles").delete().eq("user_id", targetId);
+    const { error } = await supabaseAdmin
+      .from("client_users")
+      .upsert({ user_id: targetId, company_id: companyId!, created_by: actorId }, { onConflict: "user_id" });
+    if (error) {
+      throw new Error(
+        error.message.includes("participa")
+          ? "Este usuário participa de projetos ou tarefas internos. Remova-o dessas equipes antes de torná-lo Cliente."
+          : error.message,
+      );
+    }
+    return;
+  }
+  await supabaseAdmin.from("client_users").delete().eq("user_id", targetId);
+  await supabaseAdmin.from("user_roles").delete().eq("user_id", targetId);
+  const { error } = await supabaseAdmin.from("user_roles").insert({ user_id: targetId, role });
+  if (error) throw new Error(error.message);
+}
 type AppModule = "companies" | "projects" | "tasks" | "appointments" | "reports";
 
 const schema = z.object({
@@ -37,9 +70,10 @@ const schema = z.object({
   password: z.string().min(8).max(72).optional(),
   full_name: z.string().min(1).max(120),
   job_title: z.string().max(120).optional(),
-  role: z.enum(["owner", "collaborator", "viewer"]),
+  role: z.enum(["owner", "collaborator", "viewer", "client"]),
+  company_id: z.string().uuid().optional(),
   modules: z.array(z.enum(["companies", "projects", "tasks", "appointments", "reports"])).default([]),
-});
+}).refine((d) => d.role !== "client" || !!d.company_id, { message: "Selecione a empresa do Cliente." });
 
 export const adminCreateUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -61,7 +95,7 @@ export const adminCreateUser = createServerFn({ method: "POST" })
     let newId: string;
     if (invite) {
       const { data: invited, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(data.email, {
-        data: { full_name: data.full_name },
+        data: { full_name: data.full_name, ...(data.role === "client" ? { account_type: "client" } : {}) },
         redirectTo: passwordSetupRedirect(),
       });
       if (error || !invited.user) throw new Error(inviteErrorMessage(error?.message));
@@ -71,7 +105,7 @@ export const adminCreateUser = createServerFn({ method: "POST" })
         email: data.email,
         password: data.password,
         email_confirm: true,
-        user_metadata: { full_name: data.full_name },
+        user_metadata: { full_name: data.full_name, ...(data.role === "client" ? { account_type: "client" } : {}) },
         app_metadata: { must_change_password: true },
       });
       if (error || !created.user) throw new Error(error?.message ?? "Falha ao criar");
@@ -82,11 +116,9 @@ export const adminCreateUser = createServerFn({ method: "POST" })
       await supabaseAdmin.from("profiles").update({ job_title: data.job_title }).eq("id", newId);
     }
 
-    // Override default role
-    await supabaseAdmin.from("user_roles").delete().eq("user_id", newId);
-    await supabaseAdmin.from("user_roles").insert({ user_id: newId, role: data.role as AppRole });
+    await applyAccess(newId, data.role, data.company_id, userId);
 
-    if (data.modules.length > 0) {
+    if (data.role !== "client" && data.modules.length > 0) {
       await supabaseAdmin
         .from("user_module_access")
         .insert(data.modules.map((m: AppModule) => ({ user_id: newId, module: m })));
@@ -97,7 +129,7 @@ export const adminCreateUser = createServerFn({ method: "POST" })
       entity_type: "user",
       entity_id: newId,
       origin: "admin.users",
-      metadata: { role: data.role, modules: data.modules, invite } as never,
+      metadata: { role: data.role, company_id: data.company_id ?? null, modules: data.modules, invite } as never,
     });
 
     return { id: newId, invited: invite };
@@ -105,9 +137,10 @@ export const adminCreateUser = createServerFn({ method: "POST" })
 
 const updateSchema = z.object({
   user_id: z.string().uuid(),
-  role: z.enum(["owner", "collaborator", "viewer"]),
+  role: z.enum(["owner", "collaborator", "viewer", "client"]),
+  company_id: z.string().uuid().optional(),
   modules: z.array(z.enum(["companies", "projects", "tasks", "appointments", "reports"])),
-});
+}).refine((d) => d.role !== "client" || !!d.company_id, { message: "Selecione a empresa do Cliente." });
 
 export const adminUpdateUserAccess = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -117,12 +150,18 @@ export const adminUpdateUserAccess = createServerFn({ method: "POST" })
     const { data: roles } = await supabaseAdmin
       .from("user_roles").select("role").eq("user_id", userId);
     if (!roles?.some((r) => r.role === "owner")) throw new Error("Sem permissão");
+    if (data.role !== "owner") {
+      if (data.user_id === userId) throw new Error("Você não pode retirar o próprio perfil de Administrador.");
+      const { data: owners } = await supabaseAdmin.from("user_roles").select("user_id").eq("role", "owner");
+      if (owners?.some((o) => o.user_id === data.user_id) && (owners?.length ?? 0) <= 1) {
+        throw new Error("O sistema precisa manter ao menos um Administrador.");
+      }
+    }
 
-    await supabaseAdmin.from("user_roles").delete().eq("user_id", data.user_id);
-    await supabaseAdmin.from("user_roles").insert({ user_id: data.user_id, role: data.role as AppRole });
+    await applyAccess(data.user_id, data.role, data.company_id, userId);
 
     await supabaseAdmin.from("user_module_access").delete().eq("user_id", data.user_id);
-    if (data.modules.length > 0) {
+    if (data.role !== "client" && data.modules.length > 0) {
       await supabaseAdmin
         .from("user_module_access")
         .insert(data.modules.map((m: AppModule) => ({ user_id: data.user_id, module: m })));
@@ -133,7 +172,7 @@ export const adminUpdateUserAccess = createServerFn({ method: "POST" })
       entity_type: "user",
       entity_id: data.user_id,
       origin: "admin.users",
-      metadata: { role: data.role, modules: data.modules } as never,
+      metadata: { role: data.role, company_id: data.company_id ?? null, modules: data.modules } as never,
     });
     return { ok: true };
   });

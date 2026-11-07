@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Share2, MessageSquare, X, Send } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
+import { fetchStaffProfiles } from "@/lib/staff-profiles";
 
 type Permission = "view" | "comment" | "edit";
 
@@ -28,7 +29,7 @@ export function TaskShares({ taskId }: { taskId: string }) {
 
   const { data: users = [] } = useQuery({
     queryKey: ["users-list"],
-    queryFn: async () => (await supabase.from("profiles").select("id,full_name").order("full_name")).data ?? [],
+    queryFn: () => fetchStaffProfiles(),
   });
 
   const { data: externals = [] } = useQuery({
@@ -131,7 +132,7 @@ export function ProjectShares({ projectId }: { projectId: string }) {
   });
   const { data: users = [] } = useQuery({
     queryKey: ["users-list"],
-    queryFn: async () => (await supabase.from("profiles").select("id,full_name").order("full_name")).data ?? [],
+    queryFn: () => fetchStaffProfiles(),
   });
   const { data: externals = [] } = useQuery({
     queryKey: ["external-list"],

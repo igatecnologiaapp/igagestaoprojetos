@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { AuditHistory } from "@/components/audit-history";
@@ -16,6 +18,7 @@ import { ProjectDevelopmentTimeline } from "@/components/project-development-tim
 import { ProjectManagementSummary } from "@/components/project-management-summary";
 import { ProjectDocuments } from "@/components/project-documents";
 import { ProjectFinance } from "@/components/project-finance";
+import { ProjectClientAccess } from "@/components/project-client-access";
 import { useAuth } from "@/lib/auth-context";
 import {
   Coins,
@@ -27,6 +30,7 @@ import {
   Lock,
   FolderOpen,
 } from "lucide-react";
+import { fetchStaffProfiles } from "@/lib/staff-profiles";
 
 const sb = supabase as unknown as { from: (t: string) => any };
 
@@ -127,6 +131,20 @@ export const folderSections = [
 ] as const;
 export type FolderSection = (typeof folderSections)[number]["id"];
 
+const taskStatusLabels: Record<string, string> = {
+  pending: "Pendente",
+  started: "Iniciada",
+  in_progress: "Em andamento",
+  paused: "Pausada",
+  completed: "Concluída",
+};
+const taskPriorityLabels: Record<string, string> = {
+  low: "Baixa",
+  medium: "Média",
+  high: "Alta",
+  urgent: "Urgente",
+};
+
 const statusLabels: Record<string, string> = {
   planning: "Planejamento",
   in_progress: "Em andamento",
@@ -150,7 +168,16 @@ export function ProjectFolder({
   section: FolderSection;
   onSectionChange: (s: FolderSection) => void;
 }) {
-  const { isOwner, hasPermission, loading: authLoading } = useAuth();
+  const { isOwner, hasPermission, canEdit, loading: authLoading } = useAuth();
+  const qc = useQueryClient();
+  const toggleTaskClient = async (taskId: string, visible: boolean) => {
+    const { error } = await supabase
+      .from("tasks")
+      .update({ client_visible: visible })
+      .eq("id", taskId);
+    if (error) return toast.error(error.message);
+    void qc.invalidateQueries({ queryKey: ["project-detail-tasks", projectId] });
+  };
   const canViewFinance = hasPermission("financial.view");
   const [promptView, setPromptView] = useState("timeline");
 
@@ -174,7 +201,7 @@ export function ProjectFolder({
     queryFn: async () => {
       const { data } = await supabase
         .from("tasks")
-        .select("id,name,status,priority,due_date")
+        .select("id,name,status,priority,due_date,client_visible")
         .eq("project_id", projectId!)
         .order("position");
       return data ?? [];
@@ -223,8 +250,7 @@ export function ProjectFolder({
   // Bloco 3A.1 — reutiliza a lista de perfis já existente no sistema para o campo Responsável.
   const { data: profiles = [] } = useQuery({
     queryKey: ["profiles-select"],
-    queryFn: async () =>
-      (await supabase.from("profiles").select("id,full_name").order("full_name")).data ?? [],
+    queryFn: async () => await fetchStaffProfiles(),
   });
   const responsibleOptions = profiles.map((p) => ({
     value: p.id,
@@ -407,10 +433,32 @@ export function ProjectFolder({
                   >
                     <span className="truncate">{t.name}</span>
                     <div className="flex items-center gap-2 shrink-0">
-                      <Badge variant="outline">{t.priority}</Badge>
-                      <Badge variant={t.status === "completed" ? "default" : "secondary"}>
-                        {t.status}
+                      {t.due_date && (
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(t.due_date + "T12:00:00").toLocaleDateString("pt-BR")}
+                        </span>
+                      )}
+                      <Badge variant="outline">
+                        {taskPriorityLabels[t.priority] ?? t.priority}
                       </Badge>
+                      <Badge variant={t.status === "completed" ? "default" : "secondary"}>
+                        {taskStatusLabels[t.status] ?? t.status}
+                      </Badge>
+                      {canEdit ? (
+                        <label
+                          className="flex items-center gap-1.5 text-xs text-muted-foreground"
+                          title="Mostrar esta tarefa no Portal do Cliente"
+                        >
+                          <Switch
+                            checked={t.client_visible}
+                            onCheckedChange={(v) => void toggleTaskClient(t.id, v)}
+                            aria-label={`Cliente vê a tarefa ${t.name}`}
+                          />
+                          Cliente vê
+                        </label>
+                      ) : (
+                        t.client_visible && <Badge variant="outline">Cliente vê</Badge>
+                      )}
                     </div>
                   </li>
                 ))}
@@ -909,7 +957,19 @@ export function ProjectFolder({
           </Tabs>
         )}
 
-        {current === "equipe" && <ProjectShares projectId={projectId} />}
+        {current === "equipe" && (
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card className="p-4 space-y-2">
+              <h3 className="font-display text-lg font-semibold">Participantes da equipe</h3>
+              <p className="text-sm text-muted-foreground">
+                Cada participante vê só os projetos em que foi incluído. Valores financeiros
+                aparecem apenas para quem tem a permissão Financeiro.
+              </p>
+              <ProjectShares projectId={projectId} />
+            </Card>
+            <ProjectClientAccess projectId={projectId} />
+          </div>
+        )}
       </section>
     </div>
   );

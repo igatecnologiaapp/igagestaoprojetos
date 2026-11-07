@@ -14,6 +14,7 @@ import { Plus, Calendar, MapPin, Users, Pencil, Trash2, X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
+import { fetchStaffProfiles } from "@/lib/staff-profiles";
 
 export const Route = createFileRoute("/agenda")({
   component: () => <RequireAuth module="appointments"><AppointmentsPage /></RequireAuth>,
@@ -78,7 +79,7 @@ function AppointmentsPage() {
 
   const { data: users = [] } = useQuery({
     queryKey: ["users-list"],
-    queryFn: async () => (await supabase.from("profiles").select("id,full_name").order("full_name")).data ?? [],
+    queryFn: () => fetchStaffProfiles(),
   });
 
   const filteredProjects = form.company_id ? projects.filter((p) => p.company_id === form.company_id) : projects;

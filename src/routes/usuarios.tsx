@@ -64,8 +64,13 @@ export const Route = createFileRoute("/usuarios")({
   }),
 });
 
-type Role = "owner" | "collaborator" | "viewer";
-const roleLabels: Record<Role, string> = { owner: "Administrador", collaborator: "Colaborador", viewer: "Visualizador" };
+type Role = "owner" | "collaborator" | "viewer" | "client";
+const roleLabels: Record<Role, string> = {
+  owner: "Administrador",
+  collaborator: "Colaborador",
+  viewer: "Visualizador",
+  client: "Cliente (portal, só consulta)",
+};
 const allModules: { value: AppModule; label: string }[] = [
   { value: "companies", label: "Empresas" },
   { value: "projects", label: "Projetos" },
@@ -86,6 +91,7 @@ function UsersPage() {
   const [form, setForm] = useState({
     email: "", password: "", full_name: "", job_title: "",
     role: "collaborator" as Role,
+    company_id: "",
     modules: [] as AppModule[],
   });
 
@@ -100,13 +106,15 @@ function UsersPage() {
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["all-users"],
     queryFn: async () => {
-      const [{ data: profiles }, { data: roles }, { data: mods }] = await Promise.all([
+      const [{ data: profiles }, { data: roles }, { data: mods }, { data: clients }] = await Promise.all([
         supabase.from("profiles").select("id,full_name,phone,job_title,created_at").order("full_name"),
         supabase.from("user_roles").select("user_id,role"),
         supabase.from("user_module_access").select("user_id,module"),
+        supabase.from("client_users").select("user_id,company_id"),
       ]);
       return (profiles ?? []).map((p) => ({
         ...p,
+        clientCompanyId: (clients ?? []).find((c) => c.user_id === p.id)?.company_id ?? null,
         roles: (roles ?? []).filter((r) => r.user_id === p.id).map((r) => r.role as Role),
         modules: (mods ?? []).filter((m) => m.user_id === p.id).map((m) => m.module as AppModule),
       }));
@@ -114,10 +122,17 @@ function UsersPage() {
     enabled: isOwner,
   });
 
+  const { data: companies = [] } = useQuery({
+    queryKey: ["companies-for-clients"],
+    queryFn: async () => (await supabase.from("companies").select("id,name").order("name")).data ?? [],
+    enabled: isOwner,
+  });
+  const companyName = (id: string | null) => companies.find((c) => c.id === id)?.name ?? "empresa";
+
   const authOf = (id: string) => authUsers.find((a) => a.id === id);
 
   const reset = () => {
-    setForm({ email: "", password: "", full_name: "", job_title: "", role: "collaborator", modules: [] });
+    setForm({ email: "", password: "", full_name: "", job_title: "", role: "collaborator", company_id: "", modules: [] });
     setEditing(null);
     setInviteMode(true);
   };
@@ -135,7 +150,8 @@ function UsersPage() {
           full_name: form.full_name,
           job_title: form.job_title || undefined,
           role: form.role,
-          modules: form.modules,
+          modules: form.role === "client" ? [] : form.modules,
+          ...(form.role === "client" ? { company_id: form.company_id } : {}),
           ...(inviteMode ? {} : { password: form.password }),
         },
       })),
@@ -153,7 +169,14 @@ function UsersPage() {
   });
 
   const updateMut = useMutation({
-    mutationFn: () => adminCall(adminUpdateUserAccess({ data: { user_id: editing!, role: form.role, modules: form.modules } })),
+    mutationFn: () => adminCall(adminUpdateUserAccess({
+      data: {
+        user_id: editing!,
+        role: form.role,
+        modules: form.role === "client" ? [] : form.modules,
+        ...(form.role === "client" ? { company_id: form.company_id } : {}),
+      },
+    })),
     onSuccess: () => { toast.success("Atualizado"); refresh(); setOpen(false); reset(); },
     onError: (e: Error) => toast.error(friendlyAdminError(e)),
   });
@@ -263,6 +286,23 @@ function UsersPage() {
                   </SelectContent>
                 </Select>
               </div>
+              {form.role === "client" && (
+                <div className="space-y-1">
+                  <Label htmlFor="client-company">Empresa do cliente</Label>
+                  <Select value={form.company_id} onValueChange={(v) => setForm({ ...form, company_id: v })}>
+                    <SelectTrigger id="client-company"><SelectValue placeholder="Selecione a empresa…" /></SelectTrigger>
+                    <SelectContent>
+                      {companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    O cliente entra direto no Portal do Cliente e vê só os projetos desta empresa que você liberar (seção Equipe
+                    da pasta do projeto): andamento, prazos, tarefas e documentos marcados e os valores que já pagou. Nunca vê
+                    custos nem informações internas.
+                  </p>
+                </div>
+              )}
+              {form.role !== "client" && (
               <div>
                 <Label>Módulos liberados</Label>
                 <p className="text-xs text-muted-foreground mb-2">Vazio = todos. Administradores acessam tudo.</p>
@@ -278,6 +318,7 @@ function UsersPage() {
                   Exceções individuais de permissão e escopo por projeto continuam na tela Permissões.
                 </p>
               </div>
+              )}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
@@ -285,6 +326,7 @@ function UsersPage() {
                 onClick={() => editing ? updateMut.mutate() : createMut.mutate()}
                 disabled={
                   createMut.isPending || updateMut.isPending
+                  || (form.role === "client" && !form.company_id)
                   || (!editing && (!form.email || !form.full_name || (!inviteMode && form.password.length < 8)))
                 }
               >
@@ -389,8 +431,9 @@ function UsersPage() {
                     <Badge variant={active ? "secondary" : "destructive"}>{active ? "Ativo" : "Desativado"}</Badge>
                     {auth?.pending && <Badge variant="outline">Convite pendente</Badge>}
                     {auth?.must_change_password && <Badge variant="outline">Troca de senha pendente</Badge>}
+                    {u.clientCompanyId && <Badge className="bg-primary/10 text-primary border-primary/30" variant="outline">Cliente · {companyName(u.clientCompanyId)}</Badge>}
                     {u.roles.map((r) => <Badge key={r} variant="secondary">{roleLabels[r]}</Badge>)}
-                    {u.modules.length === 0
+                    {u.clientCompanyId ? null : u.modules.length === 0
                       ? <Badge variant="outline">Todos os módulos</Badge>
                       : u.modules.map((m) => <Badge key={m} variant="outline">{allModules.find((x) => x.value === m)?.label}</Badge>)}
                   </div>
@@ -398,7 +441,7 @@ function UsersPage() {
                 <div className="flex gap-1">
                   <Button size="icon" variant="ghost" aria-label="Editar acesso" onClick={() => {
                     setEditing(u.id);
-                    setForm({ email: "", password: "", full_name: u.full_name ?? "", job_title: u.job_title ?? "", role: (u.roles[0] ?? "collaborator") as Role, modules: u.modules });
+                    setForm({ email: "", password: "", full_name: u.full_name ?? "", job_title: u.job_title ?? "", role: (u.clientCompanyId ? "client" : (u.roles[0] ?? "collaborator")) as Role, company_id: u.clientCompanyId ?? "", modules: u.modules });
                     setOpen(true);
                   }}>
                     <Pencil className="h-4 w-4" />

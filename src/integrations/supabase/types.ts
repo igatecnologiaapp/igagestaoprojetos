@@ -391,6 +391,7 @@ export type Database = {
         Row: {
           amount: number
           amount_brl: number | null
+          auto_generated: boolean
           category_id: string | null
           competence: string
           cost_type: Database["public"]["Enums"]["finance_cost_type"]
@@ -401,7 +402,6 @@ export type Database = {
           due_date: string | null
           id: string
           is_shared: boolean
-          auto_generated: boolean
           notes: string | null
           paid_at: string | null
           service_id: string | null
@@ -412,6 +412,7 @@ export type Database = {
         Insert: {
           amount: number
           amount_brl?: number | null
+          auto_generated?: boolean
           category_id?: string | null
           competence: string
           cost_type?: Database["public"]["Enums"]["finance_cost_type"]
@@ -422,7 +423,6 @@ export type Database = {
           due_date?: string | null
           id?: string
           is_shared?: boolean
-          auto_generated?: boolean
           notes?: string | null
           paid_at?: string | null
           service_id?: string | null
@@ -433,6 +433,7 @@ export type Database = {
         Update: {
           amount?: number
           amount_brl?: number | null
+          auto_generated?: boolean
           category_id?: string | null
           competence?: string
           cost_type?: Database["public"]["Enums"]["finance_cost_type"]
@@ -443,7 +444,6 @@ export type Database = {
           due_date?: string | null
           id?: string
           is_shared?: boolean
-          auto_generated?: boolean
           notes?: string | null
           paid_at?: string | null
           service_id?: string | null
@@ -478,6 +478,7 @@ export type Database = {
       finance_services: {
         Row: {
           amount: number | null
+          auto_generate: boolean
           auto_renew: boolean
           billing_day: number | null
           category_id: string | null
@@ -488,11 +489,9 @@ export type Database = {
           default_project_id: string | null
           description: string | null
           expires_at: string | null
+          generation_start: string | null
           id: string
           is_shared: boolean
-          auto_generate: boolean
-          generation_start: string | null
-          status_effective_at: string | null
           name: string
           notes: string | null
           plan: string | null
@@ -500,11 +499,13 @@ export type Database = {
           recurrence: Database["public"]["Enums"]["finance_recurrence"]
           renews_at: string | null
           status: Database["public"]["Enums"]["finance_service_status"]
+          status_effective_at: string | null
           updated_at: string
           vendor_id: string
         }
         Insert: {
           amount?: number | null
+          auto_generate?: boolean
           auto_renew?: boolean
           billing_day?: number | null
           category_id?: string | null
@@ -515,11 +516,9 @@ export type Database = {
           default_project_id?: string | null
           description?: string | null
           expires_at?: string | null
+          generation_start?: string | null
           id?: string
           is_shared?: boolean
-          auto_generate?: boolean
-          generation_start?: string | null
-          status_effective_at?: string | null
           name: string
           notes?: string | null
           plan?: string | null
@@ -527,11 +526,13 @@ export type Database = {
           recurrence?: Database["public"]["Enums"]["finance_recurrence"]
           renews_at?: string | null
           status?: Database["public"]["Enums"]["finance_service_status"]
+          status_effective_at?: string | null
           updated_at?: string
           vendor_id: string
         }
         Update: {
           amount?: number | null
+          auto_generate?: boolean
           auto_renew?: boolean
           billing_day?: number | null
           category_id?: string | null
@@ -542,11 +543,9 @@ export type Database = {
           default_project_id?: string | null
           description?: string | null
           expires_at?: string | null
+          generation_start?: string | null
           id?: string
           is_shared?: boolean
-          auto_generate?: boolean
-          generation_start?: string | null
-          status_effective_at?: string | null
           name?: string
           notes?: string | null
           plan?: string | null
@@ -554,6 +553,7 @@ export type Database = {
           recurrence?: Database["public"]["Enums"]["finance_recurrence"]
           renews_at?: string | null
           status?: Database["public"]["Enums"]["finance_service_status"]
+          status_effective_at?: string | null
           updated_at?: string
           vendor_id?: string
         }
@@ -1746,10 +1746,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      finance_generate_recurring_costs: {
-        Args: { _until?: string }
-        Returns: number
-      }
       can_edit: { Args: { _user_id: string }; Returns: boolean }
       can_edit_project: {
         Args: { _project_id: string; _user_id: string }
@@ -1786,6 +1782,10 @@ export type Database = {
       can_view_task: {
         Args: { _task_id: string; _user_id: string }
         Returns: boolean
+      }
+      finance_generate_recurring_costs: {
+        Args: { _until?: string }
+        Returns: number
       }
       has_permission: {
         Args: { _permission: string; _user_id: string }

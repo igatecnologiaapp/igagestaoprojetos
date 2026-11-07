@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ShieldAlert, ShieldCheck, Search, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
+import { fetchStaffProfiles } from "@/lib/staff-profiles";
 
 export const Route = createFileRoute("/permissoes")({
   component: () => (
@@ -74,8 +75,8 @@ function PermissionsPage() {
   const { data: users = [] } = useQuery({
     queryKey: ["rbac-users"],
     queryFn: async () => {
-      const [{ data: profiles }, { data: ur }] = await Promise.all([
-        supabase.from("profiles").select("id,full_name,job_title").order("full_name"),
+      const [profiles, { data: ur }] = await Promise.all([
+        fetchStaffProfiles(),
         supabase.from("user_roles").select("user_id,role"),
       ]);
       return (profiles ?? []).map((p) => ({

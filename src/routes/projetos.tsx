@@ -20,6 +20,7 @@ import { useAuth } from "@/lib/auth-context";
 import { ProjectShares } from "@/components/task-collaboration";
 import { CustomFieldDefinitions } from "@/components/project-custom-fields";
 import { consumption, levelLabels, realizedFor, type BudgetRow, type ConsumptionLevel, type RealizedAllocation } from "@/lib/finance-budgets";
+import { fetchStaffProfiles } from "@/lib/staff-profiles";
 
 export const Route = createFileRoute("/projetos")({
   component: () => <RequireAuth module="projects"><ProjectsPage /></RequireAuth>,
@@ -124,8 +125,7 @@ function ProjectsPage() {
   const { data: profiles = [] } = useQuery({
     queryKey: ["profiles-select"],
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("id,full_name").order("full_name");
-      return data ?? [];
+      return fetchStaffProfiles();
     },
   });
 

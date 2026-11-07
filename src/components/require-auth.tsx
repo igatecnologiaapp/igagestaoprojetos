@@ -6,17 +6,20 @@ import { Card } from "@/components/ui/card";
 import { ShieldAlert } from "lucide-react";
 
 export function RequireAuth({ children, module }: { children: ReactNode; module?: AppModule }) {
-  const { user, loading, canAccess } = useAuth();
+  const { user, loading, canAccess, isClient } = useAuth();
   const navigate = useNavigate();
 
   // Senha provisória ou definida pelo Administrador: troca obrigatória antes de usar o sistema.
   const mustChangePassword =
-    (user?.app_metadata as { must_change_password?: boolean } | undefined)?.must_change_password === true;
+    (user?.app_metadata as { must_change_password?: boolean } | undefined)?.must_change_password ===
+    true;
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
     else if (!loading && mustChangePassword) navigate({ to: "/reset-password" });
-  }, [loading, user, mustChangePassword, navigate]);
+    // Cliente usa apenas o Portal do Cliente.
+    else if (!loading && isClient) navigate({ to: "/portal" });
+  }, [loading, user, mustChangePassword, isClient, navigate]);
 
   if (loading) {
     return (
@@ -25,7 +28,7 @@ export function RequireAuth({ children, module }: { children: ReactNode; module?
       </div>
     );
   }
-  if (!user || mustChangePassword) return null;
+  if (!user || mustChangePassword || isClient) return null;
 
   if (module && !canAccess(module)) {
     return (

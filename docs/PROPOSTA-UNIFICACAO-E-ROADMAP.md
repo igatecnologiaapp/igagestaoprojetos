@@ -18,7 +18,7 @@ O repositório **`igatecnologiaapp/igagestaoprojetos`** (este) é a **base únic
 | Tabelas `iga_*` | Remover → verificado: **já haviam sido removidas** pela migration de 21/08/2026 |
 | Dados do banco do repositório antigo (`afiulywlzkqwwghitdtt`) | **Descartar** (dados de teste); manter apenas o backup do repositório |
 | Cofre de senhas | **Dentro do sistema**, cifrado (Supabase Vault) |
-| Papel "Cliente" no portal | Pendente — decidir até a Fase 4 |
+| Papel "Cliente" no portal | **Somente consulta** (opção 2): andamento, prazos, tarefas e documentos marcados e os valores que ele já pagou — nunca custos (decidido em 07/11/2026) |
 
 **Diretriz permanente:** propor melhorias sempre que identificadas, mantendo telas, layouts e funcionalidades **intuitivos, práticos e de fácil compreensão** para os três perfis: **Administrador, Colaborador e Visualizador**. O protótipo visual aprovado é a referência de interface.
 

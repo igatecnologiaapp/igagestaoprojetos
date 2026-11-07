@@ -379,6 +379,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "finance_cost_allocations_cost_id_fkey"
+            columns: ["cost_id"]
+            isOneToOne: false
+            referencedRelation: "v_finance_unallocated_costs"
+            referencedColumns: ["cost_id"]
+          },
+          {
             foreignKeyName: "finance_cost_allocations_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
@@ -389,6 +396,7 @@ export type Database = {
       }
       finance_costs: {
         Row: {
+          allocation_source: string
           amount: number
           amount_brl: number | null
           auto_generated: boolean
@@ -410,6 +418,7 @@ export type Database = {
           vendor_id: string | null
         }
         Insert: {
+          allocation_source?: string
           amount: number
           amount_brl?: number | null
           auto_generated?: boolean
@@ -431,6 +440,7 @@ export type Database = {
           vendor_id?: string | null
         }
         Update: {
+          allocation_source?: string
           amount?: number
           amount_brl?: number | null
           auto_generated?: boolean
@@ -584,6 +594,149 @@ export type Database = {
             columns: ["vendor_id"]
             isOneToOne: false
             referencedRelation: "finance_vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finance_usage_aliases: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          external_name: string
+          id: string
+          project_id: string
+          service_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          external_name: string
+          id?: string
+          project_id: string
+          service_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          external_name?: string
+          id?: string
+          project_id?: string
+          service_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_usage_aliases_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_usage_aliases_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "finance_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finance_usage_entries: {
+        Row: {
+          created_at: string
+          external_name: string
+          id: string
+          period_id: string
+          project_id: string | null
+          quantity: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          external_name: string
+          id?: string
+          period_id: string
+          project_id?: string | null
+          quantity: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          external_name?: string
+          id?: string
+          period_id?: string
+          project_id?: string | null
+          quantity?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_usage_entries_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "finance_usage_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_usage_entries_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finance_usage_periods: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          id: string
+          imported_by: string | null
+          notes: string | null
+          period: string
+          service_id: string
+          source: string
+          status: string
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          id?: string
+          imported_by?: string | null
+          notes?: string | null
+          period: string
+          service_id: string
+          source?: string
+          status?: string
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          id?: string
+          imported_by?: string | null
+          notes?: string | null
+          period?: string
+          service_id?: string
+          source?: string
+          status?: string
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_usage_periods_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "finance_services"
             referencedColumns: ["id"]
           },
         ]
@@ -1743,7 +1896,28 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      v_finance_unallocated_costs: {
+        Row: {
+          allocated: number | null
+          cost_id: string | null
+          currency: string | null
+          description: string | null
+          period: string | null
+          service_id: string | null
+          status: Database["public"]["Enums"]["finance_cost_status"] | null
+          unallocated: number | null
+          value: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_costs_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "finance_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       can_edit: { Args: { _user_id: string }; Returns: boolean }
@@ -1782,6 +1956,14 @@ export type Database = {
       can_view_task: {
         Args: { _task_id: string; _user_id: string }
         Returns: boolean
+      }
+      finance_apply_usage_allocation: {
+        Args: { _period_id: string }
+        Returns: number
+      }
+      finance_close_usage_period: {
+        Args: { _period_id: string }
+        Returns: undefined
       }
       finance_generate_recurring_costs: {
         Args: { _until?: string }

@@ -25,7 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { useRecurringCostsSync } from "@/lib/use-recurring-costs";
-import igaLogo from "@/assets/iga-logo-oficial.png.asset.json";
+import igaLogo from "@/assets/iga-logo-oficial.png";
 
 type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; module?: AppModule; ownerOnly?: boolean; permission?: string };
 type NavGroup = { id: string; label: string; items: NavItem[] };
@@ -82,7 +82,7 @@ function Brand({ collapsed, onNavigate }: { collapsed?: boolean; onNavigate?: ()
   return (
     <Link to="/painel" onClick={onNavigate} className="flex items-center gap-3 min-w-0">
       <img
-        src={igaLogo.url}
+        src={igaLogo}
         alt="IGA Tecnologia"
         className="h-10 w-10 rounded-lg object-cover shrink-0"
       />
@@ -275,7 +275,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </SheetContent>
           </Sheet>
           <Link to="/painel" className="flex items-center gap-2 min-w-0">
-            <img src={igaLogo.url} alt="IGA Tecnologia" className="h-8 w-8 rounded-md object-cover" />
+            <img src={igaLogo} alt="IGA Tecnologia" className="h-8 w-8 rounded-md object-cover" />
             <span className="font-display font-semibold truncate">IGA TECNOLOGIA</span>
           </Link>
         </div>

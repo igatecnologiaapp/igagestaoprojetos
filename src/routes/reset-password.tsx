@@ -8,7 +8,7 @@ import { PasswordInput } from "@/components/password-input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import igaLogo from "@/assets/iga-logo-oficial.png.asset.json";
+import igaLogo from "@/assets/iga-logo-oficial.png";
 
 export const Route = createFileRoute("/reset-password")({
   component: ResetPasswordPage,
@@ -69,7 +69,7 @@ function ResetPasswordPage() {
     <div className="min-h-screen flex items-center justify-center p-6" style={{ background: "var(--gradient-subtle)" }}>
       <div className="w-full max-w-md">
         <div className="flex items-center gap-3 justify-center mb-6">
-          <img src={igaLogo.url} alt="IGA Tecnologia" className="h-12 w-12 rounded-lg object-cover" />
+          <img src={igaLogo} alt="IGA Tecnologia" className="h-12 w-12 rounded-lg object-cover" />
           <div>
             <h1 className="text-xl font-display font-semibold leading-none">IGA TECNOLOGIA</h1>
             <p className="text-xs text-muted-foreground mt-1">Gestão de Projetos</p>

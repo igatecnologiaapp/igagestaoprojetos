@@ -161,41 +161,6 @@ export type Database = {
         }
         Relationships: []
       }
-      client_users: {
-        Row: {
-          company_id: string
-          created_at: string
-          created_by: string | null
-          id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          company_id: string
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          company_id?: string
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "client_users_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       companies: {
         Row: {
           address: string | null
@@ -1240,7 +1205,6 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          client_visible: boolean
           description: string | null
           file_name: string
           folder: string
@@ -1255,7 +1219,6 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          client_visible?: boolean
           description?: string | null
           file_name: string
           folder?: string
@@ -1270,7 +1233,6 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          client_visible?: boolean
           description?: string | null
           file_name?: string
           folder?: string
@@ -1794,7 +1756,6 @@ export type Database = {
           name: string
           next_action: string | null
           owner_id: string | null
-          client_portal: boolean
           phase: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["project_status"]
@@ -1812,7 +1773,6 @@ export type Database = {
           name: string
           next_action?: string | null
           owner_id?: string | null
-          client_portal?: boolean
           phase?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["project_status"]
@@ -1830,7 +1790,6 @@ export type Database = {
           name?: string
           next_action?: string | null
           owner_id?: string | null
-          client_portal?: boolean
           phase?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["project_status"]
@@ -2060,7 +2019,6 @@ export type Database = {
       tasks: {
         Row: {
           assignee_id: string | null
-          client_visible: boolean
           created_at: string
           created_by: string | null
           description: string | null
@@ -2076,7 +2034,6 @@ export type Database = {
         }
         Insert: {
           assignee_id?: string | null
-          client_visible?: boolean
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -2092,7 +2049,6 @@ export type Database = {
         }
         Update: {
           assignee_id?: string | null
-          client_visible?: boolean
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -2243,30 +2199,6 @@ export type Database = {
       }
     }
     Functions: {
-      client_portal_contacts: {
-        Args: { _project_id: string }
-        Returns: { full_name: string | null; user_id: string }[]
-      }
-      client_portal_document_path: { Args: { _file_id: string }; Returns: string | null }
-      client_portal_project: { Args: { _project_id: string }; Returns: Json }
-      client_portal_projects: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          company_name: string
-          documents: number
-          end_date: string | null
-          id: string
-          name: string
-          next_due: string | null
-          paid_total: number
-          phase: string | null
-          start_date: string | null
-          status: string
-          tasks_done: number
-          tasks_total: number
-        }[]
-      }
-      is_portal_client: { Args: { _user_id: string }; Returns: boolean }
       can_edit: { Args: { _user_id: string }; Returns: boolean }
       can_edit_project: {
         Args: { _project_id: string; _user_id: string }

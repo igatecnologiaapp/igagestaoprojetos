@@ -1238,9 +1238,9 @@ export type Database = {
       }
       project_files: {
         Row: {
+          client_visible: boolean
           created_at: string
           created_by: string | null
-          client_visible: boolean
           description: string | null
           file_name: string
           folder: string
@@ -1253,9 +1253,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          client_visible?: boolean
           created_at?: string
           created_by?: string | null
-          client_visible?: boolean
           description?: string | null
           file_name: string
           folder?: string
@@ -1268,9 +1268,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          client_visible?: boolean
           created_at?: string
           created_by?: string | null
-          client_visible?: boolean
           description?: string | null
           file_name?: string
           folder?: string
@@ -1784,6 +1784,7 @@ export type Database = {
       }
       projects: {
         Row: {
+          client_portal: boolean
           company_id: string
           created_at: string
           created_by: string | null
@@ -1794,7 +1795,6 @@ export type Database = {
           name: string
           next_action: string | null
           owner_id: string | null
-          client_portal: boolean
           phase: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["project_status"]
@@ -1802,6 +1802,7 @@ export type Database = {
           value: number | null
         }
         Insert: {
+          client_portal?: boolean
           company_id: string
           created_at?: string
           created_by?: string | null
@@ -1812,7 +1813,6 @@ export type Database = {
           name: string
           next_action?: string | null
           owner_id?: string | null
-          client_portal?: boolean
           phase?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["project_status"]
@@ -1820,6 +1820,7 @@ export type Database = {
           value?: number | null
         }
         Update: {
+          client_portal?: boolean
           company_id?: string
           created_at?: string
           created_by?: string | null
@@ -1830,7 +1831,6 @@ export type Database = {
           name?: string
           next_action?: string | null
           owner_id?: string | null
-          client_portal?: boolean
           phase?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["project_status"]
@@ -2243,30 +2243,6 @@ export type Database = {
       }
     }
     Functions: {
-      client_portal_contacts: {
-        Args: { _project_id: string }
-        Returns: { full_name: string | null; user_id: string }[]
-      }
-      client_portal_document_path: { Args: { _file_id: string }; Returns: string | null }
-      client_portal_project: { Args: { _project_id: string }; Returns: Json }
-      client_portal_projects: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          company_name: string
-          documents: number
-          end_date: string | null
-          id: string
-          name: string
-          next_due: string | null
-          paid_total: number
-          phase: string | null
-          start_date: string | null
-          status: string
-          tasks_done: number
-          tasks_total: number
-        }[]
-      }
-      is_portal_client: { Args: { _user_id: string }; Returns: boolean }
       can_edit: { Args: { _user_id: string }; Returns: boolean }
       can_edit_project: {
         Args: { _project_id: string; _user_id: string }
@@ -2304,6 +2280,43 @@ export type Database = {
         Args: { _task_id: string; _user_id: string }
         Returns: boolean
       }
+      client_portal_can_download: {
+        Args: { _object_name: string; _user_id: string }
+        Returns: boolean
+      }
+      client_portal_can_view_project: {
+        Args: { _project_id: string; _user_id: string }
+        Returns: boolean
+      }
+      client_portal_contacts: {
+        Args: { _project_id: string }
+        Returns: {
+          full_name: string
+          user_id: string
+        }[]
+      }
+      client_portal_document_path: {
+        Args: { _file_id: string }
+        Returns: string
+      }
+      client_portal_project: { Args: { _project_id: string }; Returns: Json }
+      client_portal_projects: {
+        Args: never
+        Returns: {
+          company_name: string
+          documents: number
+          end_date: string
+          id: string
+          name: string
+          next_due: string
+          paid_total: number
+          phase: string
+          start_date: string
+          status: string
+          tasks_done: number
+          tasks_total: number
+        }[]
+      }
       finance_apply_usage_allocation: {
         Args: { _period_id: string }
         Returns: number
@@ -2331,6 +2344,7 @@ export type Database = {
         Args: { _appointment_id: string; _user_id: string }
         Returns: boolean
       }
+      is_portal_client: { Args: { _user_id: string }; Returns: boolean }
       project_file_project_id: {
         Args: { _object_name: string }
         Returns: string

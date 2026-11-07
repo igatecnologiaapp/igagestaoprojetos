@@ -29,6 +29,13 @@
       "when": 1794024221992,
       "tag": "0003_fase2c_receitas_resultado",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794051916769,
+      "tag": "0004_fase4_participantes_portal_cliente",
+      "breakpoints": true
     }
   ]
 }

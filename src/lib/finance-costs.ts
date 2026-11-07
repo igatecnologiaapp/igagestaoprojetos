@@ -36,6 +36,8 @@ export interface CostRow {
   amount_brl: number | null;
   status: CostStatus;
   is_shared: boolean;
+  /** Fase 2A: lançado automaticamente a partir de uma despesa fixa. */
+  auto_generated?: boolean;
   notes: string | null;
   finance_cost_allocations?: CostAllocationRow[];
 }

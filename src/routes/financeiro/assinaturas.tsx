@@ -69,6 +69,7 @@ const emptyForm = {
   project_account_id: "none",
   default_project_id: "none",
   is_shared: false,
+  auto_generate: true,
   notes: "",
 };
 
@@ -149,6 +150,7 @@ function ServicesPage() {
         project_account_id: form.project_account_id === "none" ? null : form.project_account_id,
         default_project_id: form.default_project_id === "none" ? null : form.default_project_id,
         is_shared: form.is_shared,
+        auto_generate: form.recurrence === "one_off" ? false : form.auto_generate,
         notes: form.notes || null,
       };
       if (editingId) {
@@ -168,12 +170,29 @@ function ServicesPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // Pausa, cancelamento ou reativação com data de efeito (Fase 2A):
+  // a partir da data, a despesa fixa deixa de (ou volta a) ser lançada automaticamente.
+  const today = new Date().toISOString().slice(0, 10);
+  const [statusFor, setStatusFor] = useState<{ id: string; name: string; current: ServiceStatus } | null>(null);
+  const [nextStatus, setNextStatus] = useState<ServiceStatus>("paused");
+  const [effectiveAt, setEffectiveAt] = useState(today);
   const statusMut = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: ServiceStatus }) => {
-      const { error } = await supabase.from("finance_services").update({ status }).eq("id", id);
+    mutationFn: async ({ id, status, date }: { id: string; status: ServiceStatus; date: string }) => {
+      const { error } = await supabase
+        .from("finance_services")
+        .update({ status, status_effective_at: date })
+        .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["finance_services"] }),
+    onSuccess: (_d, v) => {
+      toast.success(
+        v.status === "active"
+          ? "Despesa reativada: volta a ser lançada a partir do próximo vencimento."
+          : `Despesa ${v.status === "paused" ? "pausada" : "cancelada"}: deixa de ser lançada a partir de ${new Date(v.date + "T12:00:00").toLocaleDateString("pt-BR")}.`,
+      );
+      qc.invalidateQueries({ queryKey: ["finance_services"] });
+      setStatusFor(null);
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -245,10 +264,16 @@ function ServicesPage() {
                   <Badge variant={s.status === "active" ? "secondary" : "outline"}>{statusLabels[s.status as ServiceStatus]}</Badge>
                   <Badge variant="outline">{recurrenceLabels[s.recurrence as Recurrence]}</Badge>
                   {s.is_shared && <Badge variant="outline">Compartilhado</Badge>}
+                  {s.recurrence !== "one_off" && s.auto_generate && s.status === "active" && (
+                    <Badge variant="outline" className="border-primary/40 text-primary">Lançamento automático</Badge>
+                  )}
                 </div>
                 <div className="text-xs text-muted-foreground">
                   {vendorName(s.vendor_id)} · {money(s.amount as number | null, s.currency)}
                   {s.renews_at ? ` · renova em ${new Date(s.renews_at).toLocaleDateString("pt-BR")}` : ""}
+                  {s.status !== "active" && s.status_effective_at
+                    ? ` · ${statusLabels[s.status as ServiceStatus].toLowerCase()} desde ${new Date(s.status_effective_at + "T12:00:00").toLocaleDateString("pt-BR")}`
+                    : ""}
                 </div>
               </div>
               {canEditFinance && (
@@ -256,9 +281,13 @@ function ServicesPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => statusMut.mutate({ id: s.id, status: s.status === "active" ? "paused" : "active" })}
+                    onClick={() => {
+                      setStatusFor({ id: s.id, name: s.name, current: s.status as ServiceStatus });
+                      setNextStatus(s.status === "active" ? "paused" : "active");
+                      setEffectiveAt(today);
+                    }}
                   >
-                    {s.status === "active" ? "Pausar" : "Ativar"}
+                    {s.status === "active" ? "Pausar ou cancelar" : "Reativar"}
                   </Button>
                   <Button
                     size="icon"
@@ -284,6 +313,7 @@ function ServicesPage() {
                         project_account_id: s.project_account_id ?? "none",
                         default_project_id: s.default_project_id ?? "none",
                         is_shared: s.is_shared,
+                        auto_generate: s.auto_generate ?? true,
                         notes: s.notes ?? "",
                       });
                       setOpen(true);
@@ -457,6 +487,15 @@ function ServicesPage() {
                 <Checkbox checked={form.is_shared} onCheckedChange={(v) => setForm({ ...form, is_shared: Boolean(v) })} />
                 Recurso compartilhado
               </label>
+              {form.recurrence !== "one_off" && (
+                <label className="flex items-center gap-2 text-sm">
+                  <Checkbox
+                    checked={form.auto_generate}
+                    onCheckedChange={(v) => setForm({ ...form, auto_generate: Boolean(v) })}
+                  />
+                  Lançar automaticamente a cada vencimento
+                </label>
+              )}
             </div>
             <div>
               <Label htmlFor="services-descricao">Descrição</Label>
@@ -474,6 +513,60 @@ function ServicesPage() {
             </Button>
             <Button onClick={() => saveMut.mutate()} disabled={!form.vendor_id || !form.name.trim() || saveMut.isPending}>
               Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!statusFor} onOpenChange={(v) => { if (!v) setStatusFor(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{statusFor?.current === "active" ? "Pausar ou cancelar" : "Reativar"} — {statusFor?.name}</DialogTitle>
+          </DialogHeader>
+          {statusFor && (
+            <div className="space-y-4">
+              {statusFor.current === "active" ? (
+                <div className="space-y-1">
+                  <Label htmlFor="status-next">O que aconteceu com o pagamento?</Label>
+                  <Select value={nextStatus} onValueChange={(v) => setNextStatus(v as ServiceStatus)}>
+                    <SelectTrigger id="status-next"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="paused">Pausado (pode voltar depois)</SelectItem>
+                      <SelectItem value="cancelled">Cancelado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  A despesa volta a ser lançada automaticamente a partir do primeiro vencimento na data informada ou depois dela.
+                  O período em que ficou parada não é cobrado.
+                </p>
+              )}
+              <div className="space-y-1">
+                <Label htmlFor="status-date">{statusFor.current === "active" ? "Vale a partir de" : "Reativar a partir de"}</Label>
+                <Input id="status-date" type="date" value={effectiveAt} onChange={(e) => setEffectiveAt(e.target.value)} />
+                {statusFor.current === "active" && (
+                  <p className="text-xs text-muted-foreground">
+                    Vencimentos anteriores a esta data continuam no custo; os seguintes deixam de ser lançados.
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setStatusFor(null)}>Voltar</Button>
+            <Button
+              disabled={!effectiveAt || statusMut.isPending}
+              onClick={() =>
+                statusFor &&
+                statusMut.mutate({
+                  id: statusFor.id,
+                  status: statusFor.current === "active" ? nextStatus : "active",
+                  date: effectiveAt,
+                })
+              }
+            >
+              Confirmar
             </Button>
           </DialogFooter>
         </DialogContent>

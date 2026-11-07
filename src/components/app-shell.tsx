@@ -25,6 +25,7 @@ import { useAuth, type AppModule } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { useRecurringCostsSync } from "@/lib/use-recurring-costs";
 import igaLogo from "@/assets/iga-logo-oficial.png.asset.json";
 
 type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; module?: AppModule; ownerOnly?: boolean; permission?: string };
@@ -226,6 +227,7 @@ function UserFooter({ collapsed }: { collapsed?: boolean }) {
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
+  useRecurringCostsSync();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 

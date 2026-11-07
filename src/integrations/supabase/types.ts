@@ -161,6 +161,41 @@ export type Database = {
         }
         Relationships: []
       }
+      client_users: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_users_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           address: string | null
@@ -1203,6 +1238,7 @@ export type Database = {
       }
       project_files: {
         Row: {
+          client_visible: boolean
           created_at: string
           created_by: string | null
           description: string | null
@@ -1217,6 +1253,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          client_visible?: boolean
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -1231,6 +1268,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          client_visible?: boolean
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -1746,6 +1784,7 @@ export type Database = {
       }
       projects: {
         Row: {
+          client_portal: boolean
           company_id: string
           created_at: string
           created_by: string | null
@@ -1763,6 +1802,7 @@ export type Database = {
           value: number | null
         }
         Insert: {
+          client_portal?: boolean
           company_id: string
           created_at?: string
           created_by?: string | null
@@ -1780,6 +1820,7 @@ export type Database = {
           value?: number | null
         }
         Update: {
+          client_portal?: boolean
           company_id?: string
           created_at?: string
           created_by?: string | null
@@ -2019,6 +2060,7 @@ export type Database = {
       tasks: {
         Row: {
           assignee_id: string | null
+          client_visible: boolean
           created_at: string
           created_by: string | null
           description: string | null
@@ -2034,6 +2076,7 @@ export type Database = {
         }
         Insert: {
           assignee_id?: string | null
+          client_visible?: boolean
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -2049,6 +2092,7 @@ export type Database = {
         }
         Update: {
           assignee_id?: string | null
+          client_visible?: boolean
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -2236,6 +2280,43 @@ export type Database = {
         Args: { _task_id: string; _user_id: string }
         Returns: boolean
       }
+      client_portal_can_download: {
+        Args: { _object_name: string; _user_id: string }
+        Returns: boolean
+      }
+      client_portal_can_view_project: {
+        Args: { _project_id: string; _user_id: string }
+        Returns: boolean
+      }
+      client_portal_contacts: {
+        Args: { _project_id: string }
+        Returns: {
+          full_name: string
+          user_id: string
+        }[]
+      }
+      client_portal_document_path: {
+        Args: { _file_id: string }
+        Returns: string
+      }
+      client_portal_project: { Args: { _project_id: string }; Returns: Json }
+      client_portal_projects: {
+        Args: never
+        Returns: {
+          company_name: string
+          documents: number
+          end_date: string
+          id: string
+          name: string
+          next_due: string
+          paid_total: number
+          phase: string
+          start_date: string
+          status: string
+          tasks_done: number
+          tasks_total: number
+        }[]
+      }
       finance_apply_usage_allocation: {
         Args: { _period_id: string }
         Returns: number
@@ -2263,6 +2344,7 @@ export type Database = {
         Args: { _appointment_id: string; _user_id: string }
         Returns: boolean
       }
+      is_portal_client: { Args: { _user_id: string }; Returns: boolean }
       project_file_project_id: {
         Args: { _object_name: string }
         Returns: string

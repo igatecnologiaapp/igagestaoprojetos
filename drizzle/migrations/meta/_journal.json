@@ -15,6 +15,13 @@
       "when": 1794020106229,
       "tag": "0001_fase2a_despesas_fixas_automaticas",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794023514028,
+      "tag": "0002_fase2b_consumo_rateio",
+      "breakpoints": true
     }
   ]
 }

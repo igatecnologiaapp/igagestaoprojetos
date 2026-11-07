@@ -379,6 +379,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "finance_cost_allocations_cost_id_fkey"
+            columns: ["cost_id"]
+            isOneToOne: false
+            referencedRelation: "v_finance_unallocated_costs"
+            referencedColumns: ["cost_id"]
+          },
+          {
             foreignKeyName: "finance_cost_allocations_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
@@ -389,10 +396,10 @@ export type Database = {
       }
       finance_costs: {
         Row: {
+          allocation_source: string
           amount: number
           amount_brl: number | null
           auto_generated: boolean
-          allocation_source: string
           category_id: string | null
           competence: string
           cost_type: Database["public"]["Enums"]["finance_cost_type"]
@@ -411,10 +418,10 @@ export type Database = {
           vendor_id: string | null
         }
         Insert: {
+          allocation_source?: string
           amount: number
           amount_brl?: number | null
           auto_generated?: boolean
-          allocation_source?: string
           category_id?: string | null
           competence: string
           cost_type?: Database["public"]["Enums"]["finance_cost_type"]
@@ -433,10 +440,10 @@ export type Database = {
           vendor_id?: string | null
         }
         Update: {
+          allocation_source?: string
           amount?: number
           amount_brl?: number | null
           auto_generated?: boolean
-          allocation_source?: string
           category_id?: string | null
           competence?: string
           cost_type?: Database["public"]["Enums"]["finance_cost_type"]
@@ -1901,18 +1908,18 @@ export type Database = {
           unallocated: number | null
           value: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "finance_costs_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "finance_services"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
-      finance_apply_usage_allocation: {
-        Args: { _period_id: string }
-        Returns: number
-      }
-      finance_close_usage_period: {
-        Args: { _period_id: string }
-        Returns: undefined
-      }
       can_edit: { Args: { _user_id: string }; Returns: boolean }
       can_edit_project: {
         Args: { _project_id: string; _user_id: string }
@@ -1949,6 +1956,14 @@ export type Database = {
       can_view_task: {
         Args: { _task_id: string; _user_id: string }
         Returns: boolean
+      }
+      finance_apply_usage_allocation: {
+        Args: { _period_id: string }
+        Returns: number
+      }
+      finance_close_usage_period: {
+        Args: { _period_id: string }
+        Returns: undefined
       }
       finance_generate_recurring_costs: {
         Args: { _until?: string }

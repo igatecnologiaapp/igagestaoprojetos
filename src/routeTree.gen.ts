@@ -37,6 +37,7 @@ import { Route as FinanceServicesRouteImport } from './routes/finance/services'
 import { Route as FinanceVendorsRouteImport } from './routes/finance/vendors'
 import { Route as FinanceiroAssinaturasRouteImport } from './routes/financeiro/assinaturas'
 import { Route as FinanceiroCategoriasRouteImport } from './routes/financeiro/categorias'
+import { Route as FinanceiroConsumoRouteImport } from './routes/financeiro/consumo'
 import { Route as FinanceiroCustosRouteImport } from './routes/financeiro/custos'
 import { Route as FinanceiroFornecedoresRouteImport } from './routes/financeiro/fornecedores'
 import { Route as FinanceiroOrcamentosRouteImport } from './routes/financeiro/orcamentos'
@@ -182,6 +183,11 @@ const FinanceiroCategoriasRoute = FinanceiroCategoriasRouteImport.update({
   path: '/financeiro/categorias',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FinanceiroConsumoRoute = FinanceiroConsumoRouteImport.update({
+  id: '/financeiro/consumo',
+  path: '/financeiro/consumo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FinanceiroCustosRoute = FinanceiroCustosRouteImport.update({
   id: '/financeiro/custos',
   path: '/financeiro/custos',
@@ -232,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/finance/vendors': typeof FinanceVendorsRoute
   '/financeiro/assinaturas': typeof FinanceiroAssinaturasRoute
   '/financeiro/categorias': typeof FinanceiroCategoriasRoute
+  '/financeiro/consumo': typeof FinanceiroConsumoRoute
   '/financeiro/custos': typeof FinanceiroCustosRoute
   '/financeiro/fornecedores': typeof FinanceiroFornecedoresRoute
   '/financeiro/orcamentos': typeof FinanceiroOrcamentosRoute
@@ -266,6 +273,7 @@ export interface FileRoutesByTo {
   '/finance/vendors': typeof FinanceVendorsRoute
   '/financeiro/assinaturas': typeof FinanceiroAssinaturasRoute
   '/financeiro/categorias': typeof FinanceiroCategoriasRoute
+  '/financeiro/consumo': typeof FinanceiroConsumoRoute
   '/financeiro/custos': typeof FinanceiroCustosRoute
   '/financeiro/fornecedores': typeof FinanceiroFornecedoresRoute
   '/financeiro/orcamentos': typeof FinanceiroOrcamentosRoute
@@ -301,6 +309,7 @@ export interface FileRoutesById {
   '/finance/vendors': typeof FinanceVendorsRoute
   '/financeiro/assinaturas': typeof FinanceiroAssinaturasRoute
   '/financeiro/categorias': typeof FinanceiroCategoriasRoute
+  '/financeiro/consumo': typeof FinanceiroConsumoRoute
   '/financeiro/custos': typeof FinanceiroCustosRoute
   '/financeiro/fornecedores': typeof FinanceiroFornecedoresRoute
   '/financeiro/orcamentos': typeof FinanceiroOrcamentosRoute
@@ -337,6 +346,7 @@ export interface FileRouteTypes {
     | '/finance/vendors'
     | '/financeiro/assinaturas'
     | '/financeiro/categorias'
+    | '/financeiro/consumo'
     | '/financeiro/custos'
     | '/financeiro/fornecedores'
     | '/financeiro/orcamentos'
@@ -371,6 +381,7 @@ export interface FileRouteTypes {
     | '/finance/vendors'
     | '/financeiro/assinaturas'
     | '/financeiro/categorias'
+    | '/financeiro/consumo'
     | '/financeiro/custos'
     | '/financeiro/fornecedores'
     | '/financeiro/orcamentos'
@@ -405,6 +416,7 @@ export interface FileRouteTypes {
     | '/finance/vendors'
     | '/financeiro/assinaturas'
     | '/financeiro/categorias'
+    | '/financeiro/consumo'
     | '/financeiro/custos'
     | '/financeiro/fornecedores'
     | '/financeiro/orcamentos'
@@ -440,6 +452,7 @@ export interface RootRouteChildren {
   FinanceVendorsRoute: typeof FinanceVendorsRoute
   FinanceiroAssinaturasRoute: typeof FinanceiroAssinaturasRoute
   FinanceiroCategoriasRoute: typeof FinanceiroCategoriasRoute
+  FinanceiroConsumoRoute: typeof FinanceiroConsumoRoute
   FinanceiroCustosRoute: typeof FinanceiroCustosRoute
   FinanceiroFornecedoresRoute: typeof FinanceiroFornecedoresRoute
   FinanceiroOrcamentosRoute: typeof FinanceiroOrcamentosRoute
@@ -644,6 +657,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FinanceiroCategoriasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/financeiro/consumo': {
+      id: '/financeiro/consumo'
+      path: '/financeiro/consumo'
+      fullPath: '/financeiro/consumo'
+      preLoaderRoute: typeof FinanceiroConsumoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/financeiro/custos': {
       id: '/financeiro/custos'
       path: '/financeiro/custos'
@@ -704,6 +724,7 @@ const rootRouteChildren: RootRouteChildren = {
   FinanceVendorsRoute: FinanceVendorsRoute,
   FinanceiroAssinaturasRoute: FinanceiroAssinaturasRoute,
   FinanceiroCategoriasRoute: FinanceiroCategoriasRoute,
+  FinanceiroConsumoRoute: FinanceiroConsumoRoute,
   FinanceiroCustosRoute: FinanceiroCustosRoute,
   FinanceiroFornecedoresRoute: FinanceiroFornecedoresRoute,
   FinanceiroOrcamentosRoute: FinanceiroOrcamentosRoute,

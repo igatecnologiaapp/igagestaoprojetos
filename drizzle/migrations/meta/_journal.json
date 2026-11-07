@@ -22,6 +22,13 @@
       "when": 1794023514028,
       "tag": "0002_fase2b_consumo_rateio",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794024221992,
+      "tag": "0003_fase2c_receitas_resultado",
+      "breakpoints": true
     }
   ]
 }

@@ -33,35 +33,23 @@ type AppRole = "owner" | "collaborator" | "viewer";
 type AccessRole = AppRole | "client";
 
 /**
- * Aplica o perfil do usuário. Cliente (Portal do Cliente) não tem papel interno:
- * fica só vinculado à empresa em client_users. O banco recusa misturar os dois.
+ * Aplica o perfil do usuário numa ÚNICA transação no banco (admin_apply_user_access, Fase 4b).
+ * Cliente (Portal do Cliente) não tem papel interno: fica só vinculado à empresa em client_users.
+ * Se qualquer etapa falhar (participação interna, privilégio, empresa inválida), nada é alterado
+ * e o usuário mantém o perfil que tinha.
  */
 async function applyAccess(targetId: string, role: AccessRole, companyId: string | undefined, actorId: string) {
-  if (role === "client") {
-    const [{ count: ps }, { count: ts }] = await Promise.all([
-      supabaseAdmin.from("project_shares").select("id", { count: "exact", head: true }).eq("user_id", targetId),
-      supabaseAdmin.from("task_shares").select("id", { count: "exact", head: true }).eq("user_id", targetId),
-    ]);
-    if ((ps ?? 0) + (ts ?? 0) > 0) {
-      throw new Error("Este usuário participa de projetos ou tarefas internos. Remova-o dessas equipes antes de torná-lo Cliente.");
-    }
-    await supabaseAdmin.from("user_roles").delete().eq("user_id", targetId);
-    const { error } = await supabaseAdmin
-      .from("client_users")
-      .upsert({ user_id: targetId, company_id: companyId!, created_by: actorId }, { onConflict: "user_id" });
-    if (error) {
-      throw new Error(
-        error.message.includes("participa")
-          ? "Este usuário participa de projetos ou tarefas internos. Remova-o dessas equipes antes de torná-lo Cliente."
-          : error.message,
-      );
-    }
-    return;
+  const { error } = await supabaseAdmin.rpc("admin_apply_user_access", {
+    _user_id: targetId,
+    _role: role,
+    _company_id: role === "client" ? (companyId ?? null) : null,
+    _actor: actorId,
+  });
+  if (error) {
+    // Mensagens em português definidas na função do banco seguem como estão.
+    const known = ["participa de projetos", "Selecione a empresa", "Perfil inválido", "perfil interno"];
+    throw new Error(known.some((k) => error.message.includes(k)) ? error.message : `Não foi possível aplicar o perfil: ${error.message}`);
   }
-  await supabaseAdmin.from("client_users").delete().eq("user_id", targetId);
-  await supabaseAdmin.from("user_roles").delete().eq("user_id", targetId);
-  const { error } = await supabaseAdmin.from("user_roles").insert({ user_id: targetId, role });
-  if (error) throw new Error(error.message);
 }
 type AppModule = "companies" | "projects" | "tasks" | "appointments" | "reports";
 

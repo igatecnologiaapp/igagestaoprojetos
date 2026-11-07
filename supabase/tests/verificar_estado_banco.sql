@@ -1,6 +1,6 @@
 -- =============================================================================
 -- VERIFICAÇÃO DO ESTADO DO BANCO — SOMENTE LEITURA (não altera nada)
--- Gerado por supabase/tests/local/gerar_verificacao.py a partir das 42 migrations do repositório.
+-- Gerado por supabase/tests/local/gerar_verificacao.py a partir das 43 migrations do repositório.
 --
 -- Rode no SQL Editor do Supabase (homologação ou produção) ANTES de decidir qualquer aplicação.
 --
@@ -396,7 +396,8 @@ WITH esperado(migration, tipo, esquema, tabela, nome, assinatura) AS (
     ('20261108090000_fase4_participantes_portal_cliente.sql', 'trigger', 'public', 'projects', 'trg_projects_no_client_owner', NULL),
     ('20261108090000_fase4_participantes_portal_cliente.sql', 'trigger', 'public', 'task_shares', 'trg_task_shares_no_client', NULL),
     ('20261108090000_fase4_participantes_portal_cliente.sql', 'trigger', 'public', 'tasks', 'trg_tasks_no_client_assignee', NULL),
-    ('20261108090000_fase4_participantes_portal_cliente.sql', 'trigger', 'public', 'user_roles', 'trg_user_roles_no_client', NULL)
+    ('20261108090000_fase4_participantes_portal_cliente.sql', 'trigger', 'public', 'user_roles', 'trg_user_roles_no_client', NULL),
+    ('20261108120000_fase4b_client_users_service_role.sql', 'function', 'public', '', 'admin_apply_user_access', '6a5b93a12e4381ed0f79de23ce109e1d')
 ),
 situacao AS (
   SELECT e.*,

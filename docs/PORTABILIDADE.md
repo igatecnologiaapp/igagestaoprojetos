@@ -33,7 +33,7 @@ código são **dados do negócio** (a ferramenta Lovable como custo e conta dos 
 
 Verificado: `typecheck` ok; `build` gera `.output/` (Node); servidor sobe e serve login e logo; variáveis
 públicas funcionam tanto no build quanto em tempo de execução (um build serve homologação e produção);
-8 suítes SQL, 213 aprovados.
+9 suítes SQL, 233 aprovados (inclui a simulação da homologação sem privilégios automáticos).
 
 ---
 
@@ -42,7 +42,7 @@ públicas funcionam tanto no build quanto em tempo de execução (um build serve
 ### 2.1 Reconciliar o banco (somente leitura)
 Duas consultas, ambas só leem metadados. **Nenhuma decide sozinha o que aplicar.**
 
-1. `supabase/tests/verificar_historico_migrations.sql` cruza os 42 arquivos do repositório com o registro de
+1. `supabase/tests/verificar_historico_migrations.sql` cruza os 43 arquivos do repositório com o registro de
    migrations do Supabase (`supabase_migrations.schema_migrations`). Esse registro só existe e só é preenchido
    quando migrations são aplicadas pela CLI ou pelo painel de migrations; SQL colado no SQL Editor não entra nele.
    A primeira linha informa se o registro existe.
@@ -67,6 +67,9 @@ Envie os dois resultados para análise. A decisão sai do cruzamento:
   aplicar tudo o que não está no histórico, inclusive o que já existe.
 - Aplique em ordem de nome, exatamente como está, uma migration por vez, e rode as duas consultas de novo.
 - Bucket `project-files`: privado, limite de 50 MB (painel → Storage).
+- A consulta de estado não confere GRANTs. Para a gestão de Clientes (Fase 4b), confira à parte, só leitura:
+  `select p, has_table_privilege('service_role','public.client_users',p) from unnest(array['SELECT','INSERT','UPDATE','DELETE']) p;`
+  (esperado: `true` nos quatro) e `select has_function_privilege('service_role','public.admin_apply_user_access(uuid,text,uuid,uuid)','EXECUTE');`.
 - Ao final: histórico `registrada` e objetos `completa` em todas as linhas.
 
 ### 2.3 Configurar a autenticação

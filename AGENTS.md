@@ -51,7 +51,7 @@ docker run -d --name iga-pg -e POSTGRES_PASSWORD=postgres -p 54329:5432 postgres
 PGHOST=localhost PGPORT=54329 PGUSER=postgres PGPASSWORD=postgres bun run test:db
 ```
 
-Estado esperado: **8 suítes, 213 aprovados, 0 falhas**. Sete suítes antigas (`bloco_*`, `storage_bloco_1_*`)
+Estado esperado: **9 suítes, 233 aprovados, 0 falhas**. Sete suítes antigas (`bloco_*`, `storage_bloco_1_*`)
 dependem de dados preexistentes e ficam fora por padrão (`INCLUDE_LEGACY=1` para rodar).
 
 ## Regras de segurança (não negociáveis)
@@ -60,6 +60,8 @@ dependem de dados preexistentes e ficam fora por padrão (`INCLUDE_LEGACY=1` par
    de acesso nasce em migration + teste SQL.
 2. **`supabaseAdmin` (service role) só em funções de servidor** (`src/utils/*.functions.ts`, `client.server.ts`),
    sempre depois de verificar no próprio handler quem chama e se tem permissão. Nunca em código de navegador.
+   Troca de perfil (interno ↔ Cliente) só por `admin_apply_user_access` (uma transação: se falhar, o usuário
+   mantém o perfil anterior). Nunca apague o papel e grave o novo em chamadas separadas.
 3. **Financeiro** (custos, rateio, orçamentos, assinaturas, receitas, resultado) exige `financial.view`;
    alterar exige `financial.edit`.
 4. **Cliente** não lê nenhuma tabela interna. Tudo o que ele vê vem das funções `client_portal_*`
@@ -79,6 +81,10 @@ dependem de dados preexistentes e ficam fora por padrão (`INCLUDE_LEGACY=1` par
   (`IF NOT EXISTS`, `CREATE OR REPLACE`, `DROP POLICY IF EXISTS` antes de `CREATE POLICY`).
 - Cada migration nova vem com uma suíte em `supabase/tests/<fase>.sql` no formato das existentes
   (transação, tabela `_r`, `APROVADO`/`FALHOU`, `ROLLBACK` no fim).
+- **Privilégios explícitos.** Projetos Supabase novos (ex.: a homologação) não concedem privilégios automáticos
+  em tabelas novas. Toda tabela nova recebe na própria migration os `GRANT`s de que precisa (`authenticated`,
+  `service_role`) e `REVOKE ALL ... FROM anon`. Teste o caminho real (role `service_role`/`authenticated`).
+  Testes que leem como `anon` devem aceitar `insufficient_privilege` além de "0 linhas".
 - Bucket de Storage não é criado por migration: crie pelo painel/CLI (`project-files`, privado, 50 MB).
 - Depois de uma migration nova, regenere a verificação: `python3 supabase/tests/local/gerar_verificacao.py`
   (com `TEST_DB` apontando para o banco descartável recém-preparado).

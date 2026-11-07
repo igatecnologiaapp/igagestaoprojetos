@@ -1,6 +1,6 @@
 -- =============================================================================
 -- HISTÓRICO DE MIGRATIONS — SOMENTE LEITURA (não altera nada)
--- Gerado por supabase/tests/local/gerar_verificacao.py (42 migrations no repositório).
+-- Gerado por supabase/tests/local/gerar_verificacao.py (43 migrations no repositório).
 --
 -- Cruza cada arquivo de supabase/migrations com o registro do Supabase
 -- (supabase_migrations.schema_migrations), preenchido quando migrations são aplicadas pela
@@ -53,7 +53,8 @@ WITH repo(version, arquivo) AS (
     ('20261107090000', '20261107090000_fase2a_despesas_fixas_automaticas.sql'),
     ('20261107120000', '20261107120000_fase2b_consumo_rateio.sql'),
     ('20261107150000', '20261107150000_fase2c_receitas_resultado.sql'),
-    ('20261108090000', '20261108090000_fase4_participantes_portal_cliente.sql')
+    ('20261108090000', '20261108090000_fase4_participantes_portal_cliente.sql'),
+    ('20261108120000', '20261108120000_fase4b_client_users_service_role.sql')
 ),
 hist AS (
   SELECT x.version, x.name

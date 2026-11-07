@@ -31,7 +31,12 @@ export function useRecurringCostsSync() {
 
 /** Gera os lançamentos devidos; retorna quantos foram criados (0 em caso de erro). */
 export async function generateRecurringCosts(): Promise<number> {
-  const { data, error } = await supabase.rpc("finance_generate_recurring_costs");
-  if (error) return 0;
-  return typeof data === "number" ? data : 0;
+  const [costs, revenues] = await Promise.all([
+    supabase.rpc("finance_generate_recurring_costs"),
+    // Fase 2C: parcelas de receitas (implantação e mensalidades) devidas até hoje
+    supabase.rpc("project_revenue_generate_installments"),
+  ]);
+  const n = (r: { data: unknown; error: unknown }) =>
+    !r.error && typeof r.data === "number" ? r.data : 0;
+  return n(costs) + n(revenues);
 }

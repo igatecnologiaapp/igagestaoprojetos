@@ -24,6 +24,24 @@ export const Route = createFileRoute("/reset-password")({
   }),
 });
 
+/** Erros de updateUser({ password }). O Supabase devolve { error } em vez de lançar exceção. */
+function setPasswordErrorMessage(error: unknown) {
+  const e = (error ?? {}) as { message?: string; code?: string; name?: string; status?: number };
+  const message = (e.message ?? "").toLowerCase();
+  const code = (e.code ?? "").toLowerCase();
+  if (code === "same_password" || message.includes("different from the old")) {
+    return "A nova senha precisa ser diferente da senha atual.";
+  }
+  if (code === "weak_password" || message.includes("password should")) {
+    return "Senha fraca. Use ao menos 8 caracteres, misturando letras e números.";
+  }
+  if (e.name === "AuthSessionMissingError" || code === "session_not_found" || message.includes("session")) {
+    return "O link de acesso expirou ou já foi usado. Solicite um novo link.";
+  }
+  if (e.status === 429 || code.includes("rate_limit")) return "Muitas tentativas. Aguarde alguns minutos e tente novamente.";
+  return "Não foi possível definir a senha agora. Tente novamente ou solicite um novo link.";
+}
+
 function ResetPasswordPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -35,6 +53,10 @@ function ResetPasswordPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (password.length < 8) {
+      toast.error("A senha precisa ter ao menos 8 caracteres.");
+      return;
+    }
     if (password !== confirm) {
       toast.error("As senhas não conferem.");
       return;
@@ -43,14 +65,16 @@ function ResetPasswordPage() {
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) {
-        toast.error("Não foi possível definir a senha. Solicite um novo link de acesso.");
+        toast.error(setPasswordErrorMessage(error));
         return;
       }
       if (firstAccess) {
         // Remove a exigência de troca e atualiza a sessão para refletir isso.
+        // Se a sessão não for atualizada, a exigência continuaria valendo e a pessoa voltaria a esta tela.
         try {
           await clearMustChangePassword();
-          await supabase.auth.refreshSession();
+          const { error: refreshError } = await supabase.auth.refreshSession();
+          if (refreshError) throw refreshError;
         } catch {
           toast.error("Senha alterada, mas não foi possível concluir o primeiro acesso. Entre novamente.");
           await supabase.auth.signOut();
@@ -60,6 +84,8 @@ function ResetPasswordPage() {
       }
       toast.success("Senha definida com sucesso.");
       navigate({ to: "/painel" });
+    } catch (error) {
+      toast.error(setPasswordErrorMessage(error));
     } finally {
       setBusy(false);
     }

@@ -25,11 +25,12 @@ para todos os perfis (Administrador, Colaborador, Visualizador e Cliente).
 - React 19, react-query, shadcn/ui (`src/components/ui`), Tailwind v4, lucide-react, sonner
 - Supabase: Postgres com RLS, Auth, Storage (bucket privado `project-files`)
 - Build: Vite 7 + Nitro (servidor SSR). Destino detectado automaticamente; fora de plataformas conhecidas gera Node em `.output/`
+- **Node 22.12 ou mais recente** (exigido pelo TanStack Start; `.nvmrc` = 22)
 
 ## Comandos
 
 ```bash
-bun install                 # dependências (bun.lock é a fonte da verdade)
+bun install --frozen-lockfile   # dependências (bun.lock é a fonte da verdade)
 cp .env.example .env        # preencha com o Supabase de HOMOLOGAÇÃO
 bun run dev                 # http://localhost:8080
 bun run typecheck           # tsc --noEmit
@@ -65,8 +66,11 @@ dependem de dados preexistentes e ficam fora por padrão (`INCLUDE_LEGACY=1` par
    (SECURITY DEFINER, já filtradas): projetos liberados (`projects.client_portal`), tarefas e documentos
    marcados (`client_visible`) e **somente valores já pagos** — nunca custos. Gatilhos impedem que um
    Cliente receba papel interno, seja participante, responsável por tarefa ou dono de projeto.
-5. **Senhas, tokens e chaves** nunca em código, logs, PDFs, exportações ou mensagens. `.env` não é versionado.
-6. **Não apague nem arquive repositórios, dados ou arquivos** sem confirmação explícita do Gestor.
+5. **Erros do Supabase Auth vêm em `{ error }`, não como exceção.** Sempre confira `error` antes de mostrar
+   sucesso (login, recuperação e troca de senha, convites). Mensagens de recuperação continuam neutras
+   ("se o e-mail estiver cadastrado…") para não revelar quais e-mails existem.
+6. **Senhas, tokens e chaves** nunca em código, logs, PDFs, exportações ou mensagens. `.env` não é versionado.
+7. **Não apague nem arquive repositórios, dados ou arquivos** sem confirmação explícita do Gestor.
 
 ## Migrations
 
@@ -82,8 +86,13 @@ dependem de dados preexistentes e ficam fora por padrão (`INCLUDE_LEGACY=1` par
   prefira `supabase gen types typescript --project-id <ref> > src/integrations/supabase/types.ts` e revise o diff.
 
 Consultas **somente leitura** para rodar no SQL Editor de um Supabase real:
-- `supabase/tests/verificar_estado_banco.sql` — quais migrations estão completas/parciais/ausentes/divergentes
+- `supabase/tests/verificar_historico_migrations.sql` — repositório × registro de migrations do banco
+- `supabase/tests/verificar_estado_banco.sql` — objetos de cada migration: completa/parcial/ausente/divergente
+  (não prova execução nem confere GRANTs, CHECKs, índices ou dados de carga)
 - `supabase/tests/verificar_contagem_registros.sql` — contagem por tabela, usuários e arquivos (comparar origem × destino)
+
+**Nunca aplique migrations nem rode `db push` com base só nessas consultas.** Cruze histórico e objetos
+(tabela de decisão em `docs/PORTABILIDADE.md`, seção 2.1) e peça aprovação do Gestor.
 
 ## Mapa do código
 

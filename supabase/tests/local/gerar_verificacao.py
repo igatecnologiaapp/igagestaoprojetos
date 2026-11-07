@@ -41,8 +41,10 @@ for f in sorted(MIG.glob("*.sql")):
         objects[("view", "public", "", m.group(1).lower())] = f.name
     for m in re.finditer(r"CREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\s+public\." + ident, sql, re.I):
         objects[("function", "public", "", m.group(1).lower())] = f.name
-    for m in re.finditer(r'CREATE\s+POLICY\s+"([^"]+)"\s+ON\s+(?:(public|storage)\.)?' + ident, sql, re.I):
-        objects[("policy", (m.group(2) or "public").lower(), m.group(3).lower(), m.group(1))] = f.name
+    # Nome da política com ou sem aspas (sem aspas o Postgres guarda em minúsculas).
+    for m in re.finditer(r'CREATE\s+POLICY\s+(?:"([^"]+)"|([A-Za-z_][A-Za-z0-9_]*))\s+ON\s+(?:(public|storage)\.)?' + ident, sql, re.I):
+        pname = m.group(1) if m.group(1) is not None else m.group(2).lower()
+        objects[("policy", (m.group(3) or "public").lower(), m.group(4).lower(), pname)] = f.name
     for m in re.finditer(r"CREATE\s+(?:OR\s+REPLACE\s+)?(?:CONSTRAINT\s+)?TRIGGER\s+" + ident + r"[^;]*?\sON\s+(?:(public|storage|auth)\.)?" + ident, sql, re.I | re.S):
         objects[("trigger", (m.group(2) or "public").lower(), m.group(3).lower(), m.group(1).lower())] = f.name
     for stmt in sql.split(";"):
@@ -57,13 +59,24 @@ funcs = {r[0]: r[1] for r in psql("""
   select p.proname, md5(string_agg(pg_get_functiondef(p.oid), '|' order by pg_get_function_identity_arguments(p.oid)))
   from pg_proc p where p.pronamespace = 'public'::regnamespace and p.prokind = 'f' group by p.proname""")}
 pols = {(r[0], r[1], r[2]): r[3] for r in psql("""
-  select schemaname, tablename, policyname, md5(cmd || '|' || coalesce(qual,'') || '|' || coalesce(with_check,''))
+  select schemaname, tablename, policyname,
+         md5(permissive || '|' || array_to_string(array(select unnest(roles) order by 1), ',') || '|' || cmd || '|' || coalesce(qual,'') || '|' || coalesce(with_check,''))
   from pg_policies where schemaname in ('public','storage')""")}
 tables = {r[0] for r in psql("select table_name from information_schema.tables where table_schema='public'")}
 cols = {(r[0], r[1]) for r in psql("select table_name, column_name from information_schema.columns where table_schema='public'")}
 trigs = {(r[0], r[1], r[2]) for r in psql("""
   select n.nspname, c.relname, t.tgname from pg_trigger t join pg_class c on c.oid=t.tgrelid
   join pg_namespace n on n.oid=c.relnamespace where not t.tgisinternal""")}
+
+# Políticas e gatilhos criados dinamicamente (laços com EXECUTE format) não aparecem no texto:
+# atribui-os à migration que criou a tabela, para que também sejam verificados.
+table_mig = {k[3]: v for k, v in objects.items() if k[0] == "table"}
+for (sch, tbl, name) in pols:
+    if ("policy", sch, tbl, name) not in objects and sch == "public" and tbl in table_mig:
+        objects[("policy", sch, tbl, name)] = table_mig[tbl]
+for (sch, tbl, name) in trigs:
+    if ("trigger", sch, tbl, name) not in objects and sch == "public" and tbl in table_mig:
+        objects[("trigger", sch, tbl, name)] = table_mig[tbl]
 
 rows = []
 for (kind, sch, tbl, name), mig in sorted(objects.items(), key=lambda kv: (kv[1], kv[0])):
@@ -87,14 +100,22 @@ header = f"""-- ================================================================
 -- VERIFICAÇÃO DO ESTADO DO BANCO — SOMENTE LEITURA (não altera nada)
 -- Gerado por supabase/tests/local/gerar_verificacao.py a partir das {len(list(MIG.glob('*.sql')))} migrations do repositório.
 --
--- Rode no SQL Editor do Supabase (homologação ou produção) ANTES de aplicar migrations.
--- Resultado 1 (resumo por migration):
---   completa  = todos os objetos existem e funções/políticas estão na versão do repositório
+-- Rode no SQL Editor do Supabase (homologação ou produção) ANTES de decidir qualquer aplicação.
+--
+-- O QUE ESTA CONSULTA FAZ: verifica se os OBJETOS que cada migration cria existem (tabelas, colunas,
+-- visões, funções, políticas, gatilhos) e compara a definição de funções e políticas (inclusive papéis
+-- e tipo da política) com a versão do repositório.
+-- O QUE ELA NÃO FAZ: não prova que a migration foi executada, não confere GRANTs/REVOKEs, comentários,
+-- índices, CHECKs, dados de carga (ex.: permissões cadastradas) nem buckets do Storage.
+-- Por isso NÃO aplique nada só com base nela: cruze com verificar_historico_migrations.sql e analise.
+--
+-- Resultado (resumo por migration):
+--   completa   = todos os objetos existem e funções/políticas conferem com o repositório
 --   divergente = objetos existem, mas alguma função/política tem definição diferente
---   parcial   = parte dos objetos existe
---   ausente   = nenhum objeto existe → migration ainda não aplicada
--- Resultado 2 (detalhe): só os objetos ausentes ou divergentes.
--- "divergente" pode ser só formatação diferente de versão do Postgres: confira o detalhe antes de agir.
+--   parcial    = parte dos objetos existe
+--   ausente    = nenhum objeto existe (indício de que não foi aplicada — confirmar no histórico)
+-- Objetos redefinidos por migrations posteriores contam só na ÚLTIMA migration que os define.
+-- "divergente" pode ser só formatação de outra versão do Postgres: veja o detalhe (fim do arquivo).
 -- =============================================================================
 """
 body = """WITH esperado(migration, tipo, esquema, tabela, nome, assinatura) AS (
@@ -115,7 +136,7 @@ situacao AS (
     CASE e.tipo
       WHEN 'function' THEN (SELECT md5(string_agg(pg_get_functiondef(p.oid), '|' ORDER BY pg_get_function_identity_arguments(p.oid)))
                               FROM pg_proc p WHERE p.pronamespace='public'::regnamespace AND p.proname=e.nome AND p.prokind='f')
-      WHEN 'policy' THEN (SELECT md5(p.cmd || '|' || coalesce(p.qual,'') || '|' || coalesce(p.with_check,''))
+      WHEN 'policy' THEN (SELECT md5(p.permissive || '|' || array_to_string(array(SELECT unnest(p.roles) ORDER BY 1), ',') || '|' || p.cmd || '|' || coalesce(p.qual,'') || '|' || coalesce(p.with_check,''))
                             FROM pg_policies p WHERE p.schemaname=e.esquema AND p.tablename=e.tabela AND p.policyname=e.nome)
     END AS assinatura_atual
   FROM esperado e
@@ -144,3 +165,49 @@ SELECT migration,
 """
 OUT.write_text(header + body)
 print(f"{OUT.relative_to(ROOT)}: {len(rows)} objetos de {len(set(objects.values()))} migrations")
+
+# Consulta de histórico: cruza os arquivos do repositório com o registro de migrations do Supabase.
+HIST = ROOT / "supabase" / "tests" / "verificar_historico_migrations.sql"
+repo = [f.name for f in sorted(MIG.glob("*.sql"))]
+vals = ",\n".join(f"    ('{n.split('_', 1)[0]}', '{n}')" for n in repo)
+HIST.write_text(f"""-- =============================================================================
+-- HISTÓRICO DE MIGRATIONS — SOMENTE LEITURA (não altera nada)
+-- Gerado por supabase/tests/local/gerar_verificacao.py ({len(repo)} migrations no repositório).
+--
+-- Cruza cada arquivo de supabase/migrations com o registro do Supabase
+-- (supabase_migrations.schema_migrations), preenchido quando migrations são aplicadas pela
+-- Supabase CLI (db push) ou pelo painel de migrations. SQL colado no SQL Editor NÃO entra nesse registro.
+--   registrada   = consta no histórico do banco
+--   sem registro = não consta (pode ter sido aplicada à mão: confira em verificar_estado_banco.sql)
+--   só no banco  = consta no banco mas não existe no repositório (investigar antes de qualquer push)
+-- Se a primeira linha disser que o histórico não existe, use verificar_estado_banco.sql e análise manual.
+-- =============================================================================
+WITH repo(version, arquivo) AS (
+  VALUES
+{vals}
+),
+hist AS (
+  SELECT x.version, x.name
+    FROM xmltable('/table/row' PASSING query_to_xml(
+      CASE WHEN to_regclass('supabase_migrations.schema_migrations') IS NULL
+           THEN 'SELECT NULL::text AS version, NULL::text AS name WHERE false'
+           ELSE 'SELECT version::text AS version, name::text AS name FROM supabase_migrations.schema_migrations'
+      END, false, false, '')
+      COLUMNS version text PATH 'version', name text PATH 'name') x
+)
+SELECT '(histórico)' AS version,
+       CASE WHEN to_regclass('supabase_migrations.schema_migrations') IS NULL
+            THEN 'supabase_migrations.schema_migrations NÃO existe neste banco'
+            ELSE 'supabase_migrations.schema_migrations existe: ' || (SELECT count(*) FROM hist) || ' registros' END AS arquivo,
+       '' AS situacao
+UNION ALL
+SELECT * FROM (
+  SELECT coalesce(r.version, h.version), coalesce(r.arquivo, h.name),
+         CASE WHEN r.version IS NULL THEN 'só no banco'
+              WHEN h.version IS NULL THEN 'sem registro'
+              ELSE 'registrada' END
+    FROM repo r FULL JOIN hist h ON h.version = r.version
+   ORDER BY 1
+) t;
+""")
+print(f"{HIST.relative_to(ROOT)}: {len(repo)} migrations do repositório")

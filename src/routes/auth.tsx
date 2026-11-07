@@ -37,6 +37,30 @@ function authErrorMessage(error: unknown) {
   return "Não foi possível entrar agora. Tente novamente em instantes.";
 }
 
+/**
+ * Erros de "Esqueci minha senha". O Supabase NÃO lança exceção: devolve { error }.
+ * A mensagem de sucesso continua neutra para não revelar quais e-mails existem.
+ */
+function forgotErrorMessage(error: unknown) {
+  const e = (error ?? {}) as { message?: string; status?: number; code?: string };
+  const message = (e.message ?? "").toLowerCase();
+  const code = (e.code ?? "").toLowerCase();
+
+  if (e.status === 429 || code.includes("rate_limit") || message.includes("rate limit")) {
+    return "Muitas solicitações seguidas. Aguarde alguns minutos e tente novamente.";
+  }
+  if (code === "email_address_invalid" || code === "validation_failed" || message.includes("invalid") && message.includes("email")) {
+    return "Confira o e-mail digitado.";
+  }
+  if (message.includes("failed to fetch") || message.includes("network")) {
+    return "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.";
+  }
+  if (message.includes("sending") || message.includes("smtp") || (e.status ?? 0) >= 500) {
+    return "O envio de e-mail está indisponível no momento. Tente mais tarde ou peça ao Administrador para redefinir sua senha.";
+  }
+  return "Não foi possível enviar agora. Tente novamente em instantes ou peça ao Administrador para redefinir sua senha.";
+}
+
 function AuthPage() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
@@ -70,13 +94,18 @@ function AuthPage() {
     e.preventDefault();
     setBusy(true);
     try {
-      await supabase.auth.resetPasswordForEmail(email.trim(), {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
         redirectTo: `${window.location.origin}/reset-password`,
       });
+      if (error) {
+        // Fica na tela de recuperação para a pessoa corrigir ou tentar de novo.
+        toast.error(forgotErrorMessage(error));
+        return;
+      }
       toast.success("Se o e-mail estiver cadastrado, você receberá as instruções de acesso.");
       setMode("signin");
-    } catch {
-      toast.error("Não foi possível enviar agora. Tente novamente em instantes.");
+    } catch (error) {
+      toast.error(forgotErrorMessage(error));
     } finally {
       setBusy(false);
     }

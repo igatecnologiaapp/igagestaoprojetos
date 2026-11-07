@@ -8,6 +8,13 @@
       "when": 1793971841605,
       "tag": "0000_fase1_documentos_projeto_sem_bucket",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794020106229,
+      "tag": "0001_fase2a_despesas_fixas_automaticas",
+      "breakpoints": true
     }
   ]
 }

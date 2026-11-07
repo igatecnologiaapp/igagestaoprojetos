@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Pencil, Split, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { generateRecurringCosts } from "@/lib/use-recurring-costs";
 import {
   costStatusLabels,
   costTypeLabels,
@@ -79,6 +80,8 @@ function CostsPage() {
   const { data: costs = [], isLoading } = useQuery({
     queryKey: ["finance_costs"],
     queryFn: async () => {
+      // Lança as despesas fixas devidas antes de listar (idempotente).
+      await generateRecurringCosts();
       const { data, error } = await supabase
         .from("finance_costs")
         .select("*, finance_cost_allocations(id,project_id,percentage,amount,projects(name))")
@@ -335,6 +338,9 @@ function CostsPage() {
                     </Badge>
                     <Badge variant="outline">{costTypeLabels[c.cost_type]}</Badge>
                     {c.is_shared && <Badge variant="outline">Compartilhado</Badge>}
+                    {c.auto_generated && (
+                      <Badge variant="outline" className="border-primary/40 text-primary">Automático</Badge>
+                    )}
                   </div>
                   <div className="text-xs text-muted-foreground">
                     Competência {new Date(c.competence + "T00:00:00").toLocaleDateString("pt-BR", { month: "2-digit", year: "numeric" })} ·{" "}

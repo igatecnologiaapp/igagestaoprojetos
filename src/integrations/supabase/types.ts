@@ -401,6 +401,7 @@ export type Database = {
           due_date: string | null
           id: string
           is_shared: boolean
+          auto_generated: boolean
           notes: string | null
           paid_at: string | null
           service_id: string | null
@@ -421,6 +422,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           is_shared?: boolean
+          auto_generated?: boolean
           notes?: string | null
           paid_at?: string | null
           service_id?: string | null
@@ -441,6 +443,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           is_shared?: boolean
+          auto_generated?: boolean
           notes?: string | null
           paid_at?: string | null
           service_id?: string | null
@@ -487,6 +490,9 @@ export type Database = {
           expires_at: string | null
           id: string
           is_shared: boolean
+          auto_generate: boolean
+          generation_start: string | null
+          status_effective_at: string | null
           name: string
           notes: string | null
           plan: string | null
@@ -511,6 +517,9 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_shared?: boolean
+          auto_generate?: boolean
+          generation_start?: string | null
+          status_effective_at?: string | null
           name: string
           notes?: string | null
           plan?: string | null
@@ -535,6 +544,9 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_shared?: boolean
+          auto_generate?: boolean
+          generation_start?: string | null
+          status_effective_at?: string | null
           name?: string
           notes?: string | null
           plan?: string | null
@@ -1734,6 +1746,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      finance_generate_recurring_costs: {
+        Args: { _until?: string }
+        Returns: number
+      }
       can_edit: { Args: { _user_id: string }; Returns: boolean }
       can_edit_project: {
         Args: { _project_id: string; _user_id: string }

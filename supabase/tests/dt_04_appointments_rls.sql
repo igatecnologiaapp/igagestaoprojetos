@@ -92,9 +92,20 @@ BEGIN
   -- ---- Anônimo ----
   EXECUTE 'set local role anon';
   PERFORM set_config('request.jwt.claims', json_build_object('role','anon')::text, true);
-  SELECT count(*) INTO n FROM public.appointments WHERE id = a_id;
+  -- Bloqueio aceito de duas formas: RLS devolve 0 linhas, ou o anon nem tem privilégio na tabela
+  -- (insufficient_privilege, caso de projetos sem privilégios padrão). Vale para appointments e
+  -- appointment_participants. Nenhum acesso é concedido ao anon.
+  BEGIN
+    SELECT count(*) INTO n FROM public.appointments WHERE id = a_id;
+  EXCEPTION WHEN insufficient_privilege THEN
+    n := 0;
+  END;
   INSERT INTO _res VALUES ('Anon','appointments','SELECT','Não',0,n,n=0);
-  SELECT count(*) INTO n FROM public.appointment_participants WHERE appointment_id = a_id;
+  BEGIN
+    SELECT count(*) INTO n FROM public.appointment_participants WHERE appointment_id = a_id;
+  EXCEPTION WHEN insufficient_privilege THEN
+    n := 0;
+  END;
   INSERT INTO _res VALUES ('Anon','appointment_participants','SELECT','Não',0,n,n=0);
   EXECUTE 'reset role';
 

@@ -1,1 +1,5 @@
-project_id = "luhlzufqxueurgmsecvu"
+# Nome local do projeto para a Supabase CLI (não é o banco remoto).
+# O banco remoto é escolhido com: supabase link --project-ref <ref-do-projeto>
+# Até a migração, os dados de produção continuam no Lovable Cloud (luhlzufqxueurgmsecvu),
+# que NÃO pode ser vinculado pela CLI. Veja docs/PORTABILIDADE.md.
+project_id = "igagestaoprojetos"

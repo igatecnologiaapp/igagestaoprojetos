@@ -70,9 +70,20 @@ BEGIN
   -- ============ ANÔNIMO ============
   EXECUTE 'set local role anon';
   PERFORM set_config('request.jwt.claims', NULL, true);
-  SELECT count(*) INTO n FROM public.projects WHERE id = p_id;
+  -- Bloqueio aceito de duas formas: RLS devolve 0 linhas, ou o anon nem tem privilégio na tabela
+  -- (insufficient_privilege, caso de projetos sem privilégios padrão). Vale para projects e tasks.
+  -- Nenhum acesso é concedido ao anon.
+  BEGIN
+    SELECT count(*) INTO n FROM public.projects WHERE id = p_id;
+  EXCEPTION WHEN insufficient_privilege THEN
+    n := 0;
+  END;
   INSERT INTO _res VALUES ('Anônimo','projects','SELECT','Não',0,n,n=0);
-  SELECT count(*) INTO n FROM public.tasks WHERE id = t_id;
+  BEGIN
+    SELECT count(*) INTO n FROM public.tasks WHERE id = t_id;
+  EXCEPTION WHEN insufficient_privilege THEN
+    n := 0;
+  END;
   INSERT INTO _res VALUES ('Anônimo','tasks','SELECT','Não',0,n,n=0);
   EXECUTE 'reset role';
 

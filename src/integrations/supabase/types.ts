@@ -2243,6 +2243,10 @@ export type Database = {
       }
     }
     Functions: {
+      admin_apply_user_access: {
+        Args: { _user_id: string; _role: string; _company_id?: string | null; _actor?: string | null }
+        Returns: undefined
+      }
       can_edit: { Args: { _user_id: string }; Returns: boolean }
       can_edit_project: {
         Args: { _project_id: string; _user_id: string }

@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import igaLogo from "@/assets/iga-logo-oficial.png.asset.json";
+import igaLogo from "@/assets/iga-logo-oficial.png";
 
 /**
  * Fase 4 — Portal do Cliente (somente consulta).
@@ -147,7 +147,7 @@ function PortalPage() {
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
           <div className="flex items-center gap-3 min-w-0">
             <img
-              src={igaLogo.url}
+              src={igaLogo}
               alt="IGA Tecnologia"
               className="h-10 w-10 rounded-lg object-cover shrink-0"
             />

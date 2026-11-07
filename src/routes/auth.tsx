@@ -8,7 +8,7 @@ import { PasswordInput } from "@/components/password-input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import igaLogo from "@/assets/iga-logo-oficial.png.asset.json";
+import igaLogo from "@/assets/iga-logo-oficial.png";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -35,6 +35,30 @@ function authErrorMessage(error: unknown) {
   if (message.includes("rate limit")) return "Muitas tentativas. Aguarde alguns minutos e tente novamente.";
 
   return "Não foi possível entrar agora. Tente novamente em instantes.";
+}
+
+/**
+ * Erros de "Esqueci minha senha". O Supabase NÃO lança exceção: devolve { error }.
+ * A mensagem de sucesso continua neutra para não revelar quais e-mails existem.
+ */
+function forgotErrorMessage(error: unknown) {
+  const e = (error ?? {}) as { message?: string; status?: number; code?: string };
+  const message = (e.message ?? "").toLowerCase();
+  const code = (e.code ?? "").toLowerCase();
+
+  if (e.status === 429 || code.includes("rate_limit") || message.includes("rate limit")) {
+    return "Muitas solicitações seguidas. Aguarde alguns minutos e tente novamente.";
+  }
+  if (code === "email_address_invalid" || code === "validation_failed" || message.includes("invalid") && message.includes("email")) {
+    return "Confira o e-mail digitado.";
+  }
+  if (message.includes("failed to fetch") || message.includes("network")) {
+    return "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.";
+  }
+  if (message.includes("sending") || message.includes("smtp") || (e.status ?? 0) >= 500) {
+    return "O envio de e-mail está indisponível no momento. Tente mais tarde ou peça ao Administrador para redefinir sua senha.";
+  }
+  return "Não foi possível enviar agora. Tente novamente em instantes ou peça ao Administrador para redefinir sua senha.";
 }
 
 function AuthPage() {
@@ -70,13 +94,18 @@ function AuthPage() {
     e.preventDefault();
     setBusy(true);
     try {
-      await supabase.auth.resetPasswordForEmail(email.trim(), {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
         redirectTo: `${window.location.origin}/reset-password`,
       });
+      if (error) {
+        // Fica na tela de recuperação para a pessoa corrigir ou tentar de novo.
+        toast.error(forgotErrorMessage(error));
+        return;
+      }
       toast.success("Se o e-mail estiver cadastrado, você receberá as instruções de acesso.");
       setMode("signin");
-    } catch {
-      toast.error("Não foi possível enviar agora. Tente novamente em instantes.");
+    } catch (error) {
+      toast.error(forgotErrorMessage(error));
     } finally {
       setBusy(false);
     }
@@ -86,7 +115,7 @@ function AuthPage() {
     <div className="min-h-screen flex items-center justify-center p-6" style={{ background: "var(--gradient-subtle)" }}>
       <div className="w-full max-w-md">
         <div className="flex items-center gap-3 justify-center mb-6">
-          <img src={igaLogo.url} alt="IGA Tecnologia" className="h-12 w-12 rounded-lg object-cover" />
+          <img src={igaLogo} alt="IGA Tecnologia" className="h-12 w-12 rounded-lg object-cover" />
           <div>
             <h1 className="text-xl font-display font-semibold leading-none">IGA TECNOLOGIA</h1>
             <p className="text-xs text-muted-foreground mt-1">Gestão de Projetos</p>

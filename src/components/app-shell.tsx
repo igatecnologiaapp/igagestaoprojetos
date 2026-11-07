@@ -19,8 +19,7 @@ import {
   Tags,
   Server,
   PiggyBank,
-  Store,
-} from "lucide-react";
+  Store, Gauge } from "lucide-react";
 import { useAuth, type AppModule } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -52,6 +51,7 @@ const groups: NavGroup[] = [
     items: [
       { to: "/financeiro/custos", label: "Custos", icon: Wallet, permission: "financial.view" },
       { to: "/financeiro/assinaturas", label: "Assinaturas e Créditos", icon: Server, permission: "financial.view" },
+      { to: "/financeiro/consumo", label: "Consumo e rateio", icon: Gauge, permission: "financial.view" },
       { to: "/financeiro/orcamentos", label: "Orçamentos", icon: PiggyBank, permission: "financial.view" },
       { to: "/financeiro/fornecedores", label: "Cadastros · Fornecedores", icon: Store, permission: "financial.view" },
       { to: "/financeiro/categorias", label: "Cadastros · Categorias", icon: Tags, permission: "financial.view" },
